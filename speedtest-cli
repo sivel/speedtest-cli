@@ -1,13 +1,18 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import urllib
+import urllib2
+import urlparse
 import math
 import xml.etree.ElementTree as ET
 import time
 import os
 import sys
+import hashlib
 import threading
 from Queue import Queue
+
 
 def distance(origin, destination):
   """Determine distance between 2 sets of [lat,lon] in km"""
@@ -227,6 +232,42 @@ def speedtest():
   ulspeed = uploadSpeed(best['url'], sizes)
   print '\nUpload speed: %s Mbit/s' % round((ulspeed/1024/1024)*8,2)
 
+  dlspeedk = int(round((dlspeed/1024)*8, 0))
+  ping = int(round(best['latency'], 0))
+  ulspeedk = int(round((ulspeed/1024)*8, 0))
+
+  apiData = [
+    'download=%s' % dlspeedk,
+    'ping=%s' % ping,
+    'upload=%s' % ulspeedk,
+    'promo=',
+    'startmode=%s' % 'pingselect',
+    'recommendedserverid=%s' % best['id'],
+    'accuracy=%s' % 1,
+    'serverid=%s' % best['id'],
+    'hash=%s' % hashlib.md5('%s-%s-%s-%s' % (ping, ulspeedk, dlspeedk, '297aae72')).hexdigest()
+  ]
+
+  req = urllib2.Request('http://www.speedtest.net/api/api.php', data='&'.join(apiData))
+  req.add_header('Referer', 'http://c.speedtest.net/flash/speedtest.swf')
+  f = urllib2.urlopen(req)
+  response = f.read()
+  code = f.getcode()
+  f.close()
+
+  if int(code) != 200:
+    print 'Could not submit results to speedtest.net'
+    sys.exit(1)
+
+  qsargs = urlparse.parse_qs(response)
+  resultid = qsargs.get('resultid')
+  if not resultid or len(resultid) != 1:
+    print 'Could not submit results to speedtest.net'
+    sys.exit(1)
+
+  print 'Share results: http://www.speedtest.net/result/%s.png' % resultid[0]
 
 if __name__ == '__main__':
   speedtest()
+
+# vim:ts=2:sw=2:expandtab
