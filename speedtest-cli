@@ -15,11 +15,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urllib
 import urllib2
-import urlparse
+try:
+    from urlparse import parse_qs
+except ImportError:
+    from cgi import parse_qs
 import math
-import xml.etree.ElementTree as ET
+from xml.dom import minidom as DOM
 import time
 import os
 import sys
@@ -59,7 +61,7 @@ class FileGetter(threading.Thread):
     def run(self):
         try:
             if (time.time() - self.starttime) <= 10:
-                f = urllib.urlopen(self.url)
+                f = urllib2.urlopen(self.url)
                 contents = f.read()
                 f.close()
                 self.result = contents
@@ -113,7 +115,7 @@ class FilePutter(threading.Thread):
     def run(self):
         try:
             if (time.time() - self.starttime) <= 10:
-                f = urllib.urlopen(self.url, self.data)
+                f = urllib2.urlopen(self.url, self.data)
                 contents = f.read()
                 f.close()
                 self.result = self.data
@@ -153,22 +155,29 @@ def uploadSpeed(url, sizes):
     return (len(''.join(finished))/(time.time()-start))
 
 
+def getAttributesByTagName(dom, tagName):
+    elem = dom.getElementsByTagName(tagName)[0]
+    return dict(elem.attributes.items())
+
+
 def getConfig():
     """Download the speedtest.net configuration and return only the data
     we are interested in
     """
 
-    uh = urllib.urlopen('http://www.speedtest.net/speedtest-config.php')
+    uh = urllib2.urlopen('http://www.speedtest.net/speedtest-config.php')
     configxml = uh.read()
-    if int(uh.getcode()) != 200:
+    if int(uh.code) != 200:
         return None
     uh.close()
-    root = ET.fromstring(configxml)
+    root = DOM.parseString(configxml)
     config = {
-        'client': root.find('client').attrib,
-        'times': root.find('times').attrib,
-        'download': root.find('download').attrib,
-        'upload': root.find('upload').attrib}
+        'client': getAttributesByTagName(root, 'client'),
+        'times': getAttributesByTagName(root, 'times'),
+        'download': getAttributesByTagName(root, 'download'),
+        'upload': getAttributesByTagName(root, 'upload')}
+
+    del root
     return config
 
 
@@ -177,17 +186,17 @@ def closestServers(client):
     distance
     """
 
-    uh = urllib.urlopen('http://speedtest.net/speedtest-servers.php')
+    uh = urllib2.urlopen('http://speedtest.net/speedtest-servers.php')
     serversxml = uh.read()
-    if int(uh.getcode()) != 200:
+    if int(uh.code) != 200:
         return None
     uh.close()
-    root = ET.fromstring(serversxml)
+    root = DOM.parseString(serversxml)
     servers = {}
-    for server in root[0]:
+    for server in root.getElementsByTagName('server'):
         d = distance([float(client['lat']), float(client['lon'])],
-                     [float(server.get('lat')), float(server.get('lon'))])
-        servers[d] = server.attrib
+                     [float(server.getAttribute('lat')), float(server.getAttribute('lon'))])
+        servers[d] = dict(server.attributes.items())
 
     closest = []
     for d in sorted(servers.keys())[0:4]:
@@ -208,11 +217,11 @@ def getBestServer(servers):
         cum = 0
         url = os.path.dirname(server['url'])
         for i in xrange(0, 3):
-            uh = urllib.urlopen('%s/latency.txt' % url)
+            uh = urllib2.urlopen('%s/latency.txt' % url)
             start = time.time()
             text = uh.read().strip()
             total = time.time() - start
-            if int(uh.getcode()) == 200 and text == 'test=test':
+            if int(uh.code) == 200 and text == 'test=test':
                 cum += total
             else:
                 cum += 3600
@@ -280,14 +289,14 @@ def speedtest():
     req.add_header('Referer', 'http://c.speedtest.net/flash/speedtest.swf')
     f = urllib2.urlopen(req)
     response = f.read()
-    code = f.getcode()
+    code = f.code
     f.close()
 
     if int(code) != 200:
         print 'Could not submit results to speedtest.net'
         sys.exit(1)
 
-    qsargs = urlparse.parse_qs(response)
+    qsargs = parse_qs(response)
     resultid = qsargs.get('resultid')
     if not resultid or len(resultid) != 1:
         print 'Could not submit results to speedtest.net'
