@@ -197,9 +197,10 @@ def closestServers(client):
     root = DOM.parseString(serversxml)
     servers = {}
     for server in root.getElementsByTagName('server'):
+        attrib = dict(server.attributes.items())
         d = distance([float(client['lat']), float(client['lon'])],
-                     [float(server.getAttribute('lat')), float(server.getAttribute('lon'))])
-        servers[d] = dict(server.attributes.items())
+                     [float(attrib.get('lat')), float(attrib.get('lon'))])
+        servers[d] = attrib
 
     closest = []
     for d in sorted(servers.keys())[0:4]:
