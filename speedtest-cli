@@ -25,7 +25,10 @@ from xml.dom import minidom as DOM
 import time
 import os
 import sys
-import hashlib
+try:
+    from hashlib import md5
+except:
+    from md5 import md5
 import threading
 from Queue import Queue
 
@@ -280,9 +283,9 @@ def speedtest():
         'recommendedserverid=%s' % best['id'],
         'accuracy=%s' % 1,
         'serverid=%s' % best['id'],
-        'hash=%s' % hashlib.md5('%s-%s-%s-%s' %
-                                (ping, ulspeedk, dlspeedk, '297aae72')
-                                ).hexdigest()]
+        'hash=%s' % md5('%s-%s-%s-%s' %
+                        (ping, ulspeedk, dlspeedk, '297aae72')
+                        ).hexdigest()]
 
     req = urllib2.Request('http://www.speedtest.net/api/api.php',
                           data='&'.join(apiData))
