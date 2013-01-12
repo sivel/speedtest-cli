@@ -16,21 +16,21 @@
 #    under the License.
 
 import urllib2
+import math
+import time
+import os
+import sys
+import threading
+from Queue import Queue
+from xml.dom import minidom as DOM
 try:
     from urlparse import parse_qs
 except ImportError:
     from cgi import parse_qs
-import math
-from xml.dom import minidom as DOM
-import time
-import os
-import sys
 try:
     from hashlib import md5
-except:
+except ImportError:
     from md5 import md5
-import threading
-from Queue import Queue
 
 
 def distance(origin, destination):
