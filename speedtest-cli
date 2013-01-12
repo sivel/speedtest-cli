@@ -107,7 +107,9 @@ def downloadSpeed(files):
 class FilePutter(threading.Thread):
     def __init__(self, url, start, size):
         self.url = url
-        self.data = os.urandom(int(size)-len('content1='))
+        data = os.urandom(int(size)).encode('hex')
+        self.data = 'content1=%s' % data[0:int(size)-9]
+        del data
         self.result = None
         self.starttime = start
         threading.Thread.__init__(self)

@@ -25,6 +25,7 @@ import os
 import sys
 import hashlib
 import threading
+import binascii
 from queue import Queue
 
 
@@ -103,7 +104,9 @@ def downloadSpeed(files):
 class FilePutter(threading.Thread):
     def __init__(self, url, start, size):
         self.url = url
-        self.data = os.urandom(int(size)-len('content1='))
+        data = binascii.hexlify(os.urandom(int(size)-9)).decode()
+        self.data = 'content1=%s' % data[0:int(size)-9]
+        del data
         self.result = None
         self.starttime = start
         threading.Thread.__init__(self)
@@ -114,7 +117,7 @@ class FilePutter(threading.Thread):
     def run(self):
         try:
             if (time.time() - self.starttime) <= 10:
-                f = urllib.request.urlopen(self.url, self.data)
+                f = urllib.request.urlopen(self.url, self.data.encode())
                 contents = f.read()
                 f.close()
                 self.result = self.data
