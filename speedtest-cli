@@ -202,11 +202,20 @@ def closestServers(client):
         attrib = dict(server.attributes.items())
         d = distance([float(client['lat']), float(client['lon'])],
                      [float(attrib.get('lat')), float(attrib.get('lon'))])
-        servers[d] = attrib
+        if d not in servers:
+            servers[d] = [attrib]
+        else:
+            servers[d].append(attrib)
 
     closest = []
-    for d in sorted(servers.keys())[0:4]:
-        closest.append(servers[d])
+    for d in sorted(servers.keys()):
+        for s in servers[d]:
+            closest.append(s)
+            if(len(closest) == 5):
+                break
+        else:
+            continue
+        break
 
     del servers
     del root
@@ -235,8 +244,9 @@ def getBestServer(servers):
         avg = round((cum / 3) * 1000000, 3)
         results[avg] = server
 
-    best = results[sorted(results.keys())[0]]
-    best['latency'] = avg
+    fastest = sorted(results.keys())[0]
+    best = results[fastest]
+    best['latency'] = fastest
 
     return best
 
@@ -246,6 +256,9 @@ def speedtest():
 
     print 'Retrieving speedtest.net configuration...'
     config = getConfig()
+
+    client = dict(config['client'].items())
+    print 'Testing IP: %(ip)s from ISP: %(isp)s' % client
 
     print 'Retrieving speedtest.net server list...'
     servers = closestServers(config['client'])
