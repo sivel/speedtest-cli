@@ -23,7 +23,6 @@ import sys
 import threading
 from Queue import Queue
 from xml.dom import minidom as DOM
-from collections import defaultdict
 try:
     from urlparse import parse_qs
 except ImportError:
@@ -204,12 +203,15 @@ def closestServers(client):
         return None
     uh.close()
     root = DOM.parseString(serversxml)
-    servers = defaultdict(list)
+    servers = {}
     for server in root.getElementsByTagName('server'):
         attrib = dict(server.attributes.items())
         d = distance([float(client['lat']), float(client['lon'])],
                      [float(attrib.get('lat')), float(attrib.get('lon'))])
-        servers[d].append(attrib)
+        if d not in servers:
+            servers[d] = [attrib]
+        else:
+            servers[d].append(attrib)
 
     closest = []
     for d in sorted(servers.keys()):
