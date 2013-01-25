@@ -371,6 +371,9 @@ def speedtest():
                resultid[0])
 
 if __name__ == '__main__':
-    speedtest()
+    try:
+        speedtest()
+    except KeyboardInterrupt:
+        print '\nCancelling...'
 
 # vim:ts=4:sw=4:expandtab
