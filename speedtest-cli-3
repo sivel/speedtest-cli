@@ -273,6 +273,10 @@ def speedtest():
     servers = closestServers(config['client'])
 
     if not args.simple:
+        client = dict(config['client'].items())
+        print('Testing From: %(isp)s - %(ip)s' % client)
+
+    if not args.simple:
         print('Selecting best server based on ping...')
     best = getBestServer(servers)
     if not args.simple:
