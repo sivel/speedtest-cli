@@ -181,7 +181,7 @@ def getConfig():
     return config
 
 
-def closestServers(client):
+def closestServers(client, all=False):
     """Determine the 5 closest speedtest.net servers based on geographic
     distance
     """
@@ -196,6 +196,7 @@ def closestServers(client):
     for server in root[0]:
         d = distance([float(client['lat']), float(client['lon'])],
                      [float(server.get('lat')), float(server.get('lon'))])
+        server.attrib['d'] = d
         if d not in servers:
             servers[d] = [server.attrib]
         else:
@@ -205,7 +206,7 @@ def closestServers(client):
     for d in sorted(servers.keys()):
         for s in servers[d]:
             closest.append(s)
-            if(len(closest) == 5):
+            if len(closest) == 5 and not all:
                 break
         else:
             continue
@@ -262,6 +263,10 @@ def speedtest():
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
+    parser.add_argument('--list', action='store_true',
+                        help='Display a list of speedtest.net servers '
+                             'sorted by distance')
+    parser.add_argument('--server', help='Specify a server ID to test against')
     args = parser.parse_args()
 
     if not args.simple:
@@ -270,19 +275,43 @@ def speedtest():
 
     if not args.simple:
         print('Retrieving speedtest.net server list...')
-    servers = closestServers(config['client'])
-
-    if not args.simple:
-        client = dict(config['client'].items())
-        print('Testing From: %(isp)s - %(ip)s' % client)
-
-    if not args.simple:
-        print('Selecting best server based on ping...')
-    best = getBestServer(servers)
-    if not args.simple:
-        print('Hosted by %(sponsor)s (%(name)s): %(latency)sms' % best)
+    #servers = closestServers(config['client'])
+    if args.list or args.server:
+        servers = closestServers(config['client'], True)
+        if args.list:
+            serverList = []
+            for server in servers:
+                line = ('%(id)4s) %(sponsor)s (%(name)s, %(country)s) '
+                        '[%(d)0.2f km]' % server)
+                serverList.append(line)
+            try:
+                print('\n'.join(serverList))
+            except IOError:
+                pass
+            sys.exit(0)
     else:
-        print('Ping: %(latency)sms' % best)
+        servers = closestServers(config['client'])
+
+    if not args.simple:
+        print('Testing from %(isp)s (%(ip)s)...' % config['client'])
+
+    if args.server:
+        try:
+            best = getBestServer(filter(lambda x: x['id'] == args.server,
+                                        servers))
+        except IndexError:
+            print('Invalid server ID')
+            sys.exit(1)
+    else:
+        if not args.simple:
+            print('Selecting best server based on ping...')
+        best = getBestServer(servers)
+
+    if not args.simple:
+        print('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+              '%(latency)s ms' % best)
+    else:
+        print('Ping: %(latency)s ms' % best)
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -307,7 +336,7 @@ def speedtest():
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if not args.simple:
         print()
-    print('Upload speed: %s Mbit/s' % round((ulspeed / 1024 / 1024) * 8, 2))
+    print('Upload: %s Mbit/s' % round((ulspeed / 1024 / 1024) * 8, 2))
 
     if args.share:
         dlspeedk = int(round((dlspeed / 1024) * 8, 0))
