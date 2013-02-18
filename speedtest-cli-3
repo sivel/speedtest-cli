@@ -62,13 +62,18 @@ class FileGetter(threading.Thread):
         try:
             if (time.time() - self.starttime) <= 10:
                 f = urllib.request.urlopen(self.url)
-                contents = f.read()
+                self.result = 0
+                while 1:
+                    contents = f.read(1024)
+                    if contents:
+                        self.result += len(contents)
+                    else:
+                        break
                 f.close()
-                self.result = contents
             else:
-                self.result = ''
+                self.result = 0
         except IOError:
-            self.result = ''
+            self.result = 0
 
 
 def downloadSpeed(files, quiet=False):
@@ -89,8 +94,8 @@ def downloadSpeed(files, quiet=False):
         while len(finished) < total_files:
             thread = q.get(True)
             thread.join()
-            finished.append(len(thread.result))
-            thread.result = ''
+            finished.append(thread.result)
+            thread.result = 0
 
     q = Queue(6)
     start = time.time()
@@ -122,11 +127,11 @@ class FilePutter(threading.Thread):
                 f = urllib.request.urlopen(self.url, self.data.encode())
                 contents = f.read()
                 f.close()
-                self.result = self.data
+                self.result = len(self.data)
             else:
-                self.result = ''
+                self.result = 0
         except IOError:
-            self.result = ''
+            self.result = 0
 
 
 def uploadSpeed(url, sizes, quiet=False):
@@ -147,8 +152,8 @@ def uploadSpeed(url, sizes, quiet=False):
         while len(finished) < total_sizes:
             thread = q.get(True)
             thread.join()
-            finished.append(len(thread.result))
-            thread.result = ''
+            finished.append(thread.result)
+            thread.result = 0
 
     q = Queue(6)
     start = time.time()
@@ -383,4 +388,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('\nCancelling...')
 
-# vim:ts=2:sw=2:expandtab
+# vim:ts=4:sw=4:expandtab
