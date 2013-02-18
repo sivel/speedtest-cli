@@ -89,9 +89,10 @@ def downloadSpeed(files, quiet=False):
         while len(finished) < total_files:
             thread = q.get(True)
             thread.join()
-            finished.append(thread.get_result())
+            finished.append(len(thread.result))
+            thread.result = ''
 
-    q = Queue(3)
+    q = Queue(6)
     start = time.time()
     prod_thread = threading.Thread(target=producer, args=(q, files))
     cons_thread = threading.Thread(target=consumer, args=(q, len(files)))
@@ -99,8 +100,7 @@ def downloadSpeed(files, quiet=False):
     cons_thread.start()
     prod_thread.join()
     cons_thread.join()
-    return (len(b''.join([chunk if isinstance(chunk, bytes) else chunk.encode()
-            for chunk in finished]))/(time.time()-start))
+    return (sum(finished)/(time.time()-start))
 
 
 class FilePutter(threading.Thread):
@@ -147,9 +147,10 @@ def uploadSpeed(url, sizes, quiet=False):
         while len(finished) < total_sizes:
             thread = q.get(True)
             thread.join()
-            finished.append(thread.get_result())
+            finished.append(len(thread.result))
+            thread.result = ''
 
-    q = Queue(9)
+    q = Queue(6)
     start = time.time()
     prod_thread = threading.Thread(target=producer, args=(q, sizes))
     cons_thread = threading.Thread(target=consumer, args=(q, len(sizes)))
@@ -157,8 +158,7 @@ def uploadSpeed(url, sizes, quiet=False):
     cons_thread.start()
     prod_thread.join()
     cons_thread.join()
-    return (len(b''.join([chunk if isinstance(chunk, bytes) else chunk.encode()
-            for chunk in finished]))/(time.time()-start))
+    return (sum(finished)/(time.time()-start))
 
 
 def getConfig():
