@@ -329,9 +329,9 @@ def speedtest():
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print()
-    print('Download: %0.2f Mbit/s' % ((dlspeed / 1024 / 1024) * 8))
+    print('Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8))
 
-    sizesizes = [int(.25 * 1024 * 1024), int(.5 * 1024 * 1024)]
+    sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
     for size in sizesizes:
         for i in range(0, 25):
@@ -341,12 +341,12 @@ def speedtest():
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if not args.simple:
         print()
-    print('Upload: %0.2f Mbit/s' % ((ulspeed / 1024 / 1024) * 8))
+    print('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
 
     if args.share:
-        dlspeedk = int(round((dlspeed / 1024) * 8, 0))
+        dlspeedk = int(round((dlspeed / 1000) * 8, 0))
         ping = int(round(best['latency'], 0))
-        ulspeedk = int(round((ulspeed / 1024) * 8, 0))
+        ulspeedk = int(round((ulspeed / 1000) * 8, 0))
 
         apiData = [
             'download=%s' % dlspeedk,
