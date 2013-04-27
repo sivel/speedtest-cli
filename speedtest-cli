@@ -71,7 +71,7 @@ class FileGetter(threading.Thread):
                 f = urllib2.urlopen(self.url)
                 self.result = 0
                 while 1:
-                    contents = f.read(1024)
+                    contents = f.read(10240)
                     if contents:
                         self.result += len(contents)
                     else:
