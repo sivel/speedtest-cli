@@ -206,6 +206,7 @@ def closestServers(client, all=False):
             servers[d] = [server.attrib]
         else:
             servers[d].append(server.attrib)
+    del root
 
     closest = []
     for d in sorted(servers.keys()):
@@ -218,7 +219,6 @@ def closestServers(client, all=False):
         break
 
     del servers
-    del root
     return closest
 
 
