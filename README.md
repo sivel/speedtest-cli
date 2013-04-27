@@ -11,7 +11,7 @@ speedtest-cli-3 is written for use with Python 3
 ## Usage
 
     $ speedtest-cli -h
-    usage: speedtest-cli [-h] [--share] [--simple] [--list] [--server SERVER]
+    usage: speedtest-cli [-h] [--share] [--simple] [--list] [--bytes] [--server SERVER]
     
     Command line interface for testing internet bandwidth using speedtest.net.
     --------------------------------------------------------------------------
@@ -23,4 +23,5 @@ speedtest-cli-3 is written for use with Python 3
                        results image
       --simple         Suppress verbose output, only show basic information
       --list           Display a list of speedtest.net servers sorted by distance
+      --bytes          Display speeds in MBytes/s (instead of Mbit/s)
       --server SERVER  Specify a server ID to test against
