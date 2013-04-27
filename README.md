@@ -24,4 +24,6 @@ speedtest-cli-3 is written for use with Python 3
       --simple         Suppress verbose output, only show basic information
       --list           Display a list of speedtest.net servers sorted by distance
       --bytes          Display speeds in MBytes/s (instead of Mbit/s)
+      --ib             Use IEC binary prefixes (MiB, etc)
+                       http://en.wikipedia.org/wiki/Binary_prefix
       --server SERVER  Specify a server ID to test against
