@@ -272,6 +272,8 @@ def speedtest():
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
     parser.add_argument('--server', help='Specify a server ID to test against')
+    parser.add_argument('--bytes', action='store_true', help='Show speed in MB per second')
+    parser.add_argument('--ib', action='store_true', help='Use IEC binary prefixes (MiB, etc)')
     args = parser.parse_args()
 
     if not args.simple:
@@ -318,6 +320,15 @@ def speedtest():
     else:
         print('Ping: %(latency)s ms' % best)
 
+    unit = 'bits'
+    size_divisor = 1000
+
+    if args.bytes:
+        unit = 'B'
+    if args.ib:
+        unit = 'i' + unit
+        size_divisor = 1024
+
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
     for size in sizes:
@@ -329,9 +340,13 @@ def speedtest():
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print()
-    print('Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8))
 
-    sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
+    dlspeed = dlspeed / size_divisor / size_divisor
+    if not args.bytes:
+        dlspeed = dlspeed * 8
+    print('Download: %0.2f M%s/s' % (dlspeed, unit))
+
+    sizesizes = [int(.25 * size_divisor * size_divisor), int(.5 * size_divisor * size_divisor)]
     sizes = []
     for size in sizesizes:
         for i in range(0, 25):
@@ -341,8 +356,13 @@ def speedtest():
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if not args.simple:
         print()
-    print('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
 
+    ulspeed = ulspeed / size_divisor / size_divisor
+    if not args.bytes:
+        ulspeed = ulspeed * 8
+    print('Upload: %0.2f M%s/s' % (ulspeed, unit))
+
+    # --ib option does not affect this part
     if args.share:
         dlspeedk = int(round((dlspeed / 1000) * 8, 0))
         ping = int(round(best['latency'], 0))
