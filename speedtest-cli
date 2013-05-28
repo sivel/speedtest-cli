@@ -204,7 +204,7 @@ def closestServers(client, all=False):
     distance
     """
 
-    uh = urllib2.urlopen('http://speedtest.net/speedtest-servers.php')
+    uh = urllib2.urlopen('http://www.speedtest.net/speedtest-servers.php')
     serversxml = uh.read()
     if int(uh.code) != 200:
         return None
