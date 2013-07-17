@@ -286,6 +286,8 @@ def speedtest():
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
+    parser.add_argument('--json', action='store_true',
+                        help='Output json. Implies --simple')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
@@ -297,6 +299,11 @@ def speedtest():
     else:
         args = options
     del options
+
+    if args.json:
+        import json
+        args.simple = True
+        output = {}
 
     if not args.simple:
         print 'Retrieving speedtest.net configuration...'
@@ -339,7 +346,10 @@ def speedtest():
         print ('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                '%(latency)s ms' % best)
     else:
-        print 'Ping: %(latency)s ms' % best
+        if args.json:
+            output["server"] = best
+        else:
+            print 'Ping: %(latency)s ms' % best
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -352,7 +362,11 @@ def speedtest():
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print
-    print 'Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8)
+    if args.json:
+        output["download_raw"] = round(dlspeed, 2)
+        output["download_mbit"] = round(((dlspeed / 1000 / 1000) * 8), 2)
+    else:
+        print 'Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8)
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -364,7 +378,14 @@ def speedtest():
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if not args.simple:
         print
-    print 'Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8)
+    if args.json:
+        output["upload_raw"] = round(ulspeed, 2)
+        output["upload_mbit"] = round(((ulspeed / 1000 / 1000) * 8), 2)
+    else:
+        print 'Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8)
+
+    if args.json:
+        print json.dumps(output)
 
     if args.share:
         dlspeedk = int(round((dlspeed / 1000) * 8, 0))
