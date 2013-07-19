@@ -84,11 +84,12 @@ class FileGetter(threading.Thread):
 
 
 def show_progress( count, total ):
-    status = " %d out of %d files" % ( count, total )
-    sys.stdout.write( status )
-    if ( count < total ):
-        sys.stdout.write( '\b' * len( status ) )
-    sys.stdout.flush( )
+    if not quiet:
+        status = " %d out of %d files" % ( count, total )
+        sys.stdout.write( status )
+        if ( count < total ):
+            sys.stdout.write( '\b' * len( status ) )
+        sys.stdout.flush( )
 
 def downloadSpeed(files, quiet=False):
     start = time.time()
