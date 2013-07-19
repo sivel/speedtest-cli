@@ -85,7 +85,7 @@ class FileGetter(threading.Thread):
 
 def show_progress( count, total ):
     if not quiet:
-        status = " %d out of %d files" % ( count, total )
+        status = "[ %d out of %d files ]" % ( count, total )
         sys.stdout.write( status )
         if ( count < total ):
             sys.stdout.write( '\b' * len( status ) )
