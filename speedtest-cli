@@ -26,12 +26,18 @@ import os
 import sys
 import threading
 import binascii
+import re
 from xml.dom import minidom as DOM
 
 try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
+
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
 
 try:
     from urlparse import parse_qs
@@ -50,7 +56,6 @@ try:
     from argparse import ArgumentParser as ArgParser
 except ImportError:
     from optparse import OptionParser as ArgParser
-
 
 try:
     import builtins
@@ -362,6 +367,7 @@ def speedtest():
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
     parser.add_argument('--server', help='Specify a server ID to test against')
+    parser.add_argument('--mini', help='URL of the Speedtest Mini server')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
@@ -402,6 +408,37 @@ def speedtest():
         except IndexError:
             print_('Invalid server ID')
             sys.exit(1)
+    if args.mini:
+        name, ext = os.path.splitext(args.mini)
+        if ext:
+            url = os.path.dirname(args.mini)
+        else:
+            url = args.mini
+        urlparts = urlparse(url)
+        try:
+            f = urlopen(args.mini)
+        except:
+            print_('Invalid Speedtest Mini URL')
+            sys.exit(1)
+        else:
+            text = f.read()
+            f.close()
+        extension = re.findall('upload_extension: "([^"]+)"', text.decode())
+        if not urlparts or not extension:
+            print_('Please provide the full URL of your Speedtest Mini server')
+            sys.exit(1)
+        servers = [{
+            'sponsor': 'Speedtest Mini',
+            'name': urlparts[1],
+            'd': 0,
+            'url': '%s/speedtest/upload.%s' % (url.rstrip('/'), extension[0]),
+            'latency': 0,
+            'id': 0
+        }]
+        try:
+            best = getBestServer(servers)
+        except:
+            best = servers[0]
     else:
         if not args.simple:
             print_('Selecting best server based on ping...')
@@ -438,7 +475,10 @@ def speedtest():
         print_()
     print_('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
 
-    if args.share:
+    if args.share and args.mini:
+        print_('Cannot generate a speedtest.net share results image while '
+               'testing against a Speedtest Mini server')
+    elif args.share:
         dlspeedk = int(round((dlspeed / 1000) * 8, 0))
         ping = int(round(best['latency'], 0))
         ulspeedk = int(round((ulspeed / 1000) * 8, 0))
