@@ -4,9 +4,8 @@ Command line interface for testing internet bandwidth using speedtest.net
 
 ## Versions
 
-speedtest-cli is written for use with Python 2.4-2.7
+speedtest-cli works with Python 2.4-3.3
 
-speedtest-cli-3 is written for use with Python 3
 
 ## Usage
 
