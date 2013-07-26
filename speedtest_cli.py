@@ -517,10 +517,14 @@ def speedtest():
         print_('Share results: http://www.speedtest.net/result/%s.png' %
                resultid[0])
 
-if __name__ == '__main__':
+
+def main():
     try:
         speedtest()
     except KeyboardInterrupt:
         print_('\nCancelling...')
+
+if __name__ == '__main__':
+    main()
 
 # vim:ts=4:sw=4:expandtab
