@@ -441,9 +441,9 @@ def speedtest():
         except:
             best = servers[0]
     else:
-        if not args.simple:
-            print_('Selecting best server based on ping...')
         if best is None:
+            if not args.simple:
+                print_('Selecting best server based on ping...')
             best = getBestServer(servers)
 
     if not args.simple:
