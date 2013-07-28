@@ -160,6 +160,14 @@ class FileGetter(threading.Thread):
             self.result = 0
 
 
+def show_progress( count, total ):
+    if not quiet:
+        status = "[ %d out of %d files ]" % ( count, total )
+        sys.stdout.write( status )
+        if ( count < total ):
+            sys.stdout.write( '\b' * len( status ) )
+        sys.stdout.flush( )
+
 def downloadSpeed(files, quiet=False):
     start = time.time()
 
@@ -168,17 +176,16 @@ def downloadSpeed(files, quiet=False):
             thread = FileGetter(file, start)
             thread.start()
             q.put(thread, True)
-            if not quiet:
-                sys.stdout.write('.')
-                sys.stdout.flush()
 
     finished = []
 
     def consumer(q, total_files):
+        show_progress( len( finished ), total_files )
         while len(finished) < total_files:
             thread = q.get(True)
             thread.join()
             finished.append(thread.result)
+            show_progress( len( finished ), total_files )
             thread.result = 0
 
     q = Queue(6)
@@ -226,17 +233,16 @@ def uploadSpeed(url, sizes, quiet=False):
             thread = FilePutter(url, start, size)
             thread.start()
             q.put(thread, True)
-            if not quiet:
-                sys.stdout.write('.')
-                sys.stdout.flush()
 
     finished = []
 
     def consumer(q, total_sizes):
+        show_progress( len( finished ), total_sizes )
         while len(finished) < total_sizes:
             thread = q.get(True)
             thread.join()
             finished.append(thread.result)
+            show_progress( len( finished ), total_sizes )
             thread.result = 0
 
     q = Queue(6)
