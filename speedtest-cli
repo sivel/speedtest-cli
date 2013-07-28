@@ -408,7 +408,7 @@ def speedtest():
         except IndexError:
             print_('Invalid server ID')
             sys.exit(1)
-    if args.mini:
+    elif args.mini:
         name, ext = os.path.splitext(args.mini)
         if ext:
             url = os.path.dirname(args.mini)
