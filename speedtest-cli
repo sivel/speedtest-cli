@@ -401,6 +401,7 @@ def speedtest():
     if not args.simple:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
 
+    best = None
     if args.server:
         try:
             best = getBestServer(filter(lambda x: x['id'] == args.server,
@@ -440,9 +441,10 @@ def speedtest():
         except:
             best = servers[0]
     else:
-        if not args.simple:
-            print_('Selecting best server based on ping...')
-        best = getBestServer(servers)
+        if best is None:
+            if not args.simple:
+                print_('Selecting best server based on ping...')
+            best = getBestServer(servers)
 
     if not args.simple:
         print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
