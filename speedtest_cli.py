@@ -25,7 +25,6 @@ import time
 import os
 import sys
 import threading
-import binascii
 import re
 from xml.dom import minidom as DOM
 
@@ -143,21 +142,17 @@ class FileGetter(threading.Thread):
         return self.result
 
     def run(self):
+        self.result = [0]
         try:
             if (time.time() - self.starttime) <= 10:
                 f = urlopen(self.url)
-                self.result = 0
                 while 1:
-                    contents = f.read(10240)
-                    if contents:
-                        self.result += len(contents)
-                    else:
+                    self.result.append(len(f.read(10240)))
+                    if self.result[-1] == 0:
                         break
                 f.close()
-            else:
-                self.result = 0
         except IOError:
-            self.result = 0
+            pass
 
 
 def downloadSpeed(files, quiet=False):
@@ -178,8 +173,8 @@ def downloadSpeed(files, quiet=False):
         while len(finished) < total_files:
             thread = q.get(True)
             thread.join()
-            finished.append(thread.result)
-            thread.result = 0
+            finished.append(sum(thread.result))
+            del thread
 
     q = Queue(6)
     start = time.time()
@@ -195,7 +190,8 @@ def downloadSpeed(files, quiet=False):
 class FilePutter(threading.Thread):
     def __init__(self, url, start, size):
         self.url = url
-        data = binascii.hexlify(os.urandom(int(size)-9)).decode()
+        chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        data = chars * (int(round(int(size) / 36.0)))
         self.data = ('content1=%s' % data[0:int(size)-9]).encode()
         del data
         self.result = None
@@ -237,7 +233,7 @@ def uploadSpeed(url, sizes, quiet=False):
             thread = q.get(True)
             thread.join()
             finished.append(thread.result)
-            thread.result = 0
+            del thread
 
     q = Queue(6)
     start = time.time()
