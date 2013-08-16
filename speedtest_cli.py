@@ -316,19 +316,24 @@ def getBestServer(servers):
 
     results = {}
     for server in servers:
-        cum = 0
         url = os.path.dirname(server['url'])
-        for i in range(0, 3):
-            uh = urlopen('%s/latency.txt' % url)
-            start = time.time()
-            text = uh.read().strip()
-            total = time.time() - start
-            if int(uh.code) == 200 and text == 'test=test'.encode():
-                cum += total
-            else:
-                cum += 3600
-            uh.close()
-        avg = round((cum / 3) * 1000000, 3)
+        if os.name == 'posix':
+            cmd = 'ping -c 3 ' + url.split('/')[2] + ' | tail -n 1'
+            pingoutput = os.popen(cmd).read()
+            avg = pingoutput.split('/')[4]
+        else:
+            cum = 0
+            for i in range(0, 3):
+                uh = urlopen('%s/latency.txt' % url)
+                start = time.time()
+                text = uh.read().strip()
+                total = time.time() - start
+                if int(uh.code) == 200 and text == 'test=test'.encode():
+                    cum += total
+                else:
+                    cum += 3600
+                uh.close()
+            avg = round((cum / 3) * 1000000, 3)
         results[avg] = server
 
     fastest = sorted(results.keys())[0]
