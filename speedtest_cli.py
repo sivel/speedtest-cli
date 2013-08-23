@@ -321,7 +321,7 @@ def getBestServer(servers):
         for i in range(0, 3):
             uh = urlopen('%s/latency.txt' % url)
             start = time.time()
-            text = uh.read(9).strip()
+            text = uh.read(9)
             total = time.time() - start
             if int(uh.code) == 200 and text == 'test=test'.encode():
                 cum.append(total)
