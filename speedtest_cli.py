@@ -316,19 +316,19 @@ def getBestServer(servers):
 
     results = {}
     for server in servers:
-        cum = 0
+        cum = []
         url = os.path.dirname(server['url'])
         for i in range(0, 3):
             uh = urlopen('%s/latency.txt' % url)
             start = time.time()
-            text = uh.read().strip()
+            text = uh.read(9).strip()
             total = time.time() - start
             if int(uh.code) == 200 and text == 'test=test'.encode():
-                cum += total
+                cum.append(total)
             else:
-                cum += 3600
+                cum.append(3600)
             uh.close()
-        avg = round((cum / 3) * 1000000, 3)
+        avg = round((sum(cum) / 3) * 1000000, 3)
         results[avg] = server
 
     fastest = sorted(results.keys())[0]
