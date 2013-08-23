@@ -205,7 +205,7 @@ class FilePutter(threading.Thread):
         try:
             if (time.time() - self.starttime) <= 10:
                 f = urlopen(self.url, self.data)
-                contents = f.read()
+                f.read(11)
                 f.close()
                 self.result = len(self.data)
             else:
