@@ -30,14 +30,14 @@ python speedtest-cli/setup.py
 ### Just download (just like the way it was)
 
 ```shell
-wget -O speedtest-cli https://github.com/sivel/speedtest-cli/raw/master/speedtest_cli.py
+wget -O speedtest-cli https://raw.github.com/sivel/speedtest-cli/master/speedtest_cli.py
 chmod +x speedtest-cli
 ```
 
 or
 
 ```shell
-curl -o speedtest-cli https://github.com/sivel/speedtest-cli/raw/master/speedtest_cli.py
+curl -o speedtest-cli https://raw.github.com/sivel/speedtest-cli/master/speedtest_cli.py
 chmod +x speedtest-cli
 ```
 
