@@ -26,6 +26,7 @@ import os
 import sys
 import threading
 import re
+import signal
 from xml.dom import minidom as DOM
 
 try:
@@ -138,15 +139,12 @@ class FileGetter(threading.Thread):
         self.starttime = start
         threading.Thread.__init__(self)
 
-    def get_result(self):
-        return self.result
-
     def run(self):
         self.result = [0]
         try:
             if (time.time() - self.starttime) <= 10:
                 f = urlopen(self.url)
-                while 1:
+                while 1 and not shutdown_event.is_set():
                     self.result.append(len(f.read(10240)))
                     if self.result[-1] == 0:
                         break
@@ -163,7 +161,7 @@ def downloadSpeed(files, quiet=False):
             thread = FileGetter(file, start)
             thread.start()
             q.put(thread, True)
-            if not quiet:
+            if not quiet and not shutdown_event.is_set():
                 sys.stdout.write('.')
                 sys.stdout.flush()
 
@@ -172,18 +170,21 @@ def downloadSpeed(files, quiet=False):
     def consumer(q, total_files):
         while len(finished) < total_files:
             thread = q.get(True)
-            thread.join()
+            while thread.is_alive():
+                thread.join(timeout=0.1)
             finished.append(sum(thread.result))
             del thread
 
     q = Queue(6)
-    start = time.time()
     prod_thread = threading.Thread(target=producer, args=(q, files))
     cons_thread = threading.Thread(target=consumer, args=(q, len(files)))
+    start = time.time()
     prod_thread.start()
     cons_thread.start()
-    prod_thread.join()
-    cons_thread.join()
+    while prod_thread.is_alive():
+        prod_thread.join(timeout=0.1)
+    while cons_thread.is_alive():
+        cons_thread.join(timeout=0.1)
     return (sum(finished)/(time.time()-start))
 
 
@@ -198,12 +199,10 @@ class FilePutter(threading.Thread):
         self.starttime = start
         threading.Thread.__init__(self)
 
-    def get_result(self):
-        return self.result
-
     def run(self):
         try:
-            if (time.time() - self.starttime) <= 10:
+            if ((time.time() - self.starttime) <= 10 and
+                    not shutdown_event.is_set()):
                 f = urlopen(self.url, self.data)
                 f.read(11)
                 f.close()
@@ -222,7 +221,7 @@ def uploadSpeed(url, sizes, quiet=False):
             thread = FilePutter(url, start, size)
             thread.start()
             q.put(thread, True)
-            if not quiet:
+            if not quiet and not shutdown_event.is_set():
                 sys.stdout.write('.')
                 sys.stdout.flush()
 
@@ -231,18 +230,21 @@ def uploadSpeed(url, sizes, quiet=False):
     def consumer(q, total_sizes):
         while len(finished) < total_sizes:
             thread = q.get(True)
-            thread.join()
+            while thread.is_alive():
+                thread.join(timeout=0.1)
             finished.append(thread.result)
             del thread
 
     q = Queue(6)
-    start = time.time()
     prod_thread = threading.Thread(target=producer, args=(q, sizes))
     cons_thread = threading.Thread(target=consumer, args=(q, len(sizes)))
+    start = time.time()
     prod_thread.start()
     cons_thread.start()
-    prod_thread.join()
-    cons_thread.join()
+    while prod_thread.is_alive():
+        prod_thread.join(timeout=0.1)
+    while cons_thread.is_alive():
+        cons_thread.join(timeout=0.1)
     return (sum(finished)/(time.time()-start))
 
 
@@ -338,8 +340,19 @@ def getBestServer(servers):
     return best
 
 
+def ctrl_c(signum, frame):
+    global shutdown_event
+    shutdown_event.set()
+    raise SystemExit('\nCancelling...')
+
+
 def speedtest():
     """Run the full speedtest.net test"""
+
+    global shutdown_event
+    shutdown_event = threading.Event()
+
+    signal.signal(signal.SIGINT, ctrl_c)
 
     description = (
         'Command line interface for testing internet bandwidth using '
