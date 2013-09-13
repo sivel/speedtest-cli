@@ -24,3 +24,4 @@ speedtest-cli-3 is written for use with Python 3
       --simple         Suppress verbose output, only show basic information
       --list           Display a list of speedtest.net servers sorted by distance
       --server SERVER  Specify a server ID to test against
+      --json           Get results in json format with no status output (python 2.x only)
