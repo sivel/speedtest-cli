@@ -18,5 +18,11 @@ setuptools.setup(
             'speedtest=speedtest_cli:main',
             'speedtest-cli=speedtest_cli:main'
         ]
-    }
+    },
+    classifiers=[
+        'Programming Language :: Python',
+        'Environment :: Console',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: OS Independent'
+    ]
 )
