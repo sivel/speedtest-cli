@@ -27,7 +27,7 @@ git clone https://github.com/sivel/speedtest-cli.git
 python speedtest-cli/setup.py
 ```
 
-### Just download (just like the way it was)
+### Just download (Like the way it used to be)
 
 ```shell
 wget -O speedtest-cli https://raw.github.com/sivel/speedtest-cli/master/speedtest_cli.py

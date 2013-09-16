@@ -7,6 +7,7 @@ setuptools.setup(
     version='0.2.1',
     description=('Command line interface for testing internet bandwidth using '
                  'speedtest.net'),
+    long_description=open('README.rst').read(),
     author='Matt Martz',
     author_email='matt@sivel.net',
     url='https://github.com/sivel/speedtest-cli',
