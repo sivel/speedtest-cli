@@ -15,6 +15,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+__version__ = '0.2.1'
+
 try:
     from urllib2 import urlopen, Request
 except ImportError:
@@ -346,6 +348,10 @@ def ctrl_c(signum, frame):
     raise SystemExit('\nCancelling...')
 
 
+def version():
+    raise SystemExit(__version__)
+
+
 def speedtest():
     """Run the full speedtest.net test"""
 
@@ -377,6 +383,8 @@ def speedtest():
                              'sorted by distance')
     parser.add_argument('--server', help='Specify a server ID to test against')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
+    parser.add_argument('--version', action='store_true',
+                        help='Show the version number and exit')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
@@ -384,6 +392,9 @@ def speedtest():
     else:
         args = options
     del options
+
+    if args.version:
+        version()
 
     if not args.simple:
         print_('Retrieving speedtest.net configuration...')
