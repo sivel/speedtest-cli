@@ -1,0 +1,21 @@
+Source: speedtest-cli
+Section: python
+Priority: optional
+Maintainer: Christoph Korn <christoph.korn@getdeb.net>
+Build-Depends: debhelper (>= 9),
+               python-setuptools (>= 0.6b3),
+               python-all (>= 2.6.6-3), 
+Standards-Version: 3.9.4
+Homepage: https://github.com/sivel/speedtest-cli
+Vcs-Git: https://github.com/sivel/speedtest-cli.git
+Vcs-Browser: https://github.com/sivel/speedtest-cli
+
+Package: python-speedtest-cli
+Architecture: all
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         ${python:Depends}
+Provides: ${python:Provides}
+X-Python-Version: ${python:Versions}
+Description: Tests internet bandwidth using speedtest.net (CLI)
+ Command line interface for testing internet bandwidth using speedtest.net

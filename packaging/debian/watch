@@ -1,0 +1,3 @@
+version=3
+https://github.com/sivel/speedtest-cli/tags \
+    (?:.*/)?archive/v([\d\.]+)\.tar\.(?:gz|bz2|xz)
