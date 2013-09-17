@@ -24,7 +24,7 @@ or
 
 ```shell
 git clone https://github.com/sivel/speedtest-cli.git
-python speedtest-cli/setup.py
+python speedtest-cli/setup.py install
 ```
 
 ### Just download (Like the way it used to be)
