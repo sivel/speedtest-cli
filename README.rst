@@ -4,8 +4,10 @@ speedtest-cli
 Command line interface for testing internet bandwidth using
 speedtest.net
 
-`|image0| <https://crate.io/package/speedtest-cli>`_
-`|image1| <https://crate.io/package/speedtest-cli>`_
+.. image:: https://pypip.in/v/speedtest-cli/badge.png
+        :target: https://crate.io/package/speedtest-cli
+.. image:: https://pypip.in/d/speedtest-cli/badge.png
+        :target: https://crate.io/package/speedtest-cli
 
 Versions
 --------
@@ -79,5 +81,3 @@ Usage
       --server SERVER  Specify a server ID to test against
       --mini MINI      URL of the Speedtest Mini server
 
-.. |image0| image:: https://pypip.in/v/speedtest-cli/badge.png
-.. |image1| image:: https://pypip.in/d/speedtest-cli/badge.png
