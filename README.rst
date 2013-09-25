@@ -5,9 +5,9 @@ Command line interface for testing internet bandwidth using
 speedtest.net
 
 .. image:: https://pypip.in/v/speedtest-cli/badge.png
-        :target: https://crate.io/package/speedtest-cli
+        :target: https://crate.io/packages/speedtest-cli
 .. image:: https://pypip.in/d/speedtest-cli/badge.png
-        :target: https://crate.io/package/speedtest-cli
+        :target: https://crate.io/packages/speedtest-cli
 
 Versions
 --------
