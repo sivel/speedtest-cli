@@ -4,6 +4,9 @@ speedtest-cli
 Command line interface for testing internet bandwidth using
 speedtest.net
 
+`|Version| <https://crate.io/package/speedtest-cli>`_
+`|Downloads| <https://crate.io/package/speedtest-cli>`_
+
 Versions
 --------
 
@@ -15,16 +18,22 @@ Installation
 pip / easy\_install
 ~~~~~~~~~~~~~~~~~~~
 
-``pip install speedtest-cli``
+::
+
+    pip install speedtest-cli
 
 or
 
-``easy_install speedtest-cli``
+::
+
+    easy_install speedtest-cli
 
 Github
 ~~~~~~
 
-``pip install git+https://github.com/sivel/speedtest-cli.git``
+::
+
+    pip install git+https://github.com/sivel/speedtest-cli.git
 
 or
 
@@ -70,3 +79,5 @@ Usage
       --server SERVER  Specify a server ID to test against
       --mini MINI      URL of the Speedtest Mini server
 
+.. |Version| image:: https://pypip.in/v/speedtest-cli/badge.png
+.. |Downloads| image:: https://pypip.in/d/speedtest-cli/badge.png

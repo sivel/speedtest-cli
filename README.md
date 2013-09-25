@@ -2,6 +2,9 @@
 
 Command line interface for testing internet bandwidth using speedtest.net
 
+[![Version](https://pypip.in/v/speedtest-cli/badge.png)](https://crate.io/package/speedtest-cli)
+[![Downloads](https://pypip.in/d/speedtest-cli/badge.png)](https://crate.io/package/speedtest-cli)
+
 ## Versions
 
 speedtest-cli works with Python 2.4-3.3
@@ -10,15 +13,21 @@ speedtest-cli works with Python 2.4-3.3
 
 ### pip / easy_install
 
-`pip install speedtest-cli`
+```shell
+pip install speedtest-cli
+```
 
 or
 
-`easy_install speedtest-cli`
+```shell
+easy_install speedtest-cli
+```
 
 ### Github
 
-`pip install git+https://github.com/sivel/speedtest-cli.git`
+```shell
+pip install git+https://github.com/sivel/speedtest-cli.git
+```
 
 or
 
