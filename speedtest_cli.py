@@ -382,6 +382,8 @@ def speedtest():
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
     parser.add_argument('--server', help='Specify a server ID to test against')
+    parser.add_argument('--loc', type=float, nargs=2, metavar=('lat', 'lon'),
+                        help='Specify own location')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
@@ -399,6 +401,10 @@ def speedtest():
     if not args.simple:
         print_('Retrieving speedtest.net configuration...')
     config = getConfig()
+
+    if args.loc:
+        config['client']['lat'] = args.loc[0]
+        config['client']['lon'] = args.loc[1]
 
     if not args.simple:
         print_('Retrieving speedtest.net server list...')
