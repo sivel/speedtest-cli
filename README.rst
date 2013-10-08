@@ -66,7 +66,7 @@ Usage
 
     $ speedtest-cli -h
     usage: speedtest-cli [-h] [--share] [--simple] [--list] [--server SERVER]
-                         [--mini MINI]
+                         [--mini MINI] [--version]
 
     Command line interface for testing internet bandwidth using speedtest.net.
     --------------------------------------------------------------------------
@@ -80,4 +80,5 @@ Usage
       --list           Display a list of speedtest.net servers sorted by distance
       --server SERVER  Specify a server ID to test against
       --mini MINI      URL of the Speedtest Mini server
+      --version        Show the version number and exit
 
