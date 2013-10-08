@@ -146,7 +146,7 @@ class FileGetter(threading.Thread):
         try:
             if (time.time() - self.starttime) <= 10:
                 f = urlopen(self.url)
-                while 1 and not shutdown_event.is_set():
+                while 1 and not shutdown_event.isSet():
                     self.result.append(len(f.read(10240)))
                     if self.result[-1] == 0:
                         break
@@ -163,7 +163,7 @@ def downloadSpeed(files, quiet=False):
             thread = FileGetter(file, start)
             thread.start()
             q.put(thread, True)
-            if not quiet and not shutdown_event.is_set():
+            if not quiet and not shutdown_event.isSet():
                 sys.stdout.write('.')
                 sys.stdout.flush()
 
@@ -172,7 +172,7 @@ def downloadSpeed(files, quiet=False):
     def consumer(q, total_files):
         while len(finished) < total_files:
             thread = q.get(True)
-            while thread.is_alive():
+            while thread.isAlive():
                 thread.join(timeout=0.1)
             finished.append(sum(thread.result))
             del thread
@@ -183,9 +183,9 @@ def downloadSpeed(files, quiet=False):
     start = time.time()
     prod_thread.start()
     cons_thread.start()
-    while prod_thread.is_alive():
+    while prod_thread.isAlive():
         prod_thread.join(timeout=0.1)
-    while cons_thread.is_alive():
+    while cons_thread.isAlive():
         cons_thread.join(timeout=0.1)
     return (sum(finished)/(time.time()-start))
 
@@ -204,7 +204,7 @@ class FilePutter(threading.Thread):
     def run(self):
         try:
             if ((time.time() - self.starttime) <= 10 and
-                    not shutdown_event.is_set()):
+                    not shutdown_event.isSet()):
                 f = urlopen(self.url, self.data)
                 f.read(11)
                 f.close()
@@ -223,7 +223,7 @@ def uploadSpeed(url, sizes, quiet=False):
             thread = FilePutter(url, start, size)
             thread.start()
             q.put(thread, True)
-            if not quiet and not shutdown_event.is_set():
+            if not quiet and not shutdown_event.isSet():
                 sys.stdout.write('.')
                 sys.stdout.flush()
 
@@ -232,7 +232,7 @@ def uploadSpeed(url, sizes, quiet=False):
     def consumer(q, total_sizes):
         while len(finished) < total_sizes:
             thread = q.get(True)
-            while thread.is_alive():
+            while thread.isAlive():
                 thread.join(timeout=0.1)
             finished.append(thread.result)
             del thread
@@ -243,9 +243,9 @@ def uploadSpeed(url, sizes, quiet=False):
     start = time.time()
     prod_thread.start()
     cons_thread.start()
-    while prod_thread.is_alive():
+    while prod_thread.isAlive():
         prod_thread.join(timeout=0.1)
-    while cons_thread.is_alive():
+    while cons_thread.isAlive():
         cons_thread.join(timeout=0.1)
     return (sum(finished)/(time.time()-start))
 
