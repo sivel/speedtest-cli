@@ -123,8 +123,8 @@ def distance(origin, destination):
     lat2, lon2 = destination
     radius = 6371  # km
 
-    dlat = math.radians(lat2-lat1)
-    dlon = math.radians(lon2-lon1)
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
     a = (math.sin(dlat / 2) * math.sin(dlat / 2) + math.cos(math.radians(lat1))
          * math.cos(math.radians(lat2)) * math.sin(dlon / 2)
          * math.sin(dlon / 2))
@@ -187,7 +187,7 @@ def downloadSpeed(files, quiet=False):
         prod_thread.join(timeout=0.1)
     while cons_thread.is_alive():
         cons_thread.join(timeout=0.1)
-    return (sum(finished)/(time.time()-start))
+    return (sum(finished) / (time.time() - start))
 
 
 class FilePutter(threading.Thread):
@@ -195,7 +195,7 @@ class FilePutter(threading.Thread):
         self.url = url
         chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         data = chars * (int(round(int(size) / 36.0)))
-        self.data = ('content1=%s' % data[0:int(size)-9]).encode()
+        self.data = ('content1=%s' % data[0:int(size) - 9]).encode()
         del data
         self.result = None
         self.starttime = start
@@ -247,7 +247,7 @@ def uploadSpeed(url, sizes, quiet=False):
         prod_thread.join(timeout=0.1)
     while cons_thread.is_alive():
         cons_thread.join(timeout=0.1)
-    return (sum(finished)/(time.time()-start))
+    return (sum(finished) / (time.time() - start))
 
 
 def getAttributesByTagName(dom, tagName):
@@ -543,6 +543,7 @@ def main():
         speedtest()
     except KeyboardInterrupt:
         print_('\nCancelling...')
+
 
 if __name__ == '__main__':
     main()
