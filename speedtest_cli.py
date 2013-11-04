@@ -18,9 +18,9 @@
 __version__ = '0.2.2'
 
 try:
-    from urllib2 import urlopen, Request
+    from urllib2 import urlopen, Request, HTTPError
 except ImportError:
-    from urllib.request import urlopen, Request
+    from urllib.request import urlopen, Request, HTTPError
 
 import math
 import time
@@ -323,7 +323,11 @@ def getBestServer(servers):
         cum = []
         url = os.path.dirname(server['url'])
         for i in range(0, 3):
-            uh = urlopen('%s/latency.txt' % url)
+            try:
+                uh = urlopen('%s/latency.txt' % url)
+            except HTTPError:
+                cum.append(3600)
+                continue
             start = time.time()
             text = uh.read(9)
             total = time.time() - start
