@@ -18,9 +18,9 @@
 __version__ = '0.2.2'
 
 try:
-    from urllib2 import urlopen, Request, HTTPError
+    from urllib2 import urlopen, Request, HTTPError, URLError
 except ImportError:
-    from urllib.request import urlopen, Request, HTTPError
+    from urllib.request import urlopen, Request, HTTPError, URLError
 
 import math
 import time
@@ -29,6 +29,11 @@ import sys
 import threading
 import re
 import signal
+import socket
+
+# Used for bound_interface
+socket_socket = socket.socket
+
 from xml.dom import minidom as DOM
 
 try:
@@ -114,6 +119,15 @@ except ImportError:
 else:
     print_ = getattr(builtins, 'print')
     del builtins
+
+
+def bound_socket(*args, **kwargs):
+    """Bind socket to a specified source IP address"""
+
+    global source
+    sock = socket_socket(*args, **kwargs)
+    sock.bind((source, 0))
+    return sock
 
 
 def distance(origin, destination):
@@ -359,7 +373,7 @@ def version():
 def speedtest():
     """Run the full speedtest.net test"""
 
-    global shutdown_event
+    global shutdown_event, source
     shutdown_event = threading.Event()
 
     signal.signal(signal.SIGINT, ctrl_c)
@@ -387,6 +401,7 @@ def speedtest():
                              'sorted by distance')
     parser.add_argument('--server', help='Specify a server ID to test against')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
+    parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -400,9 +415,17 @@ def speedtest():
     if args.version:
         version()
 
+    if args.source:
+        source = args.source
+        socket.socket = bound_socket
+
     if not args.simple:
         print_('Retrieving speedtest.net configuration...')
-    config = getConfig()
+    try:
+        config = getConfig()
+    except URLError:
+        print_('Cannot retrieve speedtest configuration')
+        sys.exit(1)
 
     if not args.simple:
         print_('Retrieving speedtest.net server list...')
