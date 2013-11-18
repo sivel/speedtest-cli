@@ -17,6 +17,10 @@
 
 __version__ = '0.2.2'
 
+# Some global variables we use
+source = None
+shutdown_event = None
+
 try:
     from urllib2 import urlopen, Request, HTTPError, URLError
 except ImportError:
