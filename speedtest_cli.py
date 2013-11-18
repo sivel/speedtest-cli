@@ -21,11 +21,6 @@ __version__ = '0.2.2'
 source = None
 shutdown_event = None
 
-try:
-    from urllib2 import urlopen, Request, HTTPError, URLError
-except ImportError:
-    from urllib.request import urlopen, Request, HTTPError, URLError
-
 import math
 import time
 import os
@@ -39,6 +34,12 @@ import socket
 socket_socket = socket.socket
 
 from xml.dom import minidom as DOM
+
+# Begin import game to handle Python 2 and Python 3
+try:
+    from urllib2 import urlopen, Request, HTTPError, URLError
+except ImportError:
+    from urllib.request import urlopen, Request, HTTPError, URLError
 
 try:
     from Queue import Queue
@@ -153,6 +154,8 @@ def distance(origin, destination):
 
 
 class FileGetter(threading.Thread):
+    """Thread class for retrieving a URL"""
+
     def __init__(self, url, start):
         self.url = url
         self.result = None
@@ -174,6 +177,8 @@ class FileGetter(threading.Thread):
 
 
 def downloadSpeed(files, quiet=False):
+    """Function to launch FileGetter threads and calculate download speeds"""
+
     start = time.time()
 
     def producer(q, files):
@@ -209,6 +214,8 @@ def downloadSpeed(files, quiet=False):
 
 
 class FilePutter(threading.Thread):
+    """Thread class for putting a URL"""
+
     def __init__(self, url, start, size):
         self.url = url
         chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -234,6 +241,8 @@ class FilePutter(threading.Thread):
 
 
 def uploadSpeed(url, sizes, quiet=False):
+    """Function to launch FilePutter threads and calculate upload speeds"""
+
     start = time.time()
 
     def producer(q, sizes):
@@ -269,6 +278,9 @@ def uploadSpeed(url, sizes, quiet=False):
 
 
 def getAttributesByTagName(dom, tagName):
+    """Retrieve an attribute from an XML document and return it in a
+    consistent format
+    """
     elem = dom.getElementsByTagName(tagName)[0]
     return dict(list(elem.attributes.items()))
 
@@ -365,12 +377,18 @@ def getBestServer(servers):
 
 
 def ctrl_c(signum, frame):
+    """Catch Ctrl-C key sequence and set a shutdown_event for our threaded
+    operations
+    """
+
     global shutdown_event
     shutdown_event.set()
     raise SystemExit('\nCancelling...')
 
 
 def version():
+    """Print the version"""
+
     raise SystemExit(__version__)
 
 
@@ -390,6 +408,8 @@ def speedtest():
         'https://github.com/sivel/speedtest-cli')
 
     parser = ArgParser(description=description)
+    # Give optparse.OptionParser an `add_argument` method for
+    # compatibility with argparse.ArgumentParser
     try:
         parser.add_argument = parser.add_option
     except AttributeError:
@@ -416,9 +436,11 @@ def speedtest():
         args = options
     del options
 
+    # Print the version and exit
     if args.version:
         version()
 
+    # If specified bind to a specific IP address
     if args.source:
         source = args.source
         socket.socket = bound_socket
@@ -534,6 +556,9 @@ def speedtest():
         ping = int(round(best['latency'], 0))
         ulspeedk = int(round((ulspeed / 1000) * 8, 0))
 
+        # Build the request to send results back to speedtest.net
+        # We use a list instead of a dict because the API expects parameters
+        # in a certain order
         apiData = [
             'download=%s' % dlspeedk,
             'ping=%s' % ping,
