@@ -33,7 +33,14 @@ import socket
 # Used for bound_interface
 socket_socket = socket.socket
 
-from xml.dom import minidom as DOM
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    try:
+        import xml.etree.ElementTree as ET
+    except ImportError:
+        from xml.dom import minidom as DOM
+        ET = None
 
 # Begin import game to handle Python 2 and Python 3
 try:
@@ -280,6 +287,9 @@ def uploadSpeed(url, sizes, quiet=False):
 def getAttributesByTagName(dom, tagName):
     """Retrieve an attribute from an XML document and return it in a
     consistent format
+
+    Only used with xml.dom.minidom, which is likely only to be used
+    with python versions older than 2.5
     """
     elem = dom.getElementsByTagName(tagName)[0]
     return dict(list(elem.attributes.items()))
@@ -291,18 +301,30 @@ def getConfig():
     """
 
     uh = urlopen('http://www.speedtest.net/speedtest-config.php')
-    configxml = uh.read()
+    configxml = []
+    while 1:
+        configxml.append(uh.read(10240))
+        if len(configxml[-1]) == 0:
+            break
     if int(uh.code) != 200:
         return None
     uh.close()
-    root = DOM.parseString(configxml)
-    config = {
-        'client': getAttributesByTagName(root, 'client'),
-        'times': getAttributesByTagName(root, 'times'),
-        'download': getAttributesByTagName(root, 'download'),
-        'upload': getAttributesByTagName(root, 'upload')}
-
+    try:
+        root = ET.fromstring(''.join(configxml))
+        config = {
+            'client': root.find('client').attrib,
+            'times': root.find('times').attrib,
+            'download': root.find('download').attrib,
+            'upload': root.find('upload').attrib}
+    except AttributeError:
+        root = DOM.parseString(''.join(configxml))
+        config = {
+            'client': getAttributesByTagName(root, 'client'),
+            'times': getAttributesByTagName(root, 'times'),
+            'download': getAttributesByTagName(root, 'download'),
+            'upload': getAttributesByTagName(root, 'upload')}
     del root
+    del configxml
     return config
 
 
@@ -312,14 +334,26 @@ def closestServers(client, all=False):
     """
 
     uh = urlopen('http://www.speedtest.net/speedtest-servers.php')
-    serversxml = uh.read()
+    serversxml = []
+    while 1:
+        serversxml.append(uh.read(10240))
+        if len(serversxml[-1]) == 0:
+            break
     if int(uh.code) != 200:
         return None
     uh.close()
-    root = DOM.parseString(serversxml)
+    try:
+        root = ET.fromstring(''.join(serversxml))
+        elements = root.getiterator('server')
+    except AttributeError:
+        root = DOM.parseString(''.join(serversxml))
+        elements = root.getElementsByTagName('server')
     servers = {}
-    for server in root.getElementsByTagName('server'):
-        attrib = dict(list(server.attributes.items()))
+    for server in elements:
+        try:
+            attrib = server.attrib
+        except AttributeError:
+            attrib = dict(list(server.attributes.items()))
         d = distance([float(client['lat']), float(client['lon'])],
                      [float(attrib.get('lat')), float(attrib.get('lon'))])
         attrib['d'] = d
@@ -328,6 +362,8 @@ def closestServers(client, all=False):
         else:
             servers[d].append(attrib)
     del root
+    del serversxml
+    del elements
 
     closest = []
     for d in sorted(servers.keys()):
