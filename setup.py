@@ -4,7 +4,7 @@ import setuptools
 
 setuptools.setup(
     name='speedtest-cli',
-    version='0.2.2',
+    version='0.2.3',
     description=('Command line interface for testing internet bandwidth using '
                  'speedtest.net'),
     long_description=open('README.rst').read(),
