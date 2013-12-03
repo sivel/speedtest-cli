@@ -310,7 +310,7 @@ def getConfig():
         return None
     uh.close()
     try:
-        root = ET.fromstring(''.join(configxml))
+        root = ET.fromstring(''.encode().join(configxml))
         config = {
             'client': root.find('client').attrib,
             'times': root.find('times').attrib,
@@ -343,7 +343,7 @@ def closestServers(client, all=False):
         return None
     uh.close()
     try:
-        root = ET.fromstring(''.join(serversxml))
+        root = ET.fromstring(''.encode().join(serversxml))
         elements = root.getiterator('server')
     except AttributeError:
         root = DOM.parseString(''.join(serversxml))
