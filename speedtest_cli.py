@@ -391,7 +391,7 @@ def getBestServer(servers):
         for i in range(0, 3):
             try:
                 uh = urlopen('%s/latency.txt' % url)
-            except HTTPError:
+            except (HTTPError, URLError):
                 cum.append(3600)
                 continue
             start = time.time()
