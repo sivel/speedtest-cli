@@ -1,0 +1,83 @@
+.TH "speedtest-cli" 1 "2014-01-26" "speedtest-cli"
+.SH NAME
+speedtest-cli \- Test your bandwidth througput using speedtest.net
+.SH SYNOPSIS
+.B speedtest-cli
+[OPTION]...
+.SH DESCRIPTION
+Speedtest.net is a web service for testing your broadband connection by downloading a file
+from a nearby speedtest.net server on the web. This tool allows you to access the service
+from the command line.
+
+Speedtest mini is a version of the Speedtest.net server that you can host locally.
+
+.SH OPTIONS
+Usage: speedtest-cli [OPTION...]
+
+.B Help Options
+
+\fB\-h, --help\fR
+.RS
+Displays usage for the tool.
+.RE
+
+.B Options
+
+\fB--share\fR
+.RS
+Generate and provide a URL to the speedtest.net share results image
+.RE
+
+\fB--simple\fR
+.RS
+Suppress verbose output, only show basic information
+.RE
+
+\fB--list\fR
+.RS
+Display a list of speedtest.net servers sorted by distance
+.RE
+
+\fB--server SERVER\fR
+.RS
+Specify a server ID to test against
+.RE
+
+\fB--mini MINI\fR
+.RS
+URL of the Speedtest Mini server
+.RE
+
+\fB--source SOURCE\fR
+.RS
+Source IP address to bind to
+.RE
+
+\fB--version\fR
+.RS
+Show the version number and exit
+.RE
+
+.SH EXAMPLES
+
+\fBAutomatically find closest server and start testing\fR
+.RS
+speedtest-cli
+.RE
+
+\fBSpecify testing against server 1491\fR
+.RS
+speedtest-cli --server 1491
+.RE
+
+\fBTesting against Speedtest Mini\fR
+.RS
+speedtest-cli --mini 172.18.66.1
+.RE
+
+.SH REPORTING BUGS
+Please file issues on the Github bug tracker: https://github.com/sivel/speedtest-cli
+
+.SH AUTHORS
+This manual page was written by Jonathan Carter <jonathan@ubuntu.com>
+Speedtest-cli was written by Matt Martz <matt@sivel.net>
