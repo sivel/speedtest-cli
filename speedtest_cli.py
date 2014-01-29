@@ -23,6 +23,7 @@ shutdown_event = None
 
 import math
 import time
+import datetime
 import os
 import sys
 import threading
@@ -456,6 +457,8 @@ def speedtest():
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
+    parser.add_argument('--csv', action='store_true',
+                        help='Same as simple, formatted as CSV')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
@@ -472,6 +475,9 @@ def speedtest():
         args = options
     del options
 
+    simple = args.simple or args.csv
+    csv = args.csv and ['%s'%datetime.datetime.now(),]
+
     # Print the version and exit
     if args.version:
         version()
@@ -481,7 +487,7 @@ def speedtest():
         source = args.source
         socket.socket = bound_socket
 
-    if not args.simple:
+    if not simple:
         print_('Retrieving speedtest.net configuration...')
     try:
         config = getConfig()
@@ -489,7 +495,7 @@ def speedtest():
         print_('Cannot retrieve speedtest configuration')
         sys.exit(1)
 
-    if not args.simple:
+    if not simple:
         print_('Retrieving speedtest.net server list...')
     if args.list or args.server:
         servers = closestServers(config['client'], True)
@@ -513,7 +519,7 @@ def speedtest():
     else:
         servers = closestServers(config['client'])
 
-    if not args.simple:
+    if not simple:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
 
     if args.server:
@@ -555,11 +561,11 @@ def speedtest():
         except:
             best = servers[0]
     else:
-        if not args.simple:
+        if not simple:
             print_('Selecting best server based on ping...')
         best = getBestServer(servers)
 
-    if not args.simple:
+    if not simple:
         # Python 2.7 and newer seem to be ok with the resultant encoding
         # from parsing the XML, but older versions have some issues.
         # This block should detect whether we need to encode or not
@@ -571,7 +577,10 @@ def speedtest():
             print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                    '%(latency)s ms' % best)
     else:
-        print_('Ping: %(latency)s ms' % best)
+        if args.csv:
+            csv.append('%(latency)s' % best)
+        else:
+            print_('Ping: %(latency)s ms' % best)
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -579,25 +588,36 @@ def speedtest():
         for i in range(0, 4):
             urls.append('%s/random%sx%s.jpg' %
                         (os.path.dirname(best['url']), size, size))
-    if not args.simple:
+
+    to_mbps = lambda speed: '%0.2f' % ((speed/1000/1000)*8)
+
+    if not simple:
         print_('Testing download speed', end='')
-    dlspeed = downloadSpeed(urls, args.simple)
-    if not args.simple:
+    dlspeed = downloadSpeed(urls, simple)
+    if not simple:
         print_()
-    print_('Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8))
+    if args.csv:
+        csv.append(to_mbps(dlspeed))
+    else:
+        print_('Download: %s Mbit/s' % to_mbps(dlspeed))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
     for size in sizesizes:
         for i in range(0, 25):
             sizes.append(size)
-    if not args.simple:
+    if not simple:
         print_('Testing upload speed', end='')
-    ulspeed = uploadSpeed(best['url'], sizes, args.simple)
-    if not args.simple:
+    ulspeed = uploadSpeed(best['url'], sizes, simple)
+    if not simple:
         print_()
-    print_('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
+    if args.csv:
+        csv.append(to_mbps(ulspeed))
+    else:
+        print_('Upload: %s Mbit/s' % to_mbps(ulspeed))
 
+    if args.csv:
+        print_(','.join(csv))
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
                'testing against a Speedtest Mini server')
