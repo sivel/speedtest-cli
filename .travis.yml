@@ -1,19 +1,11 @@
 language: python
 
 python:
- - 2.4
- - 2.5
- - 2.6
  - 2.7
- - 3.0
- - 3.1
- - 3.2
- - 3.3
- - pypy
 
 install:
   - pip install .
-  - pip install --use-mirrors nose coverage pep8 pyflakes
+  - pip install pep8 pyflakes
 
 script:
   - pep8 --show-source speedtest_cli.py
