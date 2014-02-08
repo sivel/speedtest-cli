@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright 2013 Matt Martz
+# Google Docs addition 2014 Markus Busche
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -29,6 +30,11 @@ import threading
 import re
 import signal
 import socket
+import gdata
+import gdata.docs
+import gdata.spreadsheet
+import gdata.spreadsheet.service
+
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -464,6 +470,14 @@ def speedtest():
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
+    parser.add_argument('--gmailuser', type=str,
+                        help='Account for Google data access')
+    parser.add_argument('--gmailpass', type=str,
+                        help='Password for Google data access')
+    parser.add_argument('--spreadsheetkey', type=str,
+                        help='Google Docs spreadsheet key')
+    parser.add_argument('--worksheetid', type=str,
+                        help='Google Docs worksheet ID')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
@@ -642,6 +656,26 @@ def speedtest():
 
         print_('Share results: http://www.speedtest.net/result/%s.png' %
                resultid[0])
+
+    if args.gmailuser and args.gmailpass and args.spreadsheetkey:
+        if not args.worksheetid:
+            args.worksheetid = 'od6'
+        dlspeedm = round((dlspeed / 1000 / 1000) * 8, 2)
+        ping = int(round(best['latency'], 0))
+        ulspeedm = round((ulspeed / 1000 / 1000) * 8, 2)
+
+        spr_client = gdata.spreadsheet.service.SpreadsheetsService()
+        spr_client.email = args.gmailuser
+        spr_client.password = args.gmailpass
+        # spr_client.source = 'Example Spreadsheet Writing Application'
+        spr_client.ProgrammaticLogin()
+
+        dicti = {}
+        dicti['timestamp'] = time.strftime('%d/%m/%Y') + ' ' + time.strftime('%H:%M:%S')
+        dicti['download'] = str(dlspeedm)
+        dicti['upload'] = str(ulspeedm)
+        dicti['ping'] = str(ping)
+        entry = spr_client.InsertRow(dicti, args.spreadsheetkey, args.worksheetid)
 
 
 def main():
