@@ -2,6 +2,7 @@ language: python
 
 python:
  - 2.7
+ - 3.3
 
 install:
   - pip install .
@@ -10,6 +11,7 @@ install:
 script:
   - pep8 --show-source speedtest_cli.py
   - pyflakes speedtest_cli.py
+  - python speedtest_cli.py
 
 notifications:
   email:
