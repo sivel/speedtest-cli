@@ -11,7 +11,7 @@ install:
 script:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pep8 --show-source speedtest_cli.py; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pyflakes speedtest_cli.py; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then python2.4 speedtest_cli.py; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then locate python; python24 speedtest_cli.py; fi
   - python speedtest_cli.py
 
 notifications:
