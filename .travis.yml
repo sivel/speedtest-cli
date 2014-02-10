@@ -9,8 +9,8 @@ install:
   - pip install pep8 pyflakes
 
 script:
-  - pep8 --show-source speedtest_cli.py
-  - pyflakes speedtest_cli.py
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pep8 --show-source speedtest_cli.py; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pyflakes speedtest_cli.py; fi
   - python speedtest_cli.py
 
 notifications:
