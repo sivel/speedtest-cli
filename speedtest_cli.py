@@ -464,17 +464,22 @@ def speedtest():
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
+    parser.add_argument('--no-upload', action='store_true', help='no upload speed test')
+    parser.add_argument('--timeout', type=int, default=30, help='socket timeout in seconds(default to 30)')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
         args = options[0]
     else:
         args = options
+
     del options
 
     # Print the version and exit
     if args.version:
         version()
+
+    socket.setdefaulttimeout(args.timeout)
 
     # If specified bind to a specific IP address
     if args.source:
@@ -523,7 +528,7 @@ def speedtest():
         except IndexError:
             print_('Invalid server ID')
             sys.exit(1)
-    elif args.mini:
+    elif not args.no_upload and args.mini:
         name, ext = os.path.splitext(args.mini)
         if ext:
             url = os.path.dirname(args.mini)
@@ -591,12 +596,13 @@ def speedtest():
     for size in sizesizes:
         for i in range(0, 25):
             sizes.append(size)
-    if not args.simple:
-        print_('Testing upload speed', end='')
-    ulspeed = uploadSpeed(best['url'], sizes, args.simple)
-    if not args.simple:
-        print_()
-    print_('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
+    if not args.no_upload:
+        if not args.simple:
+            print_('Testing upload speed', end='')
+        ulspeed = uploadSpeed(best['url'], sizes, args.simple)
+        if not args.simple:
+            print_()
+        print_('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
