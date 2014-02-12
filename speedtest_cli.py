@@ -465,17 +465,21 @@ def speedtest():
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
     parser.add_argument('--no-upload', action='store_true', help='no upload speed test')
+    parser.add_argument('--timeout', type=int, default=30, help='socket timeout in seconds(default to 30)')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
         args = options[0]
     else:
         args = options
+
     del options
 
     # Print the version and exit
     if args.version:
         version()
+
+    socket.setdefaulttimeout(args.timeout)
 
     # If specified bind to a specific IP address
     if args.source:
