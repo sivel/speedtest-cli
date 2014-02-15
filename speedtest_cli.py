@@ -460,6 +460,10 @@ def speedtest():
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
     parser.add_argument('--server', help='Specify a server ID to test against')
+    parser.add_argument('--small', action='store_true',
+                        help='Perform a lighter test')
+    parser.add_argument('--smaller', action='store_true',
+                        help='Perform a very light test')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--version', action='store_true',
@@ -573,7 +577,13 @@ def speedtest():
     else:
         print_('Ping: %(latency)s ms' % best)
 
-    sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
+    if args.smaller:
+        sizes = [350]
+    elif args.small:
+        sizes = [350, 500, 1000]
+    else:
+        sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
+
     urls = []
     for size in sizes:
         for i in range(0, 4):
@@ -586,10 +596,22 @@ def speedtest():
         print_()
     print_('Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8))
 
-    sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
+    if args.smaller:
+        # Relative weight: 3.5 (=7*.5)
+        rounds = 7
+        sizesizes = [int(.5 * 1000 * 1000)]
+    elif args.small:
+        # Relative weight: 7.5 (=15*.5)
+        rounds = 15
+        sizesizes = [int(.5 * 1000 * 1000)]
+    else:
+        # Relative weight: 18.75 (=25*.25+25*.5)
+        rounds = 25
+        sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
+
     sizes = []
     for size in sizesizes:
-        for i in range(0, 25):
+        for i in range(0, rounds):
             sizes.append(size)
     if not args.simple:
         print_('Testing upload speed', end='')
