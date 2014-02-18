@@ -1,0 +1,31 @@
+---
+language: python
+
+python:
+ - 2.6
+ - 2.7
+ - 3.2
+ - 3.3
+ - pypy
+
+install:
+  - pip install .
+  - pip install pep8 pyflakes
+
+script:
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pep8 --show-source speedtest_cli.py; fi
+
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pyflakes speedtest_cli.py; fi
+
+  - python speedtest_cli.py
+
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then curl -s http://www.python.org/ftp/python/2.4.6/Python-2.4.6.tar.bz2 | tar xj; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then cd Python-2.4.6; ./configure --prefix=$HOME/virtualenv/python2.4 > /dev/null 2>&1; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then make > /dev/null 2>&1; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then make install > /dev/null 2>&1; cd ..; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then ~/virtualenv/python2.4/bin/python2.4 -V; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then ~/virtualenv/python2.4/bin/python2.4 ./speedtest_cli.py; fi
+
+notifications:
+  email:
+    - matt@sivel.net
