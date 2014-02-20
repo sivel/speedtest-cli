@@ -8,7 +8,7 @@ speedtest.net
         :target: https://pypi.python.org/pypi/speedtest-cli/
         :alt: Latest Version
 .. image:: https://pypip.in/d/speedtest-cli/badge.png
-        :target: https://pypi.python.org/pypi//speedtest-cli/
+        :target: https://pypi.python.org/pypi/speedtest-cli/
         :alt: Downloads
 .. image:: https://pypip.in/license/speedtest-cli/badge.png
         :target: https://pypi.python.org/pypi/speedtest-cli/
