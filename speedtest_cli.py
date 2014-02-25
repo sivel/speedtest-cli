@@ -644,6 +644,41 @@ def speedtest():
                resultid[0])
 
 
+def basic_speedtest():
+    """Run the full speedtest.net test with default/quiet options.
+    Returns data as (ping, download speed, upload speed).
+
+    """
+
+    global shutdown_event, source
+    shutdown_event = threading.Event()
+
+    config = getConfig()
+    servers = closestServers(config['client'])
+    best = getBestServer(servers)
+
+    sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
+    urls = []
+    for size in sizes:
+        for i in range(0, 4):
+            urls.append('%s/random%sx%s.jpg' %
+                        (os.path.dirname(best['url']), size, size))
+    dlspeed = downloadSpeed(urls, True)
+
+    sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
+    sizes = []
+    for size in sizesizes:
+        for i in range(0, 25):
+            sizes.append(size)
+    ulspeed = uploadSpeed(best['url'], sizes, True)
+
+    dlspeedm = int(round((dlspeed / 1000 / 1000) * 8, 0))
+    ping = int(round(best['latency'], 0))
+    ulspeedm = int(round((ulspeed / 1000 / 1000) * 8, 0))
+
+    return (ping, dlspeedm, ulspeedm)
+
+
 def main():
     try:
         speedtest()
