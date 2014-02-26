@@ -450,6 +450,7 @@ def speedtest():
         parser.add_argument = parser.add_option
     except AttributeError:
         pass
+	parser.add_argument('-b', action='store_true', help='Use Bytes instead of Bits for speed.')
     parser.add_argument('--share', action='store_true',
                         help='Generate and provide a URL to the speedtest.net '
                              'share results image')
@@ -584,7 +585,10 @@ def speedtest():
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print_()
-    print_('Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8))
+    if not args.b:
+        print_('Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8) )
+    else:
+        print_('Download: %0.2f Mbytes/s' % (dlspeed / 1000 / 1000) )
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -596,8 +600,13 @@ def speedtest():
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if not args.simple:
         print_()
-    print_('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
+    if not args.b:
+        print_('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
+    else:
+        print_('Upload: %0.2f Mbytes/s' % (ulspeed / 1000 / 1000))
 
+    if args.share and args.b:
+        print_('Cannot use Mbytes for share results image, defaulting to Mbits')
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
                'testing against a Speedtest Mini server')
