@@ -183,7 +183,7 @@ class FileGetter(threading.Thread):
             pass
 
 
-def downloadSpeed(files, quiet=False):
+def download_speed(files, quiet=False):
     """Function to launch FileGetter threads and calculate download speeds"""
 
     start = time.time()
@@ -247,7 +247,7 @@ class FilePutter(threading.Thread):
             self.result = 0
 
 
-def uploadSpeed(url, sizes, quiet=False):
+def upload_speed(url, sizes, quiet=False):
     """Function to launch FilePutter threads and calculate upload speeds"""
 
     start = time.time()
@@ -284,7 +284,7 @@ def uploadSpeed(url, sizes, quiet=False):
     return (sum(finished) / (time.time() - start))
 
 
-def getAttributesByTagName(dom, tagName):
+def get_attributes_by_tag_name(dom, tagName):
     """Retrieve an attribute from an XML document and return it in a
     consistent format
 
@@ -295,7 +295,7 @@ def getAttributesByTagName(dom, tagName):
     return dict(list(elem.attributes.items()))
 
 
-def getConfig():
+def get_config():
     """Download the speedtest.net configuration and return only the data
     we are interested in
     """
@@ -319,16 +319,16 @@ def getConfig():
     except AttributeError:
         root = DOM.parseString(''.join(configxml))
         config = {
-            'client': getAttributesByTagName(root, 'client'),
-            'times': getAttributesByTagName(root, 'times'),
-            'download': getAttributesByTagName(root, 'download'),
-            'upload': getAttributesByTagName(root, 'upload')}
+            'client': get_attributes_by_tag_name(root, 'client'),
+            'times': get_attributes_by_tag_name(root, 'times'),
+            'download': get_attributes_by_tag_name(root, 'download'),
+            'upload': get_attributes_by_tag_name(root, 'upload')}
     del root
     del configxml
     return config
 
 
-def closestServers(client, all=False):
+def closest_servers(client, all=False):
     """Determine the 5 closest speedtest.net servers based on geographic
     distance
     """
@@ -379,7 +379,7 @@ def closestServers(client, all=False):
     return closest
 
 
-def getBestServer(servers):
+def get_best_server(servers):
     """Perform a speedtest.net "ping" to determine which speedtest.net
     server has the lowest latency
     """
@@ -428,14 +428,7 @@ def version():
     raise SystemExit(__version__)
 
 
-def speedtest():
-    """Run the full speedtest.net test"""
-
-    global shutdown_event, source
-    shutdown_event = threading.Event()
-
-    signal.signal(signal.SIGINT, ctrl_c)
-
+def parse_args():
     description = (
         'Command line interface for testing internet bandwidth using '
         'speedtest.net.\n'
@@ -474,7 +467,18 @@ def speedtest():
         args = options[0]
     else:
         args = options
-    del options
+    return args
+
+
+def speedtest():
+    """Run the full speedtest.net test"""
+
+    global shutdown_event, source
+    shutdown_event = threading.Event()
+
+    signal.signal(signal.SIGINT, ctrl_c)
+
+    args = parse_args()
 
     # Print the version and exit
     if args.version:
@@ -488,7 +492,7 @@ def speedtest():
     if not args.simple:
         print_('Retrieving speedtest.net configuration...')
     try:
-        config = getConfig()
+        config = get_config()
     except URLError:
         print_('Cannot retrieve speedtest configuration')
         sys.exit(1)
@@ -496,34 +500,34 @@ def speedtest():
     if not args.simple:
         print_('Retrieving speedtest.net server list...')
     if args.list or args.server:
-        servers = closestServers(config['client'], True)
+        servers = closest_servers(config['client'], True)
         if args.list:
-            serverList = []
+            server_list = []
             for server in servers:
                 line = ('%(id)4s) %(sponsor)s (%(name)s, %(country)s) '
                         '[%(d)0.2f km]' % server)
-                serverList.append(line)
+                server_list.append(line)
             # Python 2.7 and newer seem to be ok with the resultant encoding
             # from parsing the XML, but older versions have some issues.
             # This block should detect whether we need to encode or not
             try:
                 unicode()
-                print_('\n'.join(serverList).encode('utf-8', 'ignore'))
+                print_('\n'.join(server_list).encode('utf-8', 'ignore'))
             except NameError:
-                print_('\n'.join(serverList))
+                print_('\n'.join(server_list))
             except IOError:
                 pass
             sys.exit(0)
     else:
-        servers = closestServers(config['client'])
+        servers = closest_servers(config['client'])
 
     if not args.simple:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
 
     if args.server:
         try:
-            best = getBestServer(filter(lambda x: x['id'] == args.server,
-                                        servers))
+            best = get_best_server(filter(lambda x: x['id'] == args.server,
+                                          servers))
         except IndexError:
             print_('Invalid server ID')
             sys.exit(1)
@@ -555,13 +559,13 @@ def speedtest():
             'id': 0
         }]
         try:
-            best = getBestServer(servers)
+            best = get_best_server(servers)
         except:
             best = servers[0]
     else:
         if not args.simple:
             print_('Selecting best server based on ping...')
-        best = getBestServer(servers)
+        best = get_best_server(servers)
 
     if not args.simple:
         # Python 2.7 and newer seem to be ok with the resultant encoding
@@ -585,7 +589,7 @@ def speedtest():
                         (os.path.dirname(best['url']), size, size))
     if not args.simple:
         print_('Testing download speed', end='')
-    dlspeed = downloadSpeed(urls, args.simple)
+    dlspeed = download_speed(urls, args.simple)
     if not args.simple:
         print_()
     print_('Download: %0.2f M%s/s' %
@@ -598,7 +602,7 @@ def speedtest():
             sizes.append(size)
     if not args.simple:
         print_('Testing upload speed', end='')
-    ulspeed = uploadSpeed(best['url'], sizes, args.simple)
+    ulspeed = upload_speed(best['url'], sizes, args.simple)
     if not args.simple:
         print_()
     print_('Upload: %0.2f M%s/s' %
@@ -615,7 +619,7 @@ def speedtest():
         # Build the request to send results back to speedtest.net
         # We use a list instead of a dict because the API expects parameters
         # in a certain order
-        apiData = [
+        api_data = [
             'download=%s' % dlspeedk,
             'ping=%s' % ping,
             'upload=%s' % ulspeedk,
@@ -629,7 +633,7 @@ def speedtest():
                             .encode()).hexdigest()]
 
         req = Request('http://www.speedtest.net/api/api.php',
-                      data='&'.join(apiData).encode())
+                      data='&'.join(api_data).encode())
         req.add_header('Referer', 'http://c.speedtest.net/flash/speedtest.swf')
         f = urlopen(req)
         response = f.read()
