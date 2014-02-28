@@ -353,7 +353,7 @@ class SpeedtestResults(object):
         return dict(download=self.download,
                     upload=self.upload,
                     ping=self.ping,
-                    server=self.server['id'])
+                    server=int(self.server['id']))
 
     def csv(self):
         """Return data in CSV format in the order of:
