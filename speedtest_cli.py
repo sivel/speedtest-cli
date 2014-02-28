@@ -550,8 +550,13 @@ class Speedtest(object):
             if int(attrib.get('id')) in self.config['ignore_servers']:
                 continue
 
-            d = distance(self.lat_lon,
-                         (float(attrib.get('lat')), float(attrib.get('lon'))))
+            try:
+                d = distance(self.lat_lon,
+                             (float(attrib.get('lat')),
+                              float(attrib.get('lon'))))
+            except:
+                continue
+
             attrib['d'] = d
 
             try:
