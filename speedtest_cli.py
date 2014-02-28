@@ -17,9 +17,16 @@
 
 __version__ = '1.0.0'
 
+
+class FakeShutdownEvent(object):
+    @staticmethod
+    def isSet():
+        return False
+
+
 # Some global variables we use
 source = None
-shutdown_event = None
+shutdown_event = FakeShutdownEvent()
 
 import math
 import time
