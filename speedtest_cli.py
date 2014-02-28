@@ -616,6 +616,9 @@ class Speedtest(object):
         geographic distance
         """
 
+        if not self.servers:
+            self.get_servers()
+
         for d in sorted(self.servers.keys()):
             for s in self.servers[d]:
                 self.closest.append(s)
@@ -627,10 +630,15 @@ class Speedtest(object):
 
         return self.closest
 
-    def get_best_server(self, servers):
+    def get_best_server(self, servers=[]):
         """Perform a speedtest.net "ping" to determine which speedtest.net
         server has the lowest latency
         """
+
+        if not servers:
+            if not self.closest:
+                servers = self.get_closest()
+            servers = self.closest
 
         results = {}
         for server in servers:
