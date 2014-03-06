@@ -417,6 +417,15 @@ class SpeedtestResults(object):
 
         return self._share
 
+    def simple(self, units):
+        return """Ping: %s ms
+Download: %0.2f M%s/s
+Upload: %0.2f M%s/s""" % (self.ping,
+                          (self.download / 1000 / 1000) * units[1],
+                          units[0],
+                          (self.upload / 1000 / 1000) * units[1],
+                          units[0])
+
 
 class Speedtest(object):
     """Class for performing standard speedtest.net testing operations"""
@@ -801,9 +810,16 @@ def parse_args():
     parser.add_argument('--share', action='store_true',
                         help='Generate and provide a URL to the speedtest.net '
                              'share results image')
-    parser.add_argument('--simple', action='store_true',
+    parser.add_argument('--simple', action='store_true', default=False,
                         help='Suppress verbose output, only show basic '
                              'information')
+    parser.add_argument('--csv', action='store_true', default=False,
+                        help='Suppress verbose output, only show basic '
+                             'information in CSV format of: '
+                             'ServerId,Latency,Upload,Download')
+    parser.add_argument('--json', action='store_true', default=False,
+                        help='Suppress verbose output, only show basic '
+                             'information in JSON format')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
@@ -820,6 +836,11 @@ def parse_args():
     else:
         args = options
     return args
+
+
+def printer(string, quiet=False, **kwargs):
+    if not quiet:
+        print_(string, **kwargs)
 
 
 def shell():
@@ -841,17 +862,23 @@ def shell():
         source = args.source
         socket.socket = bound_socket
 
-    # Don't set a callback if we are running in simple mode
-    if args.simple:
+    if args.simple or args.csv or args.json:
+        quiet = True
+    else:
+        quiet = False
+
+    # Don't set a callback if we are running quietly
+    if quiet:
         callback = None
     else:
         callback = print_dots
 
-    print_('Retrieving speedtest.net configuration...')
+    printer('Retrieving speedtest.net configuration...', quiet)
     try:
         speedtest = Speedtest()
     except ConfigRetrievalError:
-        print_('Cannot retrieve speedtest configuration')
+        printer('Cannot retrieve speedtest configuration')
+        sys.exit(1)
 
     if args.list:
         try:
@@ -883,10 +910,11 @@ def shell():
     if args.server:
         servers.append(args.server)
 
-    if not args.simple:
-        print_('Testing from %(isp)s (%(ip)s)...' % speedtest.config['client'])
+    printer('Testing from %(isp)s (%(ip)s)...' % speedtest.config['client'],
+            quiet)
+
     if not args.mini:
-        print_('Retrieving speedtest.net server list...')
+        printer('Retrieving speedtest.net server list...', quiet)
         try:
             speedtest.get_servers(servers)
         except NoMatchedServers:
@@ -899,41 +927,43 @@ def shell():
             print_('%s is an invalid server type, must be int' % args.server)
             sys.exit(1)
 
-        if not args.simple:
-            print_('Selecting best server based on ping...')
+        printer('Selecting best server based on ping...', quiet)
         speedtest.get_best_server(speedtest.get_closest())
     elif args.mini:
         speedtest.get_best_server(speedtest.set_mini_server(args.mini))
 
     results = speedtest.results()
 
-    if args.simple:
-        print_('Ping: %(latency)s ms' % results.server)
-    else:
-        # Python 2.7 and newer seem to be ok with the resultant encoding
-        # from parsing the XML, but older versions have some issues.
-        # This block should detect whether we need to encode or not
-        try:
-            unicode()
-            print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                    '%(latency)s ms' %
-                    results.server).encode('utf-8', 'ignore'))
-        except NameError:
-            print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                   '%(latency)s ms' % results.server)
+    # Python 2.7 and newer seem to be ok with the resultant encoding
+    # from parsing the XML, but older versions have some issues.
+    # This block should detect whether we need to encode or not
+    try:
+        unicode()
+        printer(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+                '%(latency)s ms' %
+                results.server).encode('utf-8', 'ignore'), quiet)
+    except NameError:
+        printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+                '%(latency)s ms' % results.server, quiet)
 
-    if not args.simple:
-        print_('Testing upload speed', end='')
+    printer('Testing upload speed', quiet, end='')
     speedtest.download(callback=callback)
-    print_('Download: %0.2f M%s/s' %
-           ((results.download / 1000 / 1000) * args.units[1], args.units[0]))
+    printer('Download: %0.2f M%s/s' %
+            ((results.download / 1000 / 1000) * args.units[1], args.units[0]),
+            quiet)
 
-    if not args.simple:
-        print_('Testing download speed', end='')
+    printer('Testing download speed', quiet, end='')
     speedtest.upload(callback=callback)
-    print_('Upload: %0.2f M%s/s' %
-           ((results.upload / 1000 / 1000) * args.units[1], args.units[0]))
+    printer('Upload: %0.2f M%s/s' %
+            ((results.upload / 1000 / 1000) * args.units[1], args.units[0]),
+            quiet)
 
+    if args.simple:
+        print_(results.simple(args.units))
+    elif args.csv:
+        print_(results.csv())
+    elif args.json:
+        print_(repr(results.dict()).replace("'", '"'))
 
 def main():
     try:
