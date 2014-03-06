@@ -965,6 +965,7 @@ def shell():
     elif args.json:
         print_(repr(results.dict()).replace("'", '"'))
 
+
 def main():
     try:
         shell()
