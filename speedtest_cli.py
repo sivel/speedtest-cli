@@ -946,13 +946,13 @@ def shell():
         printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                 '%(latency)s ms' % results.server, quiet)
 
-    printer('Testing upload speed', quiet, end='')
+    printer('Testing download speed', quiet, end='')
     speedtest.download(callback=callback)
     printer('Download: %0.2f M%s/s' %
             ((results.download / 1000 / 1000) * args.units[1], args.units[0]),
             quiet)
 
-    printer('Testing download speed', quiet, end='')
+    printer('Testing upload speed', quiet, end='')
     speedtest.upload(callback=callback)
     printer('Upload: %0.2f M%s/s' %
             ((results.upload / 1000 / 1000) * args.units[1], args.units[0]),
