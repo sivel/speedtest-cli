@@ -19,6 +19,7 @@ __version__ = '1.0.0'
 
 USER_AGENT = 'speedtest-cli/%s' % __version__
 
+
 class FakeShutdownEvent(object):
     @staticmethod
     def isSet():
