@@ -17,6 +17,7 @@
 
 __version__ = '1.0.0'
 
+USER_AGENT = 'speedtest-cli/%s' % __version__
 
 class FakeShutdownEvent(object):
     @staticmethod
@@ -200,7 +201,9 @@ class Downloader(threading.Thread):
         self.result = [0]
         try:
             if (time.time() - self.starttime) <= 10:
-                f = urlopen(self.url)
+                req = Request(self.url)
+                req.add_header('User-Agent', USER_AGENT)
+                f = urlopen(req)
                 while (1 and not shutdown_event.isSet() and
                         (time.time() - self.starttime) <= 10):
                     self.result.append(len(f.read(10240)))
@@ -228,7 +231,9 @@ class Uploader(threading.Thread):
         try:
             if ((time.time() - self.starttime) <= 10 and
                     not shutdown_event.isSet()):
-                f = urlopen(self.url, self.data)
+                req = Request(self.url, self.data)
+                req.add_header('User-Agent', USER_AGENT)
+                f = urlopen(req)
                 f.read(11)
                 f.close()
                 self.result = len(self.data)
@@ -393,6 +398,7 @@ class SpeedtestResults(object):
 
         req = Request('http://www.speedtest.net/api/api.php',
                       data='&'.join(api_data).encode())
+        req.add_header('User-Agent', USER_AGENT)
         req.add_header('Referer', 'http://c.speedtest.net/flash/speedtest.swf')
         try:
             f = urlopen(req)
@@ -451,19 +457,21 @@ class Speedtest(object):
         """
 
         try:
-            uh = urlopen('http://www.speedtest.net/speedtest-config.php')
+            req = Request('http://www.speedtest.net/speedtest-config.php')
+            req.add_header('User-Agent', USER_AGENT)
+            f = urlopen(req)
         except (URLError, HTTPError):
             raise ConfigRetrievalError
 
         configxml = []
         while 1:
-            configxml.append(uh.read(10240))
+            configxml.append(f.read(10240))
             if len(configxml[-1]) == 0:
                 break
-        if int(uh.code) != 200:
+        if int(f.code) != 200:
             return None
 
-        uh.close()
+        f.close()
 
         try:
             root = ET.fromstring(''.encode().join(configxml))
@@ -526,19 +534,21 @@ class Speedtest(object):
                                           'be int' % s)
 
         try:
-            uh = urlopen('http://www.speedtest.net/speedtest-servers.php')
+            req = Request('http://www.speedtest.net/speedtest-servers.php')
+            req.add_header('User-Agent', USER_AGENT)
+            f = urlopen(req)
         except (URLError, HTTPError):
             raise ServersRetrievalError
 
         serversxml = []
         while 1:
-            serversxml.append(uh.read(10240))
+            serversxml.append(f.read(10240))
             if len(serversxml[-1]) == 0:
                 break
-        if int(uh.code) != 200:
+        if int(f.code) != 200:
             return None
 
-        uh.close()
+        f.close()
 
         try:
             root = ET.fromstring(''.encode().join(serversxml))
@@ -596,7 +606,9 @@ class Speedtest(object):
         urlparts = urlparse(url)
 
         try:
-            f = urlopen(server)
+            req = Request(server)
+            req.add_header('User-Agent', USER_AGENT)
+            f = urlopen(req)
         except (URLError, HTTPError):
             raise SpeedtestMiniConnectFailure('Failed to connect to %s' %
                                               server)
@@ -655,18 +667,20 @@ class Speedtest(object):
             url = os.path.dirname(server['url'])
             for _ in range(0, 3):
                 try:
-                    uh = urlopen('%s/latency.txt' % url)
+                    req = Request('%s/latency.txt' % url)
+                    req.add_header('User-Agent', USER_AGENT)
+                    f = urlopen(req)
                 except (HTTPError, URLError):
                     cum.append(3600)
                     continue
                 start = time.time()
-                text = uh.read(9)
+                text = f.read(9)
                 total = time.time() - start
-                if int(uh.code) == 200 and text == 'test=test'.encode():
+                if int(f.code) == 200 and text == 'test=test'.encode():
                     cum.append(total)
                 else:
                     cum.append(3600)
-                uh.close()
+                f.close()
             avg = round((sum(cum) / 3) * 1000000, 3)
             results[avg] = server
 
