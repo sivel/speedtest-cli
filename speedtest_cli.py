@@ -170,14 +170,14 @@ def distance(origin, destination):
     return d
 
 
-def get_attributes_by_tag_name(dom, tagName):
+def get_attributes_by_tag_name(dom, tag_name):
     """Retrieve an attribute from an XML document and return it in a
     consistent format
 
     Only used with xml.dom.minidom, which is likely only to be used
     with python versions older than 2.5
     """
-    elem = dom.getElementsByTagName(tagName)[0]
+    elem = dom.getElementsByTagName(tag_name)[0]
     return dict(list(elem.attributes.items()))
 
 
