@@ -184,7 +184,7 @@ def get_attributes_by_tag_name(dom, tag_name):
 
 def print_dots(current, total, start=False, end=False):
     sys.stdout.write('.')
-    if current + 1 == total and end == True:
+    if current + 1 == total and end is True:
         sys.stdout.write('\n')
     sys.stdout.flush()
 
