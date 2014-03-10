@@ -185,12 +185,18 @@ def get_attributes_by_tag_name(dom, tag_name):
 
     Only used with xml.dom.minidom, which is likely only to be used
     with python versions older than 2.5
+
     """
     elem = dom.getElementsByTagName(tag_name)[0]
     return dict(list(elem.attributes.items()))
 
 
 def print_dots(current, total, start=False, end=False):
+    """Built in callback function used by Thread classes for printing
+    status
+
+    """
+
     sys.stdout.write('.')
     if current + 1 == total and end is True:
         sys.stdout.write('\n')
@@ -199,32 +205,26 @@ def print_dots(current, total, start=False, end=False):
 
 class SpeedtestException(Exception):
     """Base exception for this module"""
-    pass
 
 
 class ConfigRetrievalError(SpeedtestException):
     """Could not retrieve config.php"""
-    pass
 
 
 class ServersRetrievalError(SpeedtestException):
     """Could not retrieve speedtest-servers.php"""
-    pass
 
 
 class InvalidServerIDType(SpeedtestException):
     """Server ID used for filtering was not an integer"""
-    pass
 
 
 class NoMatchedServers(SpeedtestException):
     """No servers matched when filtering"""
-    pass
 
 
 class SpeedtestMiniConnectFailure(SpeedtestException):
     """Could not connect to the provided speedtest mini server"""
-    pass
 
 
 class InvalidSpeedtestMiniServer(SpeedtestException):
@@ -232,12 +232,10 @@ class InvalidSpeedtestMiniServer(SpeedtestException):
     to be a speedtest mini server
 
     """
-    pass
 
 
 class ShareResultsConnectFailure(SpeedtestException):
     """Could not connect to speedtest.net API to POST results"""
-    pass
 
 
 class ShareResultsSubmitFailure(SpeedtestException):
@@ -245,7 +243,6 @@ class ShareResultsSubmitFailure(SpeedtestException):
     connection
 
     """
-    pass
 
 
 class SpeedtestUploadTimeout(SpeedtestException):
@@ -254,7 +251,6 @@ class SpeedtestUploadTimeout(SpeedtestException):
     Used to ensure the upload halts when no additional data should be sent
 
     """
-    pass
 
 
 class HTTPDownloader(threading.Thread):
@@ -350,6 +346,7 @@ class SpeedtestResults(object):
     Additionally this class can return a result data as a dictionary or CSV,
     as well as submit a POST of the result data to the speedtest.net API
     to get a share results image link.
+
     """
 
     def __init__(self, download=0, upload=0, ping=0, server=dict()):
@@ -362,41 +359,49 @@ class SpeedtestResults(object):
     @property
     def download(self):
         """Get upload speed result"""
+
         return self._download
 
     @download.setter
     def download(self, value):
         """Setter for download speed value"""
+
         self._download = value
 
     @property
     def upload(self):
         """Get upload speed result"""
+
         return self._upload
 
     @upload.setter
     def upload(self, value):
         """Setter for upload speed value"""
+
         self._upload = value
 
     @property
     def ping(self):
         """Get ping/latency value"""
+
         return self._ping
 
     @ping.setter
     def ping(self, value):
         """Setter for ping/latency value"""
+
         self._ping = value
 
     @property
     def server(self):
         """Get data for server used in the test"""
+
         return self._server
 
     @server.setter
     def server(self, value):
         """Setter for server data"""
+
         self._server = value
 
     def dict(self):
@@ -418,6 +423,7 @@ class SpeedtestResults(object):
     def share(self):
         """POST data to the speedtest.net API to obtain a share results
         link
+
         """
 
         if self._share:
@@ -501,6 +507,7 @@ class Speedtest(object):
     def get_config(self):
         """Download the speedtest.net configuration and return only the data
         we are interested in
+
         """
 
         try:
@@ -575,6 +582,7 @@ class Speedtest(object):
     def get_servers(self, servers=[]):
         """Retrieve a the list of speedtest.net servers, optionally filtered
         to servers matching those specified in the ``servers`` argument
+
         """
 
         for i, s in enumerate(servers):
@@ -646,6 +654,7 @@ class Speedtest(object):
     def set_mini_server(self, server):
         """Instead of querying for a list of servers, set a link to a
         speedtest mini server
+
         """
 
         name, ext = os.path.splitext(server)
@@ -686,6 +695,7 @@ class Speedtest(object):
     def get_closest(self, limit=5):
         """Limit servers to the closest speedtest.net servers based on
         geographic distance
+
         """
 
         if not self.servers:
@@ -705,6 +715,7 @@ class Speedtest(object):
     def get_best_server(self, servers=[]):
         """Perform a speedtest.net "ping" to determine which speedtest.net
         server has the lowest latency
+
         """
 
         if not servers:
@@ -844,6 +855,7 @@ class Speedtest(object):
 def ctrl_c(signum, frame):
     """Catch Ctrl-C key sequence and set a shutdown_event for our threaded
     operations
+
     """
 
     global shutdown_event
@@ -858,6 +870,8 @@ def version():
 
 
 def parse_args():
+    """Function to handle building and parsing of command line arguments"""
+
     description = (
         'Command line interface for testing internet bandwidth using '
         'speedtest.net.\n'
@@ -908,6 +922,8 @@ def parse_args():
 
 
 def printer(string, quiet=False, **kwargs):
+    """Helper function to print a string only when not quiet"""
+
     if not quiet:
         print_(string, **kwargs)
 
