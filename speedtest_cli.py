@@ -296,14 +296,15 @@ class HTTPUploaderData(object):
         chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         data = chars * (int(round(int(length) / 36.0)))
         self.data = StringIO()
-        self.data.write(('content1=%s' % data[0:int(length) - 9]).encode())
+        self.data.write('content1=%s' % data[0:int(length) - 9])
+        del data
         self.data.seek(0)
 
         self.total = [0]
 
     def read(self, n=10240):
         if (time.time() - self.start) <= self.timeout:
-            chunk = self.data.read(n)
+            chunk = self.data.read(n).encode()
             self.total.append(len(chunk))
             return chunk
         else:
@@ -556,7 +557,7 @@ class Speedtest(object):
             if desc.startswith('ul'):
                 sizes['upload'].append(int(size))
             elif desc.startswith('dl'):
-                sizes['download'].append(int(size) / 10000)
+                sizes['download'].append(int(int(size) / 10000))
 
         sizes['upload'].sort()
         sizes['download'].sort()
