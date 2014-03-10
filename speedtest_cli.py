@@ -182,20 +182,21 @@ def get_attributes_by_tag_name(dom, tag_name):
     return dict(list(elem.attributes.items()))
 
 
-def print_dots(current, total):
+def print_dots(current, total, start=False, end=False):
     sys.stdout.write('.')
-    if current + 1 == total:
+    if current + 1 == total and end == True:
         sys.stdout.write('\n')
     sys.stdout.flush()
 
 
-class Downloader(threading.Thread):
+class HTTPDownloader(threading.Thread):
     """Thread class for retrieving a URL"""
 
-    def __init__(self, url, start):
+    def __init__(self, i, url, start):
         self.url = url
         self.result = None
         self.starttime = start
+        self.i = i
         threading.Thread.__init__(self)
 
     def run(self):
@@ -215,10 +216,10 @@ class Downloader(threading.Thread):
             pass
 
 
-class Uploader(threading.Thread):
+class HTTPUploader(threading.Thread):
     """Thread class for uploading to a URL"""
 
-    def __init__(self, url, start, size):
+    def __init__(self, i, url, start, size):
         self.url = url
         chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         data = chars * (int(round(int(size) / 36.0)))
@@ -226,6 +227,7 @@ class Uploader(threading.Thread):
         del data
         self.result = None
         self.starttime = start
+        self.i = i
         threading.Thread.__init__(self)
 
     def run(self):
@@ -709,11 +711,11 @@ class Speedtest(object):
 
         def producer(q, urls, url_count):
             for i, url in enumerate(urls):
-                thread = Downloader(url, start)
+                thread = HTTPDownloader(i, url, start)
                 thread.start()
                 q.put(thread, True)
                 if not shutdown_event.isSet() and callback:
-                    callback(i, url_count)
+                    callback(i, url_count, start=True)
 
         finished = []
 
@@ -723,6 +725,7 @@ class Speedtest(object):
                 while thread.isAlive():
                     thread.join(timeout=0.1)
                 finished.append(sum(thread.result))
+                callback(thread.i, url_count, end=True)
                 del thread
 
         q = Queue(self.config['threads']['download'])
@@ -755,11 +758,11 @@ class Speedtest(object):
 
         def producer(q, sizes, size_count):
             for i, size in enumerate(sizes):
-                thread = Uploader(self.best['url'], start, size)
+                thread = HTTPUploader(i, self.best['url'], start, size)
                 thread.start()
                 q.put(thread, True)
                 if not shutdown_event.isSet() and callback:
-                    callback(i, size_count)
+                    callback(i, size_count, start=True)
 
         finished = []
 
@@ -769,6 +772,7 @@ class Speedtest(object):
                 while thread.isAlive():
                     thread.join(timeout=0.1)
                 finished.append(thread.result)
+                callback(thread.i, size_count, end=True)
                 del thread
 
         q = Queue(6)
