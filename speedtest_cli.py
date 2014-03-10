@@ -21,8 +21,14 @@ USER_AGENT = 'speedtest-cli/%s' % __version__
 
 
 class FakeShutdownEvent(object):
+    """Class to fake a threading.Event.isSet so that users of this module
+    are not required to register their own threading.Event()
+
+    """
+
     @staticmethod
     def isSet():
+        "Dummy method to always return false"""
         return False
 
 
