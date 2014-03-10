@@ -197,6 +197,66 @@ def print_dots(current, total, start=False, end=False):
     sys.stdout.flush()
 
 
+class SpeedtestException(Exception):
+    """Base exception for this module"""
+    pass
+
+
+class ConfigRetrievalError(SpeedtestException):
+    """Could not retrieve config.php"""
+    pass
+
+
+class ServersRetrievalError(SpeedtestException):
+    """Could not retrieve speedtest-servers.php"""
+    pass
+
+
+class InvalidServerIDType(SpeedtestException):
+    """Server ID used for filtering was not an integer"""
+    pass
+
+
+class NoMatchedServers(SpeedtestException):
+    """No servers matched when filtering"""
+    pass
+
+
+class SpeedtestMiniConnectFailure(SpeedtestException):
+    """Could not connect to the provided speedtest mini server"""
+    pass
+
+
+class InvalidSpeedtestMiniServer(SpeedtestException):
+    """Server provided as a speedtest mini server does not actually appear
+    to be a speedtest mini server
+
+    """
+    pass
+
+
+class ShareResultsConnectFailure(SpeedtestException):
+    """Could not connect to speedtest.net API to POST results"""
+    pass
+
+
+class ShareResultsSubmitFailure(SpeedtestException):
+    """Unable to successfully POST results to speedtest.net API after
+    connection
+
+    """
+    pass
+
+
+class SpeedtestUploadTimeout(SpeedtestException):
+    """testlength configuration reached during upload
+
+    Used to ensure the upload halts when no additional data should be sent
+
+    """
+    pass
+
+
 class HTTPDownloader(threading.Thread):
     """Thread class for retrieving a URL"""
 
@@ -223,10 +283,6 @@ class HTTPDownloader(threading.Thread):
                 f.close()
         except:
             pass
-
-
-class SpeedtestUploadTimeout(Exception):
-    pass
 
 
 class HTTPUploaderData(object):
@@ -281,55 +337,6 @@ class HTTPUploader(threading.Thread):
                 self.result = 0
         except:
             self.result = sum(self.data.total)
-
-
-class SpeedtestException(Exception):
-    """Base exception for this module"""
-    pass
-
-
-class ConfigRetrievalError(SpeedtestException):
-    """Could not retrieve config.php"""
-    pass
-
-
-class ServersRetrievalError(SpeedtestException):
-    """Could not retrieve speedtest-servers.php"""
-    pass
-
-
-class InvalidServerIDType(SpeedtestException):
-    """Server ID used for filtering was not an integer"""
-    pass
-
-
-class NoMatchedServers(SpeedtestException):
-    """No servers matched when filtering"""
-    pass
-
-
-class SpeedtestMiniConnectFailure(SpeedtestException):
-    """Could not connect to the provided speedtest mini server"""
-    pass
-
-
-class InvalidSpeedtestMiniServer(SpeedtestException):
-    """Server provided as a speedtest mini server does not actually appear
-    to be a speedtest mini server
-    """
-    pass
-
-
-class ShareResultsConnectFailure(SpeedtestException):
-    """Could not connect to speedtest.net API to POST results"""
-    pass
-
-
-class ShareResultsSubmitFailure(SpeedtestException):
-    """Unable to successfully POST results to speedtest.net API after
-    connection
-    """
-    pass
 
 
 class SpeedtestResults(object):
