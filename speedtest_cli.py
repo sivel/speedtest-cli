@@ -808,6 +808,8 @@ class Speedtest(object):
             cons_thread.join(timeout=0.1)
 
         self._results.download = (sum(finished) / (time.time() - start))
+        if self._results.download > 100000:
+            self.config['threads']['upload'] = 8
         return self._results.download
 
     def upload(self, callback=None):
@@ -843,7 +845,7 @@ class Speedtest(object):
                 callback(thread.i, size_count, end=True)
                 del thread
 
-        q = Queue(6)
+        q = Queue(self.config['threads']['upload'])
         prod_thread = threading.Thread(target=producer,
                                        args=(q, sizes, size_count))
         cons_thread = threading.Thread(target=consumer, args=(q, size_count))
