@@ -29,6 +29,7 @@ import threading
 import re
 import signal
 import socket
+import datetime
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -450,20 +451,15 @@ def speedtest():
         parser.add_argument = parser.add_option
     except AttributeError:
         pass
-    parser.add_argument('--share', action='store_true',
-                        help='Generate and provide a URL to the speedtest.net '
-                             'share results image')
-    parser.add_argument('--simple', action='store_true',
-                        help='Suppress verbose output, only show basic '
-                             'information')
-    parser.add_argument('--list', action='store_true',
-                        help='Display a list of speedtest.net servers '
-                             'sorted by distance')
+    parser.add_argument('--share', action='store_true', help='Generate and provide a URL to the speedtest.net share results image')
+    parser.add_argument('--simple', action='store_true', help='Suppress verbose output, only show basic information')
+    parser.add_argument('--tabbed', action='store_true', help='Return results in a tabbed fashion i.e. ready to be written on a file')
+    parser.add_argument('--onlyvalues', action='store_true', help='When --tabbed write only the values and suppress descriptions')
+    parser.add_argument('--list', action='store_true', help='Display a list of speedtest.net servers sorted by distance')
     parser.add_argument('--server', help='Specify a server ID to test against')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
-    parser.add_argument('--version', action='store_true',
-                        help='Show the version number and exit')
+    parser.add_argument('--version', action='store_true', help='Show the version number and exit')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
@@ -481,7 +477,7 @@ def speedtest():
         source = args.source
         socket.socket = bound_socket
 
-    if not args.simple:
+    if not (args.simple or args.tabbed):
         print_('Retrieving speedtest.net configuration...')
     try:
         config = getConfig()
@@ -489,7 +485,7 @@ def speedtest():
         print_('Cannot retrieve speedtest configuration')
         sys.exit(1)
 
-    if not args.simple:
+    if not (args.simple or args.tabbed):
         print_('Retrieving speedtest.net server list...')
     if args.list or args.server:
         servers = closestServers(config['client'], True)
@@ -513,7 +509,7 @@ def speedtest():
     else:
         servers = closestServers(config['client'])
 
-    if not args.simple:
+    if not (args.simple or args.tabbed):
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
 
     if args.server:
@@ -555,11 +551,11 @@ def speedtest():
         except:
             best = servers[0]
     else:
-        if not args.simple:
+        if not (args.simple or args.tabbed):
             print_('Selecting best server based on ping...')
         best = getBestServer(servers)
 
-    if not args.simple:
+    if not (args.simple or args.tabbed):
         # Python 2.7 and newer seem to be ok with the resultant encoding
         # from parsing the XML, but older versions have some issues.
         # This block should detect whether we need to encode or not
@@ -570,8 +566,20 @@ def speedtest():
         except NameError:
             print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                    '%(latency)s ms' % best)
-    else:
+    elif not args.tabbed:
         print_('Ping: %(latency)s ms' % best)
+	
+    if args.tabbed:
+        ts = time.time()
+        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+	if not args.onlyvalues:
+	    print_('Timestamp: ', end='')
+	print_('%s, ' % (st), end='')
+
+	if args.onlyvalues:
+      	    print_('%(sponsor)s, %(name)s, %(d)0.2f, %(latency)s, ' % (best), end='')
+	else:
+	    print_('Target: %(sponsor)s, City: %(name)s, Distance: %(d)0.2f km, Latency: %(latency)s ms, ' % (best), end='')
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -579,24 +587,38 @@ def speedtest():
         for i in range(0, 4):
             urls.append('%s/random%sx%s.jpg' %
                         (os.path.dirname(best['url']), size, size))
-    if not args.simple:
+    if not (args.simple or args.tabbed):
         print_('Testing download speed', end='')
-    dlspeed = downloadSpeed(urls, args.simple)
-    if not args.simple:
+
+    dlspeed = downloadSpeed(urls, (args.simple or args.tabbed))
+
+    if not (args.simple or args.tabbed):
         print_()
-    print_('Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8))
+
+    if args.tabbed:
+	if args.onlyvalues:
+	    print_('%0.2f, ' % ((dlspeed / 1000 / 1000) * 8), end='')
+	else:
+	    print_('Download: %0.2f Mbit/s, ' % ((dlspeed / 1000 / 1000) * 8), end='')
+    else:
+	print_('Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
     for size in sizesizes:
         for i in range(0, 25):
             sizes.append(size)
-    if not args.simple:
+    if not (args.simple or args.tabbed):
         print_('Testing upload speed', end='')
-    ulspeed = uploadSpeed(best['url'], sizes, args.simple)
-    if not args.simple:
+    ulspeed = uploadSpeed(best['url'], sizes, (args.simple or args.tabbed))
+
+    if not (args.simple or args.tabbed):
         print_()
-    print_('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
+
+    if args.tabbed and args.onlyvalues:
+	print_('%0.2f' % ((ulspeed / 1000 / 1000) * 8))
+    else:
+        print_('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
