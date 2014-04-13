@@ -294,11 +294,9 @@ class HTTPUploaderData(object):
         self.timeout = timeout
 
         chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        data = chars * (int(round(int(length) / 36.0)))
-        self.data = StringIO()
-        self.data.write('content1=%s' % data[0:int(length) - 9])
-        del data
-        self.data.seek(0)
+        multiplier = int(round(int(length) / 36.0))
+        self.data = StringIO('content1=%s' %
+                             (chars * multiplier)[0:int(length) - 9])
 
         self.total = [0]
 
@@ -340,6 +338,8 @@ class HTTPUploader(threading.Thread):
                 self.result = 0
         except:
             self.result = sum(self.data.total)
+
+        del self.data
 
 
 class SpeedtestResults(object):
