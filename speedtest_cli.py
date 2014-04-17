@@ -543,6 +543,19 @@ def speedtest():
             text = f.read()
             f.close()
         extension = re.findall('upload_extension: "([^"]+)"', text.decode())
+        if not extension:
+            for ext in ['php', 'asp', 'aspx', 'jsp']:
+                try:
+                    f = urlopen('%s/speedtest/upload.%s' % (args.mini, ext))
+                except:
+                    pass
+                else:
+                    data = f.read().strip()
+                    if (f.code == 200 and
+                            len(data.splitlines()) == 1 and
+                            re.match('size=[0-9]', data)):
+                        extension = [ext]
+                        break
         if not urlparts or not extension:
             print_('Please provide the full URL of your Speedtest Mini server')
             sys.exit(1)
