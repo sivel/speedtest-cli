@@ -1,14 +1,20 @@
 # Pull Requests
 
-Pull requests should be made against the `working` branch.
+Pull requests should be made against the `devel` branch. Pull requests should be made from a git feature branch. Pull requests will not be accepted that:
+
+1. Are not made against the `devel` branch
+1. Are submitted from a branch named `devel`
+1. Don't pass pep8/pyflakes/flake8
+1. Do not work with Python 2.4-3.4 or pypy
+1. Add python modules not included with the Python standard library
 
 # Coding Guidelines
 
-In general, I follow strict pep8 and pyflakes.  All code must pass these tests. Since we support python 2.4-3.4, pyflakes reports unknown names in python 3.  pyflakes is run in python 2.7 only in my tests.
+In general, I follow strict pep8 and pyflakes. All code must pass these tests. Since we support python 2.4-3.4 and pypy, pyflakes reports unknown names in python 3.  pyflakes is run in python 2.7 only in my tests.
 
 # Supported Python Versions
 
-All code needs to support Python 2.4-3.4.
+All code needs to support Python 2.4-3.4 and pypy.
 
 # Permitted Python Modules
 
