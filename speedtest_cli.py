@@ -47,6 +47,7 @@ import socket
 
 # Used for bound_interface
 socket_socket = socket.socket
+socket.setdefaulttimeout(10)
 
 try:
     import xml.etree.cElementTree as ET
@@ -311,6 +312,10 @@ class HTTPUploaderData(object):
     def __len__(self):
         return self.length
 
+    def to_string(self):
+        self.total.append(self.length)
+        return self.read(self.length)
+
 
 class HTTPUploader(threading.Thread):
     """Thread class for uploading to a URL"""
@@ -318,6 +323,7 @@ class HTTPUploader(threading.Thread):
     def __init__(self, i, url, start, size, timeout):
         self.url = url
         self.data = HTTPUploaderData(size, start, timeout)
+        self.size = size
         self.result = None
         self.starttime = start
         self.timeout = timeout
@@ -328,18 +334,39 @@ class HTTPUploader(threading.Thread):
         try:
             if ((time.time() - self.starttime) <= self.timeout and
                     not shutdown_event.isSet()):
-                req = Request(self.url, self.data)
-                req.add_header('User-Agent', USER_AGENT)
-                f = urlopen(req)
+                try:
+                    req = Request(self.url, self.data)
+                    req.add_header('User-Agent', USER_AGENT)
+                    f = urlopen(req)
+                except TypeError:
+                    req.data = self.data.read(self.size)
+                    f = urlopen(req)
                 f.read(11)
                 f.close()
-                self.result = sum(self.data.total)
+                try:
+                    self.result = sum(self.data.total)
+                except AttributeError:
+                    self.result = self.size
             else:
                 self.result = 0
         except:
             self.result = sum(self.data.total)
 
         del self.data
+
+
+class DataDescriptor(object):
+    def __init__(self, value=None):
+        self.value = value
+
+    def __get__(self, instance, cls):
+        return self.value
+
+    def __set__(self, value):
+        self.value = value
+
+    def __delete__(self):
+        self.value = 0
 
 
 class SpeedtestResults(object):
@@ -357,59 +384,11 @@ class SpeedtestResults(object):
     """
 
     def __init__(self, download=0, upload=0, ping=0, server=dict()):
-        self._download = download
-        self._upload = upload
-        self._ping = ping
-        self._server = server
-        self._share = None
-
-    @property
-    def download(self):
-        """Get upload speed result"""
-
-        return self._download
-
-    @download.setter
-    def download(self, value):
-        """Setter for download speed value"""
-
-        self._download = value
-
-    @property
-    def upload(self):
-        """Get upload speed result"""
-
-        return self._upload
-
-    @upload.setter
-    def upload(self, value):
-        """Setter for upload speed value"""
-
-        self._upload = value
-
-    @property
-    def ping(self):
-        """Get ping/latency value"""
-
-        return self._ping
-
-    @ping.setter
-    def ping(self, value):
-        """Setter for ping/latency value"""
-
-        self._ping = value
-
-    @property
-    def server(self):
-        """Get data for server used in the test"""
-
-        return self._server
-
-    @server.setter
-    def server(self, value):
-        """Setter for server data"""
-
-        self._server = value
+        self.download = DataDescriptor(download)
+        self.upload = DataDescriptor(upload)
+        self.ping = DataDescriptor(ping)
+        self.server = DataDescriptor(server)
+        self.share = DataDescriptor(None)
 
     def dict(self):
         """Return dictionary of result data"""
@@ -1034,8 +1013,8 @@ def shell():
     try:
         unicode()
         printer(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                '%(latency)s ms' %
-                results.server).encode('utf-8', 'ignore'), quiet)
+                 '%(latency)s ms' %
+                 results.server).encode('utf-8', 'ignore'), quiet)
     except NameError:
         printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                 '%(latency)s ms' % results.server, quiet)
