@@ -30,8 +30,12 @@ here = os.path.abspath(os.path.dirname(__file__))
 def find_version(*file_paths):
     # Open in Latin-1 so that we avoid encoding errors.
     # Use codecs.open for Python 2 compatibility
-    with codecs.open(os.path.join(here, *file_paths), 'r', 'latin1') as f:
+    try:
+        f = codecs.open(os.path.join(here, *file_paths), 'r', 'latin1')
         version_file = f.read()
+        f.close()
+    except:
+        raise RuntimeError("Unable to find version string.")
 
     # The version line must have the form
     # __version__ = 'ver'
@@ -44,8 +48,9 @@ def find_version(*file_paths):
 
 # Get the long description from the relevant file
 try:
-    with codecs.open('README.rst', encoding='utf-8') as f:
-        long_description = f.read()
+    f = codecs.open('README.rst', encoding='utf-8')
+    long_description = f.read()
+    f.close()
 except:
     long_description = ''
 
