@@ -44,9 +44,19 @@ except ImportError:
 
 # Begin import game to handle Python 2 and Python 3
 try:
-    from urllib2 import urlopen, Request, HTTPError, URLError
+    from urllib2 import urlopen, Request, HTTPError, URLError, HTTPErrorProcessor, build_opener
 except ImportError:
-    from urllib.request import urlopen, Request, HTTPError, URLError
+    from urllib.request import urlopen, Request, HTTPError, URLError, HTTPErrorProcessor, build_opener
+
+
+class NoRedirection(HTTPErrorProcessor):
+
+    def http_response(self, request, response):
+        return response
+
+    https_response = http_response
+
+
 
 try:
     from Queue import Queue
@@ -57,6 +67,11 @@ try:
     from urlparse import urlparse
 except ImportError:
     from urllib.parse import urlparse
+
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
 
 try:
     from urlparse import parse_qs
@@ -173,7 +188,8 @@ class FileGetter(threading.Thread):
         self.result = [0]
         try:
             if (time.time() - self.starttime) <= 10:
-                f = urlopen(self.url)
+                req = Request(self.url)
+                f = urlopen(req)
                 while 1 and not shutdown_event.isSet():
                     self.result.append(len(f.read(10240)))
                     if self.result[-1] == 0:
@@ -237,7 +253,8 @@ class FilePutter(threading.Thread):
         try:
             if ((time.time() - self.starttime) <= 10 and
                     not shutdown_event.isSet()):
-                f = urlopen(self.url, self.data)
+                req = Request(self.url)
+                f = urlopen(req, self.data)
                 f.read(11)
                 f.close()
                 self.result = len(self.data)
@@ -300,7 +317,8 @@ def getConfig():
     we are interested in
     """
 
-    uh = urlopen('http://www.speedtest.net/speedtest-config.php')
+    req = Request('http://www.speedtest.net/speedtest-config.php')
+    uh = urlopen(req)
     configxml = []
     while 1:
         configxml.append(uh.read(10240))
@@ -333,7 +351,8 @@ def closestServers(client, all=False):
     distance
     """
 
-    uh = urlopen('http://www.speedtest.net/speedtest-servers.php')
+    req = Request('http://www.speedtest.net/speedtest-servers.php')
+    uh = urlopen(req)
     serversxml = []
     while 1:
         serversxml.append(uh.read(10240))
@@ -390,7 +409,8 @@ def getBestServer(servers):
         url = os.path.dirname(server['url'])
         for i in range(0, 3):
             try:
-                uh = urlopen('%s/latency.txt' % url)
+                req = Request('%s/latency.txt' % url)
+                uh = urlopen(req)
             except (HTTPError, URLError):
                 cum.append(3600)
                 continue
@@ -428,6 +448,35 @@ def version():
     raise SystemExit(__version__)
 
 
+def speedtest_auth(uid, pw):
+    """Log in to speedtest.net"""
+
+    authlist = []
+
+    noredir=build_opener(NoRedirection)
+
+    postData = urlencode({'email': uid, 'password': pw, 'action': 'login'})
+
+    req = Request('https://www.speedtest.net/user-login.php', postData)
+    f = noredir.open(req)
+    cookies = f.info().getallmatchingheaders('Set-Cookie')
+    code = f.code
+    f.close()
+
+    if int(code) != 302:
+        print_('Could not log in to speedtest.net')
+        sys.exit(1)
+
+    for cookieline in cookies:
+        cookieline = re.sub("(\r|\n)", "", cookieline)
+        cookieline = re.sub("^Set-Cookie:\s*", "", cookieline)
+        cookieline = re.sub(";.*$", "", cookieline)
+        if re.match("(stnetsid|expire)=", cookieline):
+            authlist.append(cookieline)
+
+    return "; ".join(authlist)
+
+
 def speedtest():
     """Run the full speedtest.net test"""
 
@@ -450,6 +499,8 @@ def speedtest():
         parser.add_argument = parser.add_option
     except AttributeError:
         pass
+    parser.add_argument('--uid', help='Specify speedtest.net username')
+    parser.add_argument('--pw', help='Specify speedtest.net password')
     parser.add_argument('--share', action='store_true',
                         help='Generate and provide a URL to the speedtest.net '
                              'share results image')
@@ -480,6 +531,17 @@ def speedtest():
     if args.source:
         source = args.source
         socket.socket = bound_socket
+
+    if (args.uid and not args.pw) or (args.pw and not args.uid):
+        print_('Must specify both uid and pw or neither')
+        sys.exit(1)
+
+    if args.uid:
+        if not args.share:
+            print_('Must share to post to My Results; auto-enabling')
+        auth = speedtest_auth(args.uid, args.pw)
+    else:
+        auth = None
 
     if not args.simple:
         print_('Retrieving speedtest.net configuration...')
@@ -531,7 +593,8 @@ def speedtest():
             url = args.mini
         urlparts = urlparse(url)
         try:
-            f = urlopen(args.mini)
+            req = Request(args.mini)
+            f = urlopen(req)
         except:
             print_('Invalid Speedtest Mini URL')
             sys.exit(1)
@@ -601,7 +664,7 @@ def speedtest():
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
                'testing against a Speedtest Mini server')
-    elif args.share:
+    elif args.share or args.uid:
         dlspeedk = int(round((dlspeed / 1000) * 8, 0))
         ping = int(round(best['latency'], 0))
         ulspeedk = int(round((ulspeed / 1000) * 8, 0))
@@ -625,6 +688,8 @@ def speedtest():
         req = Request('http://www.speedtest.net/api/api.php',
                       data='&'.join(apiData).encode())
         req.add_header('Referer', 'http://c.speedtest.net/flash/speedtest.swf')
+        if auth:
+            req.add_header('Cookie', auth)
         f = urlopen(req)
         response = f.read()
         code = f.code
@@ -640,7 +705,9 @@ def speedtest():
             print_('Could not submit results to speedtest.net')
             sys.exit(1)
 
-        print_('Share results: http://www.speedtest.net/result/%s.png' %
+        print_('Share results: http://www.speedtest.net/my-result/%s' %
+               resultid[0])
+        print_('Share results image: http://www.speedtest.net/result/%s.png' %
                resultid[0])
 
 
