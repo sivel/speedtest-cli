@@ -44,19 +44,11 @@ except ImportError:
 
 # Begin import game to handle Python 2 and Python 3
 try:
-    from urllib2 import urlopen, Request, HTTPError, URLError, HTTPErrorProcessor, build_opener
+    from urllib2 import urlopen, Request, HTTPError, URLError, \
+        HTTPErrorProcessor, build_opener
 except ImportError:
-    from urllib.request import urlopen, Request, HTTPError, URLError, HTTPErrorProcessor, build_opener
-
-
-class NoRedirection(HTTPErrorProcessor):
-
-    def http_response(self, request, response):
-        return response
-
-    https_response = http_response
-
-
+    from urllib.request import urlopen, Request, HTTPError, URLError, \
+        HTTPErrorProcessor, build_opener
 
 try:
     from Queue import Queue
@@ -173,6 +165,15 @@ def distance(origin, destination):
     d = radius * c
 
     return d
+
+
+class NoRedirection(HTTPErrorProcessor):
+    """httplib class to ignore redirections"""
+
+    def http_response(self, request, response):
+        return response
+
+    https_response = http_response
 
 
 class FileGetter(threading.Thread):
@@ -448,7 +449,7 @@ def speedtest_auth(uid, pw):
 
     authlist = []
 
-    noredir=build_opener(NoRedirection)
+    noredir = build_opener(NoRedirection)
 
     postData = urlencode({'email': uid, 'password': pw, 'action': 'login'})
 
