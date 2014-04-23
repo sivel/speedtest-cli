@@ -1,12 +1,18 @@
 # Pull Requests
 
-Pull requests should be made against the `devel` branch. Pull requests should be made from a git feature branch. Pull requests will not be accepted that:
+## Pull requests should be
+
+1. Made against the `devel` branch.
+1. Made from a git feature branch.
+
+## Pull requests will not be accepted that
 
 1. Are not made against the `devel` branch
 1. Are submitted from a branch named `devel`
-1. Don't pass pep8/pyflakes/flake8
+1. Do not pass pep8/pyflakes/flake8
 1. Do not work with Python 2.4-3.4 or pypy
 1. Add python modules not included with the Python standard library
+1. Are made by editing files via the GitHub website
 
 # Coding Guidelines
 
