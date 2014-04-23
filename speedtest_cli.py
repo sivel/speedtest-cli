@@ -188,8 +188,7 @@ class FileGetter(threading.Thread):
         self.result = [0]
         try:
             if (time.time() - self.starttime) <= 10:
-                req = Request(self.url)
-                f = urlopen(req)
+                f = urlopen(self.url)
                 while 1 and not shutdown_event.isSet():
                     self.result.append(len(f.read(10240)))
                     if self.result[-1] == 0:
@@ -253,8 +252,7 @@ class FilePutter(threading.Thread):
         try:
             if ((time.time() - self.starttime) <= 10 and
                     not shutdown_event.isSet()):
-                req = Request(self.url)
-                f = urlopen(req, self.data)
+                f = urlopen(self.url, self.data)
                 f.read(11)
                 f.close()
                 self.result = len(self.data)
@@ -317,8 +315,7 @@ def getConfig():
     we are interested in
     """
 
-    req = Request('http://www.speedtest.net/speedtest-config.php')
-    uh = urlopen(req)
+    uh = urlopen('http://www.speedtest.net/speedtest-config.php')
     configxml = []
     while 1:
         configxml.append(uh.read(10240))
@@ -351,8 +348,7 @@ def closestServers(client, all=False):
     distance
     """
 
-    req = Request('http://www.speedtest.net/speedtest-servers.php')
-    uh = urlopen(req)
+    uh = urlopen('http://www.speedtest.net/speedtest-servers.php')
     serversxml = []
     while 1:
         serversxml.append(uh.read(10240))
@@ -409,8 +405,7 @@ def getBestServer(servers):
         url = os.path.dirname(server['url'])
         for i in range(0, 3):
             try:
-                req = Request('%s/latency.txt' % url)
-                uh = urlopen(req)
+                uh = urlopen('%s/latency.txt' % url)
             except (HTTPError, URLError):
                 cum.append(3600)
                 continue
@@ -593,8 +588,7 @@ def speedtest():
             url = args.mini
         urlparts = urlparse(url)
         try:
-            req = Request(args.mini)
-            f = urlopen(req)
+            f = urlopen(args.mini)
         except:
             print_('Invalid Speedtest Mini URL')
             sys.exit(1)
