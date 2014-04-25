@@ -1,30 +1,35 @@
----
 language: python
 
 python:
- - 2.6
  - 2.7
- - 3.2
- - 3.3
- - pypy
+
+env:
+ - TOXENV=py24
+ - TOXENV=py25
+ - TOXENV=py26
+ - TOXENV=py27
+ - TOXENV=py31
+ - TOXENV=py32
+ - TOXENV=py33
+ - TOXENV=py34
+ - TOXENV=pypy
+ - TOXENV=flake8
+
+before_install:
+ - if [[ $(echo "$TOXENV" | egrep -c "(py2[45]|py3[14])") != 0 ]]; then sudo add-apt-repository -y ppa:fkrull/deadsnakes; fi;
+ - if [[ $(echo "$TOXENV" | egrep -c "(py2[45]|py3[14])") != 0 ]]; then sudo apt-get update -qq; fi;
+ - if [[ "$TOXENV" == "py24" ]]; then sudo apt-get install -y python2.4; fi;
+ - if [[ "$TOXENV" == "py25" ]]; then sudo apt-get install -y python2.5; fi;
+ - if [[ "$TOXENV" == "py31" ]]; then sudo apt-get install -y python3.1; fi;
+ - if [[ "$TOXENV" == "py34" ]]; then sudo apt-get install -y python3.4; fi;
+ - if [[ "$TOXENV" == "pypy" ]]; then sudo apt-get install -y pypy; fi;
 
 install:
-  - pip install .
-  - pip install pep8 pyflakes
+ - if [[ $(echo "$TOXENV" | egrep -c "(py2[45]|py31)") != 0 ]]; then pip install virtualenv==1.7.2 tox==1.3; fi;
+ - if [[ $(echo "$TOXENV" | egrep -c "(py2[45]|py31)") == 0 ]]; then pip install tox; fi;
 
 script:
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pep8 --show-source speedtest_cli.py; fi
-
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pyflakes speedtest_cli.py; fi
-
-  - python speedtest_cli.py
-
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then curl -s http://www.python.org/ftp/python/2.4.6/Python-2.4.6.tar.bz2 | tar xj; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then cd Python-2.4.6; ./configure --prefix=$HOME/virtualenv/python2.4 > /dev/null 2>&1; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then make > /dev/null 2>&1; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then make install > /dev/null 2>&1; cd ..; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then ~/virtualenv/python2.4/bin/python2.4 -V; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then ~/virtualenv/python2.4/bin/python2.4 ./speedtest_cli.py; fi
+ - tox
 
 notifications:
   email:
