@@ -538,7 +538,7 @@ def speedtest():
 
     if args.uid:
         if not args.share:
-            print_('Must share to post to My Results; auto-enabling')
+            print_('Warning: specifying credentials implies --share')
         auth = speedtest_auth(args.uid, args.pw)
     else:
         auth = None
