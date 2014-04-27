@@ -103,6 +103,11 @@ except ImportError:
     PARSER_TYPE_INT = 'int'
 
 try:
+    import json
+except ImportError:
+    import simplejson as json
+
+try:
     import builtins
 except ImportError:
     def print_(*args, **kwargs):
@@ -388,23 +393,31 @@ class SpeedtestResults(object):
         self.upload = DataDescriptor(upload)
         self.ping = DataDescriptor(ping)
         self.server = DataDescriptor(server)
-        self.share = DataDescriptor(None)
+        self._share = None
 
-    def dict(self):
+    def dict(self, share=False):
         """Return dictionary of result data"""
 
-        return dict(download=self.download,
+        output = dict(download=self.download,
                     upload=self.upload,
                     ping=self.ping,
                     server=int(self.server['id']))
 
-    def csv(self):
+        if share:
+            output["share"] = self.share()
+
+        return output
+
+    def csv(self, share=False):
         """Return data in CSV format in the order of:
-        Speedtest.net Server ID, Latency/Ping, Download Speed, Upload Speed
+        Speedtest.net Server ID, Latency/Ping, Download Speed, Upload Speed and
+        Share Link
 
         """
 
-        return '%(server)s,%(ping)s,%(download)s,%(upload)s' % self.dict()
+        output = '%(server)s,%(ping)s,%(download)s,%(upload)s' % self.dict()
+
+        return "%s,%s" % (output, self.share()) if share else output
 
     def share(self):
         """POST data to the speedtest.net API to obtain a share results
@@ -462,14 +475,17 @@ class SpeedtestResults(object):
 
         return self._share
 
-    def simple(self, units):
-        return """Ping: %s ms
+    def simple(self, units, share=False):
+        results = """Ping: %s ms
 Download: %0.2f M%s/s
 Upload: %0.2f M%s/s""" % (self.ping,
                           (self.download / 1000 / 1000) * units[1],
                           units[0],
                           (self.upload / 1000 / 1000) * units[1],
                           units[0])
+        if share:
+            results = "%s\nShare results: %s" % (results, self.share())
+        return results
 
 
 class Speedtest(object):
@@ -1046,12 +1062,15 @@ def shell():
             ((results.upload / 1000 / 1000) * args.units[1], args.units[0]),
             quiet)
 
+    if args.share:
+        printer('Share results: %s' % results.share(), quiet)
+
     if args.simple:
-        print_(results.simple(args.units))
+        print_(results.simple(args.units, share=args.share))
     elif args.csv:
-        print_(results.csv())
+        print_(results.csv(share=args.share))
     elif args.json:
-        print_(repr(results.dict()).replace("'", '"'))
+        print_(json.dumps(results.dict(share=args.share)))
 
 
 def main():
