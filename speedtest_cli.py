@@ -784,7 +784,8 @@ class Speedtest(object):
                 while thread.isAlive():
                     thread.join(timeout=0.1)
                 finished.append(sum(thread.result))
-                callback(thread.i, url_count, end=True)
+                if callback:
+                    callback(thread.i, url_count, end=True)
                 del thread
 
         q = Queue(self.config['threads']['download'])
@@ -834,7 +835,8 @@ class Speedtest(object):
                 while thread.isAlive():
                     thread.join(timeout=0.1)
                 finished.append(thread.result)
-                callback(thread.i, size_count, end=True)
+                if callback:
+                    callback(thread.i, size_count, end=True)
                 del thread
 
         q = Queue(self.config['threads']['upload'])
