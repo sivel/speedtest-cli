@@ -784,7 +784,7 @@ class Speedtest(object):
                 while thread.isAlive():
                     thread.join(timeout=0.1)
                 finished.append(sum(thread.result))
-                if callback:
+                if not shutdown_event.isSet() and callback:
                     callback(thread.i, url_count, end=True)
                 del thread
 
@@ -835,7 +835,7 @@ class Speedtest(object):
                 while thread.isAlive():
                     thread.join(timeout=0.1)
                 finished.append(thread.result)
-                if callback:
+                if not shutdown_event.isSet() and callback:
                     callback(thread.i, size_count, end=True)
                 del thread
 
