@@ -275,7 +275,8 @@ class HTTPDownloader(threading.Thread):
         self.result = [0]
         try:
             if (time.time() - self.starttime) <= self.timeout:
-                req = Request(self.url)
+                req = Request('%s?x=%s&y=%s' %
+                              (self.url, int(time.time() * 1000), self.i))
                 req.add_header('User-Agent', USER_AGENT)
                 f = urlopen(req)
                 while (1 and not shutdown_event.isSet() and
@@ -335,7 +336,9 @@ class HTTPUploader(threading.Thread):
             if ((time.time() - self.starttime) <= self.timeout and
                     not shutdown_event.isSet()):
                 try:
-                    req = Request(self.url, self.data)
+                    req = Request('%s?x=%s' %
+                                  (self.url, int(time.time() * 1000)),
+                                  self.data)
                     req.add_header('User-Agent', USER_AGENT)
                     f = urlopen(req)
                 except TypeError:
@@ -728,7 +731,8 @@ class Speedtest(object):
             url = os.path.dirname(server['url'])
             for _ in range(0, 3):
                 try:
-                    req = Request('%s/latency.txt' % url)
+                    req = Request('%s/latency.txt?x=%s' %
+                                  (url, int(time.time() * 1000)))
                     req.add_header('User-Agent', USER_AGENT)
                     f = urlopen(req)
                 except (HTTPError, URLError):
