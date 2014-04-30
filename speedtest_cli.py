@@ -1062,6 +1062,9 @@ def shell():
     elif args.json:
         print_(repr(results.dict()).replace("'", '"'))
 
+    if args.share:
+        printer('Share results: %s' % results.share(), quiet)
+
 
 def main():
     try:
