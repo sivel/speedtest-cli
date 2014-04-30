@@ -359,17 +359,17 @@ class HTTPUploader(threading.Thread):
 
 
 class DataDescriptor(object):
-    def __init__(self, value=None):
-        self.value = value
+    def __init__(self, default=None):
+        self.value = self.default = default
 
     def __get__(self, instance, cls):
         return self.value
 
-    def __set__(self, value):
+    def __set__(self, instance, value):
         self.value = value
 
     def __delete__(self):
-        self.value = 0
+        self.value = self.default
 
 
 class SpeedtestResults(object):
@@ -385,13 +385,18 @@ class SpeedtestResults(object):
     to get a share results image link.
 
     """
+    download = DataDescriptor(0)
+    upload = DataDescriptor(0)
+    ping = DataDescriptor(0)
+    server = DataDescriptor(dict())
+    _share = DataDescriptor(None)
 
     def __init__(self, download=0, upload=0, ping=0, server=dict()):
-        self.download = DataDescriptor(download)
-        self.upload = DataDescriptor(upload)
-        self.ping = DataDescriptor(ping)
-        self.server = DataDescriptor(server)
-        self.share = DataDescriptor(None)
+        self.download = download
+        self.upload = upload
+        self.ping = ping
+        self.server = server
+        self._share = None
 
     def dict(self):
         """Return dictionary of result data"""
