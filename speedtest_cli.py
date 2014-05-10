@@ -676,7 +676,7 @@ def speedtest():
             found = imp.find_module(args.resultlog)
             logmodule = imp.load_module(args.resultlog, found)
         except ImportError:
-            print_('Load log module (%s) failed.' % args.resultlog),
+            print_('Log module (%s) failed. Not logging.' % args.resultlog),
             sys.exit(1)
 
         result = {'dlspeed': dlspeed, 'ulspeed': ulspeed}
