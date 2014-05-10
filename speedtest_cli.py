@@ -30,7 +30,7 @@ import re
 import signal
 import socket
 
-from importlib import import_module
+import imp
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -673,7 +673,8 @@ def speedtest():
     if args.resultlog:
         logmodule = None
         try:
-            logmodule = import_module(args.resultlog)
+            found = imp.find_module(args.resultlog)
+            logmodule = imp.load_module(args.resultlog, found)
         except ImportError:
             print_('Load log module (%s) failed.' % args.resultlog),
             sys.exit(1)
