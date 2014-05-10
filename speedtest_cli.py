@@ -30,6 +30,8 @@ import re
 import signal
 import socket
 
+from importlib import import_module
+
 # Used for bound_interface
 socket_socket = socket.socket
 
@@ -469,7 +471,12 @@ def speedtest():
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
+    parser.add_argument('--resultlog', action='store',
+                        help='Module name to use for result logging',
+                        default=None, metavar='path.to.module')
+
     options = parser.parse_args()
+
     if isinstance(options, tuple):
         args = options[0]
     else:
@@ -571,6 +578,7 @@ def speedtest():
             best = getBestServer(servers)
         except:
             best = servers[0]
+
     else:
         if not args.simple:
             print_('Selecting best server based on ping...')
@@ -661,6 +669,18 @@ def speedtest():
 
         print_('Share results: http://www.speedtest.net/result/%s.png' %
                resultid[0])
+
+    if args.resultlog:
+        logmodule = None
+        try:
+            logmodule = import_module(args.resultlog)
+        except ImportError:
+            print_('Load log module (%s) failed.' % args.resultlog),
+            sys.exit(1)
+
+        result = {'dlspeed': dlspeed, 'ulspeed': ulspeed}
+        log = logmodule.logger(config, best, result)
+        log.logresult()
 
 
 def main():
