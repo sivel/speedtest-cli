@@ -18,6 +18,14 @@
 
 In general, I follow strict pep8 and pyflakes. All code must pass these tests. Since we support python 2.4-3.4 and pypy, pyflakes reports unknown names in python 3.  pyflakes is run in python 2.7 only in my tests.
 
+## Some other points
+
+1. Do not use `\` for line continuations, long strings should be wrapped in `()`.  Imports should start a brand new line in the form of `from foo import...`
+1. String quoting should be done with single quotes `'`, except for situations where you would otherwise have to escape an internal single quote
+1. Docstrings should use three double quotes `"""`
+1. All functions, classes and modules should have docstrings following both the PEP257 and PEP8 standards
+1. Inline comments should only be used on code where it is not immediately obvious what the code achieves
+
 # Supported Python Versions
 
 All code needs to support Python 2.4-3.4 and pypy.
