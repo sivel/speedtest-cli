@@ -49,6 +49,11 @@ except ImportError:
     from urllib.request import urlopen, Request, HTTPError, URLError
 
 try:
+    from httplib import HTTPConnection, HTTPSConnection
+except ImportError:
+    from http.client import HTTPConnection, HTTPSConnection
+
+try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
@@ -380,31 +385,36 @@ def closestServers(client, all=False):
 
 
 def getBestServer(servers):
-    """Perform a speedtest.net "ping" to determine which speedtest.net
-    server has the lowest latency
+    """Perform a speedtest.net latency request to determine which
+    speedtest.net server has the lowest latency
     """
 
     results = {}
     for server in servers:
         cum = []
-        url = os.path.dirname(server['url'])
+        url = '%s/latency.txt' % os.path.dirname(server['url'])
+        urlparts = urlparse(url)
         for i in range(0, 3):
             try:
-                uh = urlopen('%s/latency.txt' % url)
+                if urlparts[0] == 'https':
+                    h = HTTPSConnection(urlparts[1])
+                else:
+                    h = HTTPConnection(urlparts[1])
+                start = time.time()
+                h.request("GET", urlparts[2])
+                r = h.getresponse()
+                total = (time.time() - start)
             except (HTTPError, URLError):
                 cum.append(3600)
                 continue
-            start = time.time()
-            text = uh.read(9)
-            total = time.time() - start
-            if int(uh.code) == 200 and text == 'test=test'.encode():
+            text = r.read(9)
+            if int(r.status) == 200 and text == 'test=test'.encode():
                 cum.append(total)
             else:
                 cum.append(3600)
-            uh.close()
-        avg = round((sum(cum) / 3) * 1000000, 3)
+            h.close()
+        avg = round((sum(cum) / 6) * 1000, 3)
         results[avg] = server
-
     fastest = sorted(results.keys())[0]
     best = results[fastest]
     best['latency'] = fastest
@@ -573,7 +583,7 @@ def speedtest():
             best = servers[0]
     else:
         if not args.simple:
-            print_('Selecting best server based on ping...')
+            print_('Selecting best server based on latency...')
         best = getBestServer(servers)
 
     if not args.simple:
@@ -588,7 +598,7 @@ def speedtest():
             print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                    '%(latency)s ms' % best)
     else:
-        print_('Ping: %(latency)s ms' % best)
+        print_('Latency: %(latency)s ms' % best)
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
