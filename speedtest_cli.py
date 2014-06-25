@@ -315,19 +315,23 @@ def getConfig():
         return None
     uh.close()
     try:
-        root = ET.fromstring(''.encode().join(configxml))
-        config = {
-            'client': root.find('client').attrib,
-            'times': root.find('times').attrib,
-            'download': root.find('download').attrib,
-            'upload': root.find('upload').attrib}
-    except AttributeError:
-        root = DOM.parseString(''.join(configxml))
-        config = {
-            'client': getAttributesByTagName(root, 'client'),
-            'times': getAttributesByTagName(root, 'times'),
-            'download': getAttributesByTagName(root, 'download'),
-            'upload': getAttributesByTagName(root, 'upload')}
+        try:
+            root = ET.fromstring(''.encode().join(configxml))
+            config = {
+                'client': root.find('client').attrib,
+                'times': root.find('times').attrib,
+                'download': root.find('download').attrib,
+                'upload': root.find('upload').attrib}
+        except AttributeError:
+            root = DOM.parseString(''.join(configxml))
+            config = {
+                'client': getAttributesByTagName(root, 'client'),
+                'times': getAttributesByTagName(root, 'times'),
+                'download': getAttributesByTagName(root, 'download'),
+                'upload': getAttributesByTagName(root, 'upload')}
+    except SyntaxError:
+        print_('Failed to parse speedtest.net configuration')
+        sys.exit(1)
     del root
     del configxml
     return config
@@ -348,11 +352,15 @@ def closestServers(client, all=False):
         return None
     uh.close()
     try:
-        root = ET.fromstring(''.encode().join(serversxml))
-        elements = root.getiterator('server')
-    except AttributeError:
-        root = DOM.parseString(''.join(serversxml))
-        elements = root.getElementsByTagName('server')
+        try:
+            root = ET.fromstring(''.encode().join(serversxml))
+            elements = root.getiterator('server')
+        except AttributeError:
+            root = DOM.parseString(''.join(serversxml))
+            elements = root.getElementsByTagName('server')
+    except SyntaxError:
+        print_('Failed to parse list of speedtest.net servers')
+        sys.exit(1)
     servers = {}
     for server in elements:
         try:
