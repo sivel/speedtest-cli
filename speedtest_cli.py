@@ -22,7 +22,7 @@ source = None
 shutdown_event = None
 
 import math
-import time
+import timeit
 import os
 import sys
 import threading
@@ -172,7 +172,7 @@ class FileGetter(threading.Thread):
     def run(self):
         self.result = [0]
         try:
-            if (time.time() - self.starttime) <= 10:
+            if (timeit.default_timer() - self.starttime) <= 10:
                 f = urlopen(self.url)
                 while 1 and not shutdown_event.isSet():
                     self.result.append(len(f.read(10240)))
@@ -186,7 +186,7 @@ class FileGetter(threading.Thread):
 def downloadSpeed(files, quiet=False):
     """Function to launch FileGetter threads and calculate download speeds"""
 
-    start = time.time()
+    start = timeit.default_timer()
 
     def producer(q, files):
         for file in files:
@@ -210,14 +210,14 @@ def downloadSpeed(files, quiet=False):
     q = Queue(6)
     prod_thread = threading.Thread(target=producer, args=(q, files))
     cons_thread = threading.Thread(target=consumer, args=(q, len(files)))
-    start = time.time()
+    start = timeit.default_timer()
     prod_thread.start()
     cons_thread.start()
     while prod_thread.isAlive():
         prod_thread.join(timeout=0.1)
     while cons_thread.isAlive():
         cons_thread.join(timeout=0.1)
-    return (sum(finished) / (time.time() - start))
+    return (sum(finished) / (timeit.default_timer() - start))
 
 
 class FilePutter(threading.Thread):
@@ -235,7 +235,7 @@ class FilePutter(threading.Thread):
 
     def run(self):
         try:
-            if ((time.time() - self.starttime) <= 10 and
+            if ((timeit.default_timer() - self.starttime) <= 10 and
                     not shutdown_event.isSet()):
                 f = urlopen(self.url, self.data)
                 f.read(11)
@@ -250,7 +250,7 @@ class FilePutter(threading.Thread):
 def uploadSpeed(url, sizes, quiet=False):
     """Function to launch FilePutter threads and calculate upload speeds"""
 
-    start = time.time()
+    start = timeit.default_timer()
 
     def producer(q, sizes):
         for size in sizes:
@@ -274,14 +274,14 @@ def uploadSpeed(url, sizes, quiet=False):
     q = Queue(6)
     prod_thread = threading.Thread(target=producer, args=(q, sizes))
     cons_thread = threading.Thread(target=consumer, args=(q, len(sizes)))
-    start = time.time()
+    start = timeit.default_timer()
     prod_thread.start()
     cons_thread.start()
     while prod_thread.isAlive():
         prod_thread.join(timeout=0.1)
     while cons_thread.isAlive():
         cons_thread.join(timeout=0.1)
-    return (sum(finished) / (time.time() - start))
+    return (sum(finished) / (timeit.default_timer() - start))
 
 
 def getAttributesByTagName(dom, tagName):
@@ -394,9 +394,9 @@ def getBestServer(servers):
             except (HTTPError, URLError):
                 cum.append(3600)
                 continue
-            start = time.time()
+            start = timeit.default_timer()
             text = uh.read(9)
-            total = time.time() - start
+            total = timeit.default_timer() - start
             if int(uh.code) == 200 and text == 'test=test'.encode():
                 cum.append(total)
             else:
