@@ -29,6 +29,7 @@ import threading
 import re
 import signal
 import socket
+import platform
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -441,9 +442,26 @@ def ctrl_c(signum, frame):
 
 
 def version():
+    print getNetworkIp("speedtest-dev.oit.duke.edu")
     """Print the version"""
 
     raise SystemExit(__version__)
+
+
+def tracerouter(url):
+    host = '{uri.netloc}'.format(uri=urlparse(url))
+    tracer = 'tracert' if (platform.system() == 'Windows') else 'traceroute'
+    print_('Running ', tracer, ' against ', host)
+
+    from subprocess import Popen, PIPE
+    p = Popen([tracer, '-d', '-w', '3', host], stdout=PIPE)
+    while True:
+        line = p.stdout.readline()
+        if not line:
+            break
+        print '\t', line,
+    p.wait()
+    return true
 
 
 def speedtest():
@@ -484,6 +502,9 @@ def speedtest():
     parser.add_argument('--server', help='Specify a server ID to test against')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
+    parser.add_argument('--traceroute', action='store_true',
+                        help='Runs traceroute against test host '
+                        'after speedtest')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -595,16 +616,20 @@ def speedtest():
         best = getBestServer(servers)
 
     if not args.simple:
+        host = '{uri.scheme}://{uri.netloc}/'.format(uri=urlparse(best['url']))
+        print_(best['url'])
+        hostedby = ('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+                    '%(latency)s ms' % best)
+        if args.traceroute:
+            hostedby += (' via %s' % host)
         # Python 2.7 and newer seem to be ok with the resultant encoding
         # from parsing the XML, but older versions have some issues.
         # This block should detect whether we need to encode or not
         try:
             unicode()
-            print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                   '%(latency)s ms' % best).encode('utf-8', 'ignore'))
+            print_(hostedby.encode('utf-8', 'ignore'))
         except NameError:
-            print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                   '%(latency)s ms' % best)
+            print_(hostedby)
     else:
         print_('Latency: %(latency)s ms' % best)
 
@@ -679,6 +704,12 @@ def speedtest():
 
         print_('Share results: http://www.speedtest.net/result/%s.png' %
                resultid[0])
+    if args.traceroute:
+        try:
+            tracerouter(best['url'])
+        except:
+            print_('Unable to run Traceroute against ',
+                   '{uri.netloc}'.format(uri=urlparse(best['url'])))
 
 
 def main():
