@@ -22,13 +22,14 @@ source = None
 shutdown_event = None
 
 import math
-import time
+import timeit
 import os
 import sys
 import threading
 import re
 import signal
 import socket
+import platform
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -47,6 +48,11 @@ try:
     from urllib2 import urlopen, Request, HTTPError, URLError
 except ImportError:
     from urllib.request import urlopen, Request, HTTPError, URLError
+
+try:
+    from httplib import HTTPConnection, HTTPSConnection
+except ImportError:
+    from http.client import HTTPConnection, HTTPSConnection
 
 try:
     from Queue import Queue
@@ -172,7 +178,7 @@ class FileGetter(threading.Thread):
     def run(self):
         self.result = [0]
         try:
-            if (time.time() - self.starttime) <= 10:
+            if (timeit.default_timer() - self.starttime) <= 10:
                 f = urlopen(self.url)
                 while 1 and not shutdown_event.isSet():
                     self.result.append(len(f.read(10240)))
@@ -186,7 +192,7 @@ class FileGetter(threading.Thread):
 def downloadSpeed(files, quiet=False):
     """Function to launch FileGetter threads and calculate download speeds"""
 
-    start = time.time()
+    start = timeit.default_timer()
 
     def producer(q, files):
         for file in files:
@@ -210,14 +216,14 @@ def downloadSpeed(files, quiet=False):
     q = Queue(6)
     prod_thread = threading.Thread(target=producer, args=(q, files))
     cons_thread = threading.Thread(target=consumer, args=(q, len(files)))
-    start = time.time()
+    start = timeit.default_timer()
     prod_thread.start()
     cons_thread.start()
     while prod_thread.isAlive():
         prod_thread.join(timeout=0.1)
     while cons_thread.isAlive():
         cons_thread.join(timeout=0.1)
-    return (sum(finished) / (time.time() - start))
+    return (sum(finished) / (timeit.default_timer() - start))
 
 
 class FilePutter(threading.Thread):
@@ -235,7 +241,7 @@ class FilePutter(threading.Thread):
 
     def run(self):
         try:
-            if ((time.time() - self.starttime) <= 10 and
+            if ((timeit.default_timer() - self.starttime) <= 10 and
                     not shutdown_event.isSet()):
                 f = urlopen(self.url, self.data)
                 f.read(11)
@@ -250,7 +256,7 @@ class FilePutter(threading.Thread):
 def uploadSpeed(url, sizes, quiet=False):
     """Function to launch FilePutter threads and calculate upload speeds"""
 
-    start = time.time()
+    start = timeit.default_timer()
 
     def producer(q, sizes):
         for size in sizes:
@@ -274,14 +280,14 @@ def uploadSpeed(url, sizes, quiet=False):
     q = Queue(6)
     prod_thread = threading.Thread(target=producer, args=(q, sizes))
     cons_thread = threading.Thread(target=consumer, args=(q, len(sizes)))
-    start = time.time()
+    start = timeit.default_timer()
     prod_thread.start()
     cons_thread.start()
     while prod_thread.isAlive():
         prod_thread.join(timeout=0.1)
     while cons_thread.isAlive():
         cons_thread.join(timeout=0.1)
-    return (sum(finished) / (time.time() - start))
+    return (sum(finished) / (timeit.default_timer() - start))
 
 
 def getAttributesByTagName(dom, tagName):
@@ -310,19 +316,23 @@ def getConfig():
         return None
     uh.close()
     try:
-        root = ET.fromstring(''.encode().join(configxml))
-        config = {
-            'client': root.find('client').attrib,
-            'times': root.find('times').attrib,
-            'download': root.find('download').attrib,
-            'upload': root.find('upload').attrib}
-    except AttributeError:
-        root = DOM.parseString(''.join(configxml))
-        config = {
-            'client': getAttributesByTagName(root, 'client'),
-            'times': getAttributesByTagName(root, 'times'),
-            'download': getAttributesByTagName(root, 'download'),
-            'upload': getAttributesByTagName(root, 'upload')}
+        try:
+            root = ET.fromstring(''.encode().join(configxml))
+            config = {
+                'client': root.find('client').attrib,
+                'times': root.find('times').attrib,
+                'download': root.find('download').attrib,
+                'upload': root.find('upload').attrib}
+        except AttributeError:
+            root = DOM.parseString(''.join(configxml))
+            config = {
+                'client': getAttributesByTagName(root, 'client'),
+                'times': getAttributesByTagName(root, 'times'),
+                'download': getAttributesByTagName(root, 'download'),
+                'upload': getAttributesByTagName(root, 'upload')}
+    except SyntaxError:
+        print_('Failed to parse speedtest.net configuration')
+        sys.exit(1)
     del root
     del configxml
     return config
@@ -333,7 +343,7 @@ def closestServers(client, all=False):
     distance
     """
 
-    uh = urlopen('http://www.speedtest.net/speedtest-servers.php')
+    uh = urlopen('http://c.speedtest.net/speedtest-servers-static.php')
     serversxml = []
     while 1:
         serversxml.append(uh.read(10240))
@@ -343,11 +353,15 @@ def closestServers(client, all=False):
         return None
     uh.close()
     try:
-        root = ET.fromstring(''.encode().join(serversxml))
-        elements = root.getiterator('server')
-    except AttributeError:
-        root = DOM.parseString(''.join(serversxml))
-        elements = root.getElementsByTagName('server')
+        try:
+            root = ET.fromstring(''.encode().join(serversxml))
+            elements = root.getiterator('server')
+        except AttributeError:
+            root = DOM.parseString(''.join(serversxml))
+            elements = root.getElementsByTagName('server')
+    except SyntaxError:
+        print_('Failed to parse list of speedtest.net servers')
+        sys.exit(1)
     servers = {}
     for server in elements:
         try:
@@ -380,31 +394,36 @@ def closestServers(client, all=False):
 
 
 def getBestServer(servers):
-    """Perform a speedtest.net "ping" to determine which speedtest.net
-    server has the lowest latency
+    """Perform a speedtest.net latency request to determine which
+    speedtest.net server has the lowest latency
     """
 
     results = {}
     for server in servers:
         cum = []
-        url = os.path.dirname(server['url'])
+        url = '%s/latency.txt' % os.path.dirname(server['url'])
+        urlparts = urlparse(url)
         for i in range(0, 3):
             try:
-                uh = urlopen('%s/latency.txt' % url)
+                if urlparts[0] == 'https':
+                    h = HTTPSConnection(urlparts[1])
+                else:
+                    h = HTTPConnection(urlparts[1])
+                start = timeit.default_timer()
+                h.request("GET", urlparts[2])
+                r = h.getresponse()
+                total = (timeit.default_timer() - start)
             except (HTTPError, URLError):
                 cum.append(3600)
                 continue
-            start = time.time()
-            text = uh.read(9)
-            total = time.time() - start
-            if int(uh.code) == 200 and text == 'test=test'.encode():
+            text = r.read(9)
+            if int(r.status) == 200 and text == 'test=test'.encode():
                 cum.append(total)
             else:
                 cum.append(3600)
-            uh.close()
-        avg = round((sum(cum) / 3) * 1000000, 3)
+            h.close()
+        avg = round((sum(cum) / 6) * 1000, 3)
         results[avg] = server
-
     fastest = sorted(results.keys())[0]
     best = results[fastest]
     best['latency'] = fastest
@@ -423,9 +442,26 @@ def ctrl_c(signum, frame):
 
 
 def version():
+    print getNetworkIp("speedtest-dev.oit.duke.edu")
     """Print the version"""
 
     raise SystemExit(__version__)
+
+
+def tracerouter(url):
+    host = '{uri.netloc}'.format(uri=urlparse(url))
+    tracer = 'tracert' if (platform.system() == 'Windows') else 'traceroute'
+    print_('Running ', tracer, ' against ', host)
+
+    from subprocess import Popen, PIPE
+    p = Popen([tracer, '-d', '-w', '3', host], stdout=PIPE)
+    while True:
+        line = p.stdout.readline()
+        if not line:
+            break
+        print '\t', line,
+    p.wait()
+    return true
 
 
 def speedtest():
@@ -466,6 +502,9 @@ def speedtest():
     parser.add_argument('--server', help='Specify a server ID to test against')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
+    parser.add_argument('--traceroute', action='store_true',
+                        help='Runs traceroute against test host '
+                        'after speedtest')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -573,22 +612,26 @@ def speedtest():
             best = servers[0]
     else:
         if not args.simple:
-            print_('Selecting best server based on ping...')
+            print_('Selecting best server based on latency...')
         best = getBestServer(servers)
 
     if not args.simple:
+        host = '{uri.scheme}://{uri.netloc}/'.format(uri=urlparse(best['url']))
+        print_(best['url'])
+        hostedby = ('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+                    '%(latency)s ms' % best)
+        if args.traceroute:
+            hostedby += (' via %s' % host)
         # Python 2.7 and newer seem to be ok with the resultant encoding
         # from parsing the XML, but older versions have some issues.
         # This block should detect whether we need to encode or not
         try:
             unicode()
-            print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                   '%(latency)s ms' % best).encode('utf-8', 'ignore'))
+            print_(hostedby.encode('utf-8', 'ignore'))
         except NameError:
-            print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                   '%(latency)s ms' % best)
+            print_(hostedby)
     else:
-        print_('Ping: %(latency)s ms' % best)
+        print_('Latency: %(latency)s ms' % best)
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -661,6 +704,12 @@ def speedtest():
 
         print_('Share results: http://www.speedtest.net/result/%s.png' %
                resultid[0])
+    if args.traceroute:
+        try:
+            tracerouter(best['url'])
+        except:
+            print_('Unable to run Traceroute against ',
+                   '{uri.netloc}'.format(uri=urlparse(best['url'])))
 
 
 def main():
