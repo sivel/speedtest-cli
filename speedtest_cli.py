@@ -21,14 +21,14 @@ __version__ = '0.2.7'
 source = None
 shutdown_event = None
 
-import math
-import timeit
 import os
-import sys
-import threading
 import re
+import sys
+import math
 import signal
 import socket
+import timeit
+import threading
 
 # Used for bound_interface
 socket_socket = socket.socket
