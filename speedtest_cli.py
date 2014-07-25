@@ -342,7 +342,7 @@ def closestServers(client, all=False):
     distance
     """
 
-    uh = urlopen('http://c.speedtest.net/speedtest-servers-static.php')
+    uh = urlopen('http://www.speedtest.net/speedtest-servers-static.php')
     serversxml = []
     while 1:
         serversxml.append(uh.read(10240))
