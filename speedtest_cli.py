@@ -412,7 +412,7 @@ def getBestServer(servers):
                 h.request("GET", urlparts[2])
                 r = h.getresponse()
                 total = (timeit.default_timer() - start)
-            except (HTTPError, URLError):
+            except (HTTPError, URLError, socket.error):
                 cum.append(3600)
                 continue
             text = r.read(9)
