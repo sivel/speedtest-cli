@@ -486,6 +486,7 @@ def speedtest():
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
+    parser.add_argument('--rrdfile', help='Output results to an RRD file, three columns, ping (ms), download (bits per second), and upload (bits per second)')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
@@ -634,6 +635,13 @@ def speedtest():
         print_()
     print_('Upload: %0.2f M%s/s' %
            ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+           
+    if args.rrdfile:
+    	import rrdtool
+    	rrdping = int(round(best['latency'], 0))
+    	rrdDLSpeedBits = int(round(dlspeed * 8, 0))
+    	rrdULSpeedBits = int(round(ulspeed * 8, 0))
+    	ret = rrdtool.update(args.rrdfile,'N:' + `rrdping` + ':' + `rrdDLSpeedBits` + ':' + `rrdULSpeedBits`);
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
