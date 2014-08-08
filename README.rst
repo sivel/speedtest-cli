@@ -72,12 +72,12 @@ Usage
     $ speedtest-cli -h
     usage: speedtest-cli [-h] [--bytes] [--share] [--simple] [--list]
                          [--server SERVER] [--mini MINI] [--source SOURCE]
-                         [--version]
-    
+                         [--version] [--rrdfile RRDFILE]
+
     Command line interface for testing internet bandwidth using speedtest.net.
     --------------------------------------------------------------------------
     https://github.com/sivel/speedtest-cli
-    
+
     optional arguments:
       -h, --help       show this help message and exit
       --bytes          Display values in bytes instead of bits. Does not affect
@@ -90,6 +90,7 @@ Usage
       --mini MINI      URL of the Speedtest Mini server
       --source SOURCE  Source IP address to bind to
       --version        Show the version number and exit
+      --rrdfile        Output results to an RRD file, three columns, ping (ms), download (bits per second), and upload (bits per second)
 
 Inconsistency
 -------------
