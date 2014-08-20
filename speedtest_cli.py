@@ -18,6 +18,7 @@
 __version__ = '0.3.1'
 
 # Some global variables we use
+user_agent = 'speedtest-cli/%s' % __version__
 source = None
 shutdown_event = None
 
@@ -165,6 +166,17 @@ def distance(origin, destination):
     return d
 
 
+def build_request(url, data=None, headers={}):
+    """Build a urllib2 request object
+
+    This function automatically adds a User-Agent header to all requests
+
+    """
+
+    headers['User-Agent'] = user_agent
+    return Request(url, data=data, headers=headers)
+
+
 class FileGetter(threading.Thread):
     """Thread class for retrieving a URL"""
 
@@ -178,7 +190,8 @@ class FileGetter(threading.Thread):
         self.result = [0]
         try:
             if (timeit.default_timer() - self.starttime) <= 10:
-                f = urlopen(self.url)
+                request = build_request(self.url)
+                f = urlopen(request)
                 while 1 and not shutdown_event.isSet():
                     self.result.append(len(f.read(10240)))
                     if self.result[-1] == 0:
@@ -242,7 +255,8 @@ class FilePutter(threading.Thread):
         try:
             if ((timeit.default_timer() - self.starttime) <= 10 and
                     not shutdown_event.isSet()):
-                f = urlopen(self.url, self.data)
+                request = build_request(self.url, data=self.data)
+                f = urlopen(request)
                 f.read(11)
                 f.close()
                 self.result = len(self.data)
@@ -305,7 +319,8 @@ def getConfig():
     we are interested in
     """
 
-    uh = urlopen('http://www.speedtest.net/speedtest-config.php')
+    request = build_request('http://www.speedtest.net/speedtest-config.php')
+    uh = urlopen(request)
     configxml = []
     while 1:
         configxml.append(uh.read(10240))
@@ -342,7 +357,9 @@ def closestServers(client, all=False):
     distance
     """
 
-    uh = urlopen('http://www.speedtest.net/speedtest-servers-static.php')
+    url = 'http://www.speedtest.net/speedtest-servers-static.php'
+    request = build_request(url)
+    uh = urlopen(request)
     serversxml = []
     while 1:
         serversxml.append(uh.read(10240))
@@ -408,8 +425,9 @@ def getBestServer(servers):
                     h = HTTPSConnection(urlparts[1])
                 else:
                     h = HTTPConnection(urlparts[1])
+                headers = {'User-Agent': user_agent}
                 start = timeit.default_timer()
-                h.request("GET", urlparts[2])
+                h.request("GET", urlparts[2], headers=headers)
                 r = h.getresponse()
                 total = (timeit.default_timer() - start)
             except (HTTPError, URLError, socket.error):
@@ -557,7 +575,8 @@ def speedtest():
             url = args.mini
         urlparts = urlparse(url)
         try:
-            f = urlopen(args.mini)
+            request = build_request(args.mini)
+            f = urlopen(request)
         except:
             print_('Invalid Speedtest Mini URL')
             sys.exit(1)
@@ -568,7 +587,9 @@ def speedtest():
         if not extension:
             for ext in ['php', 'asp', 'aspx', 'jsp']:
                 try:
-                    f = urlopen('%s/speedtest/upload.%s' % (args.mini, ext))
+                    request = build_request('%s/speedtest/upload.%s' %
+                                            (args.mini, ext))
+                    f = urlopen(request)
                 except:
                     pass
                 else:
@@ -663,10 +684,11 @@ def speedtest():
                              (ping, ulspeedk, dlspeedk, '297aae72'))
                             .encode()).hexdigest()]
 
-        req = Request('http://www.speedtest.net/api/api.php',
-                      data='&'.join(apiData).encode())
-        req.add_header('Referer', 'http://c.speedtest.net/flash/speedtest.swf')
-        f = urlopen(req)
+        headers = {'Referer': 'http://c.speedtest.net/flash/speedtest.swf'}
+        request = build_request('http://www.speedtest.net/api/api.php',
+                                data='&'.join(apiData).encode(),
+                                headers=headers)
+        f = urlopen(request)
         response = f.read()
         code = f.code
         f.close()
