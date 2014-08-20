@@ -484,6 +484,8 @@ def speedtest():
     parser.add_argument('--server', help='Specify a server ID to test against')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
+    parser.add_argument('--timeout', default=10, type=int,
+                        help='HTTP timeout in seconds. Default 10')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -497,6 +499,8 @@ def speedtest():
     # Print the version and exit
     if args.version:
         version()
+
+    socket.setdefaulttimeout(args.timeout)
 
     # If specified bind to a specific IP address
     if args.source:

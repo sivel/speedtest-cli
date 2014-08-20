@@ -89,6 +89,7 @@ Usage
       --server SERVER  Specify a server ID to test against
       --mini MINI      URL of the Speedtest Mini server
       --source SOURCE  Source IP address to bind to
+      --timeout TIMEOUT  HTTP timeout in seconds. Default 10
       --version        Show the version number and exit
 
 Inconsistency
