@@ -500,6 +500,8 @@ def speedtest():
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
     parser.add_argument('--server', help='Specify a server ID to test against')
+    parser.add_argument('--saveresults', help='Specify a file to save the speedtest.net '
+                             'results')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=int,
@@ -642,10 +644,10 @@ def speedtest():
     if not args.simple:
         print_('Testing download speed', end='')
     dlspeed = downloadSpeed(urls, args.simple)
+    dlspdstr = '%0.2f M%s/s' % ((dlspeed / 1000 / 1000) * args.units[1], args.units[0])
     if not args.simple:
         print_()
-    print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    print_('Download: %s' % dlspdstr)
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -655,10 +657,22 @@ def speedtest():
     if not args.simple:
         print_('Testing upload speed', end='')
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
+    ulspdstr = '%0.2f M%s/s' % ((ulspeed / 1000 / 1000) * args.units[1], args.units[0])
     if not args.simple:
         print_()
-    print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    print_('Upload: %s' % ulspdstr)
+
+    # Save test results
+    if args.saveresults != None:
+        if not args.simple:
+            print_('Saving test results to %s' % args.saveresults)
+        try:
+            resfile = open(args.saveresults, 'a')
+        except:
+            print_('Unable to open results file')
+            sys.exit(1)
+        resfile.write(('%(id)s,%(sponsor)s,%(name)s,%(country)s,%(latency)s ms,' % best) + ('%s,%s\n' % (dlspdstr, ulspdstr)))
+        resfile.close()
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
