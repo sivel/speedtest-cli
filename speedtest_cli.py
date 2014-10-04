@@ -30,6 +30,7 @@ import signal
 import socket
 import timeit
 import threading
+from json import dump as jsonDump, load as jsonLoad
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -496,6 +497,12 @@ def speedtest():
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
+    parser.add_argument('--showconfig', action='store_true',
+                        help='Display the client configuration')
+    parser.add_argument('--saveconfig', help='Specify a file to save the speedtest.net '
+                             'configuration')
+    parser.add_argument('--loadconfig', help='Specify a file to load the speedtest.net '
+                             'configuration')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
@@ -525,13 +532,42 @@ def speedtest():
         source = args.source
         socket.socket = bound_socket
 
-    if not args.simple:
-        print_('Retrieving speedtest.net configuration...')
-    try:
-        config = getConfig()
-    except URLError:
-        print_('Cannot retrieve speedtest configuration')
-        sys.exit(1)
+    # Retrieve speedtest configuration
+    if args.loadconfig == None:
+        if not args.simple:
+            print_('Retrieving speedtest.net configuration...')
+        try:
+            config = getConfig()
+        except URLError:
+            print_('Cannot retrieve speedtest configuration')
+            sys.exit(1)
+
+        if args.saveconfig != None:
+            if not args.simple:
+                print_('Saving speedtest.net configuration to %s' % args.saveconfig)
+            try:
+                configfile = open(args.saveconfig, 'w')
+            except:
+                print_('Unable to open configuration file %s' % args.saveconfig)
+                sys.exit(1)
+            jsonDump(config, configfile)
+            configfile.close()
+    else:
+        if not args.simple:
+            print_('Loading speedtest.net configuration from %s' % args.loadconfig)
+        try:
+            confFile = open(args.loadconfig, 'r')
+        except:
+            print_('Unable to open configuration file %s' % args.loadconfig)
+            sys.exit(1)
+        config = jsonLoad(confFile)
+        confFile.close()
+
+    if args.showconfig:
+        print_('Speedtest.net configuration:')
+        for configitem in config:
+            print_('    %s: %s' % (configitem, config[configitem]))
+        sys.exit(0)
 
     if not args.simple:
         print_('Retrieving speedtest.net server list...')
