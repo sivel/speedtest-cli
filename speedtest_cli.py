@@ -353,7 +353,7 @@ def getConfig():
     return config
 
 
-def closestServers(client, numServers = 5):
+def closestServers(client, numServers=5):
     """Determine the closest speedtest.net servers based on geographic
     distance. The default number of servers to return is 5.  If the
     number of servers is specified as 0 then all servers are returned.
@@ -500,23 +500,23 @@ def speedtest():
                              'information')
     parser.add_argument('--showconfig', action='store_true',
                         help='Display the client configuration')
-    parser.add_argument('--saveconfig', help='Specify a file to save the speedtest.net '
-                             'configuration')
-    parser.add_argument('--loadconfig', help='Specify a file to load the speedtest.net '
-                             'configuration')
+    parser.add_argument('--saveconfig', help='Specify a file to save the '
+                        'speedtest.net configuration')
+    parser.add_argument('--loadconfig', help='Specify a file to load the '
+                        'speedtest.net configuration')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
     parser.add_argument('--listservers', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance. Synonym for --list')
-    parser.add_argument('--saveservers', help='Specify a file to save the speedtest.net '
-                             'servers list to')
-    parser.add_argument('--loadservers', help='Specify a file of speedtest.net servers '
-                             'to use instead of downloading the list')
+    parser.add_argument('--saveservers', help='Specify a file to save the '
+                        'speedtest.net servers list')
+    parser.add_argument('--loadservers', help='Specify a file of speedtest.net'
+                        ' servers to use instead of downloading the list')
     parser.add_argument('--server', help='Specify a server ID to test against')
-    parser.add_argument('--saveresults', help='Specify a file to save the speedtest.net '
-                             'results')
+    parser.add_argument('--saveresults', help='Specify a file to save the '
+                        'speedtest.net results')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=int,
@@ -543,7 +543,7 @@ def speedtest():
         socket.socket = bound_socket
 
     # Retrieve speedtest configuration
-    if args.loadconfig == None:
+    if args.loadconfig is None:
         if not args.simple:
             print_('Retrieving speedtest.net configuration...')
         try:
@@ -552,19 +552,22 @@ def speedtest():
             print_('Cannot retrieve speedtest configuration')
             sys.exit(1)
 
-        if args.saveconfig != None:
+        if args.saveconfig is not None:
             if not args.simple:
-                print_('Saving speedtest.net configuration to %s' % args.saveconfig)
+                print_('Saving speedtest.net configuration to %s'
+                       % args.saveconfig)
             try:
                 configfile = open(args.saveconfig, 'w')
             except:
-                print_('Unable to open configuration file %s' % args.saveconfig)
+                print_('Unable to open configuration file %s'
+                       % args.saveconfig)
                 sys.exit(1)
             jsonDump(config, configfile)
             configfile.close()
     else:
         if not args.simple:
-            print_('Loading speedtest.net configuration from %s' % args.loadconfig)
+            print_('Loading speedtest.net configuration from %s'
+                   % args.loadconfig)
         try:
             confFile = open(args.loadconfig, 'r')
         except:
@@ -580,10 +583,11 @@ def speedtest():
         sys.exit(0)
 
     # Retrieve speedtest server list
-    if args.list or args.listservers or args.saveservers != None or (args.server and args.loadservers == None):
+    if args.list or args.listservers or args.saveservers is not None
+    or (args.server and args.loadservers is None):
         if not args.simple:
             print_('Retrieving speedtest.net server list...')
-        servers = closestServers(config['client'], 0) # return all servers
+        servers = closestServers(config['client'], 0)  # return all servers
 
         # Display the server list and exit
         if args.list or args.listservers:
@@ -603,9 +607,10 @@ def speedtest():
             except IOError:
                 pass
             sys.exit(0)
-        elif args.saveservers != None:
+        elif args.saveservers is not None:
             if not args.simple:
-                print_('Saving speedtest.net server list to %s...' % args.saveservers)
+                print_('Saving speedtest.net server list to %s...'
+                       % args.saveservers)
             try:
                 svrFile = open(args.saveservers, 'w')
             except:
@@ -615,9 +620,10 @@ def speedtest():
             svrFile.close()
             print_('Done')
             sys.exit(0)
-    elif args.loadservers != None:
+    elif args.loadservers is not None:
         if not args.simple:
-            print_('Loading speedtest.net server list from %s' % args.loadservers)
+            print_('Loading speedtest.net server list from %s'
+                   % args.loadservers)
         try:
             svrFile = open(args.loadservers, 'r')
         except:
@@ -632,7 +638,7 @@ def speedtest():
     else:
         if not args.simple:
             print_('Retrieving speedtest.net server list...')
-        servers = closestServers(config['client']) # return closest 5 servers
+        servers = closestServers(config['client'])  # return closest 5 servers
 
     if not args.simple:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
@@ -719,7 +725,8 @@ def speedtest():
     if not args.simple:
         print_('Testing download speed', end='')
     dlspeed = downloadSpeed(urls, args.simple)
-    dlspdstr = '%0.2f M%s/s' % ((dlspeed / 1000 / 1000) * args.units[1], args.units[0])
+    dlspdstr = '%0.2f M%s/s' % ((dlspeed / 1000 / 1000)
+                                * args.units[1], args.units[0])
     if not args.simple:
         print_()
     print_('Download: %s' % dlspdstr)
@@ -732,13 +739,14 @@ def speedtest():
     if not args.simple:
         print_('Testing upload speed', end='')
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
-    ulspdstr = '%0.2f M%s/s' % ((ulspeed / 1000 / 1000) * args.units[1], args.units[0])
+    ulspdstr = '%0.2f M%s/s' % ((ulspeed / 1000 / 1000)
+                                * args.units[1], args.units[0])
     if not args.simple:
         print_()
     print_('Upload: %s' % ulspdstr)
 
     # Save test results
-    if args.saveresults != None:
+    if args.saveresults is not None:
         if not args.simple:
             print_('Saving test results to %s' % args.saveresults)
         try:
@@ -746,7 +754,9 @@ def speedtest():
         except:
             print_('Unable to open results file')
             sys.exit(1)
-        resfile.write(('%(id)s,%(sponsor)s,%(name)s,%(country)s,%(latency)s ms,' % best) + ('%s,%s\n' % (dlspdstr, ulspdstr)))
+        resfile.write(('%(id)s,%(sponsor)s,%(name)s,%(country)s,'
+                      '%(latency)s ms,' % best) + ('%s,%s\n'
+                      % (dlspdstr, ulspdstr)))
         resfile.close()
 
     if args.share and args.mini:
