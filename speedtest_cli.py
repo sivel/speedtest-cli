@@ -353,9 +353,10 @@ def getConfig():
     return config
 
 
-def closestServers(client, all=False):
-    """Determine the 5 closest speedtest.net servers based on geographic
-    distance
+def closestServers(client, numServers = 5):
+    """Determine the closest speedtest.net servers based on geographic
+    distance. The default number of servers to return is 5.  If the
+    number of servers is specified as 0 then all servers are returned.
     """
 
     url = 'http://www.speedtest.net/speedtest-servers-static.php'
@@ -400,7 +401,7 @@ def closestServers(client, all=False):
     for d in sorted(servers.keys()):
         for s in servers[d]:
             closest.append(s)
-            if len(closest) == 5 and not all:
+            if len(closest) == numServers and numServers != 0:
                 break
         else:
             continue
@@ -506,6 +507,13 @@ def speedtest():
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
+    parser.add_argument('--listservers', action='store_true',
+                        help='Display a list of speedtest.net servers '
+                             'sorted by distance. Synonym for --list')
+    parser.add_argument('--saveservers', help='Specify a file to save the speedtest.net '
+                             'servers list to')
+    parser.add_argument('--loadservers', help='Specify a file of speedtest.net servers '
+                             'to use instead of downloading the list')
     parser.add_argument('--server', help='Specify a server ID to test against')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
@@ -569,11 +577,14 @@ def speedtest():
             print_('    %s: %s' % (configitem, config[configitem]))
         sys.exit(0)
 
-    if not args.simple:
-        print_('Retrieving speedtest.net server list...')
-    if args.list or args.server:
-        servers = closestServers(config['client'], True)
-        if args.list:
+    # Retrieve speedtest server list
+    if args.list or args.listservers or args.saveservers != None or (args.server and args.loadservers == None):
+        if not args.simple:
+            print_('Retrieving speedtest.net server list...')
+        servers = closestServers(config['client'], 0) # return all servers
+
+        # Display the server list and exit
+        if args.list or args.listservers:
             serverList = []
             for server in servers:
                 line = ('%(id)4s) %(sponsor)s (%(name)s, %(country)s) '
@@ -590,8 +601,36 @@ def speedtest():
             except IOError:
                 pass
             sys.exit(0)
+        elif args.saveservers != None:
+            if not args.simple:
+                print_('Saving speedtest.net server list to %s...' % args.saveservers)
+            try:
+                svrFile = open(args.saveservers, 'w')
+            except:
+                print_('Unable to open server file')
+                sys.exit(1)
+            jsonDump(servers, svrFile)
+            svrFile.close()
+            print_('Done')
+            sys.exit(0)
+    elif args.loadservers != None:
+        if not args.simple:
+            print_('Loading speedtest.net server list from %s' % args.loadservers)
+        try:
+            svrFile = open(args.loadservers, 'r')
+        except:
+            print_('Unable to open server file')
+            sys.exit(1)
+        allServers = jsonLoad(svrFile)
+        svrFile.close()
+        if len(allServers) > 10:
+            servers = allServers[:5]
+        else:
+            servers = allServers
     else:
-        servers = closestServers(config['client'])
+        if not args.simple:
+            print_('Retrieving speedtest.net server list...')
+        servers = closestServers(config['client']) # return closest 5 servers
 
     if not args.simple:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
