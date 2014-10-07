@@ -30,7 +30,6 @@ import signal
 import socket
 import timeit
 import threading
-from json import dump as jsonDump, load as jsonLoad
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -562,7 +561,7 @@ def speedtest():
                 print_('Unable to open configuration file %s'
                        % args.saveconfig)
                 sys.exit(1)
-            jsonDump(config, configfile)
+            configfile.write(str(config))
             configfile.close()
     else:
         if not args.simple:
@@ -573,7 +572,7 @@ def speedtest():
         except:
             print_('Unable to open configuration file %s' % args.loadconfig)
             sys.exit(1)
-        config = jsonLoad(confFile)
+        config = eval(confFile.read())
         confFile.close()
 
     if args.showconfig:
@@ -616,7 +615,7 @@ def speedtest():
             except:
                 print_('Unable to open server file')
                 sys.exit(1)
-            jsonDump(servers, svrFile)
+            svrFile.write(str(servers))
             svrFile.close()
             print_('Done')
             sys.exit(0)
@@ -629,7 +628,7 @@ def speedtest():
         except:
             print_('Unable to open server file')
             sys.exit(1)
-        allServers = jsonLoad(svrFile)
+        allServers = eval(svrFile.read())
         svrFile.close()
         if len(allServers) > 10:
             servers = allServers[:5]
