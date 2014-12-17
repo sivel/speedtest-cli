@@ -319,7 +319,7 @@ def getConfig():
     we are interested in
     """
 
-    request = build_request('http://www.speedtest.net/speedtest-config.php')
+    request = build_request('https://www.speedtest.net/speedtest-config.php')
     uh = urlopen(request)
     configxml = []
     while 1:
@@ -357,7 +357,7 @@ def closestServers(client, all=False):
     distance
     """
 
-    url = 'http://www.speedtest.net/speedtest-servers-static.php'
+    url = 'https://www.speedtest.net/speedtest-servers-static.php'
     request = build_request(url)
     uh = urlopen(request)
     serversxml = []
@@ -684,8 +684,8 @@ def speedtest():
                              (ping, ulspeedk, dlspeedk, '297aae72'))
                             .encode()).hexdigest()]
 
-        headers = {'Referer': 'http://c.speedtest.net/flash/speedtest.swf'}
-        request = build_request('http://www.speedtest.net/api/api.php',
+        headers = {'Referer': 'https://c.speedtest.net/flash/speedtest.swf'}
+        request = build_request('https://www.speedtest.net/api/api.php',
                                 data='&'.join(apiData).encode(),
                                 headers=headers)
         f = urlopen(request)
@@ -703,7 +703,7 @@ def speedtest():
             print_('Could not submit results to speedtest.net')
             sys.exit(1)
 
-        print_('Share results: http://www.speedtest.net/result/%s.png' %
+        print_('Share results: https://www.speedtest.net/result/%s.png' %
                resultid[0])
 
 
