@@ -352,21 +352,22 @@ def getConfig():
     return config
 
 
-def closestServers(client, all=False):
+def closestServers(client, list_url, all=False):
     """Determine the 5 closest speedtest.net servers based on geographic
     distance
     """
 
-    url = 'http://www.speedtest.net/speedtest-servers-static.php'
-    request = build_request(url)
+    request = build_request(list_url)
     uh = urlopen(request)
+
     serversxml = []
     while 1:
         serversxml.append(uh.read(10240))
         if len(serversxml[-1]) == 0:
             break
-    if int(uh.code) != 200:
-        return None
+    if getattr(uh, 'code', None) is not None:  # Not a file: URL
+        if int(uh.code) != 200:
+            return None
     uh.close()
     try:
         try:
@@ -504,6 +505,11 @@ def speedtest():
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=int,
                         help='HTTP timeout in seconds. Default 10')
+    parser.add_argument('--list-url', metavar='URL',
+                        help='URL to load the server list from. '
+                             'Start with file: to load from a local file.',
+                        default='http://www.speedtest.net'
+                                '/speedtest-servers-static.php')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -536,7 +542,7 @@ def speedtest():
     if not args.simple:
         print_('Retrieving speedtest.net server list...')
     if args.list or args.server:
-        servers = closestServers(config['client'], True)
+        servers = closestServers(config['client'], args.list_url, True)
         if args.list:
             serverList = []
             for server in servers:
@@ -555,7 +561,7 @@ def speedtest():
                 pass
             sys.exit(0)
     else:
-        servers = closestServers(config['client'])
+        servers = closestServers(config['client'], args.list_url)
 
     if not args.simple:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
