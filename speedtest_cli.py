@@ -49,6 +49,11 @@ except ImportError:
     from urllib.request import urlopen, Request, HTTPError, URLError
 
 try:
+    from urllib2 import getproxies
+except ImportError:
+    from urllib import getproxies
+
+try:
     from httplib import HTTPConnection, HTTPSConnection
 except ImportError:
     from http.client import HTTPConnection, HTTPSConnection
@@ -404,12 +409,25 @@ def getBestServer(servers):
         urlparts = urlparse(url)
         for i in range(0, 3):
             try:
-                if urlparts[0] == 'https':
+                proxy_set = getproxies()
+                if proxy_set:
+                    if 'http' in proxy_set:
+                        proxy_path = urlparse(proxy_set['http'])
+                        h = HTTPConnection(proxy_path[1] or proxy_path[2])
+                    elif 'https' in proxy_set:
+                        proxy_path = urlparse(proxy_set['https'])
+                        h = HTTPSConnection(proxy_path[1] or proxy_path[2])
+                    request_url = proxy_path.scheme + "://" + urlparts[1] + urlparts[2]
+
+                elif urlparts[0] == 'https':
                     h = HTTPSConnection(urlparts[1])
+                    request_url = urlparts[2]
                 else:
                     h = HTTPConnection(urlparts[1])
+                    request_url = urlparts[2]
+
                 start = timeit.default_timer()
-                h.request("GET", urlparts[2])
+                h.request("GET", request_url)
                 r = h.getresponse()
                 total = (timeit.default_timer() - start)
             except (HTTPError, URLError, socket.error):
