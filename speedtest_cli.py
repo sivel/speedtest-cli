@@ -139,6 +139,13 @@ else:
     del builtins
 
 
+class SpeedtestCliServerListError(Exception):
+    """Internal Exception class used to indicate to move on to the next
+    URL for retrieving speedtest.net server details
+
+    """
+
+
 def bound_socket(*args, **kwargs):
     """Bind socket to a specified source IP address"""
 
@@ -175,6 +182,19 @@ def build_request(url, data=None, headers={}):
 
     headers['User-Agent'] = user_agent
     return Request(url, data=data, headers=headers)
+
+
+def catch_request(request):
+    """Helper function to catch common exceptions encountered when
+    establishing a connection with a HTTP/HTTPS request
+
+    """
+
+    try:
+        uh = urlopen(request)
+        return uh
+    except (HTTPError, URLError, socket.error):
+        return False
 
 
 class FileGetter(threading.Thread):
@@ -320,7 +340,10 @@ def getConfig():
     """
 
     request = build_request('http://www.speedtest.net/speedtest-config.php')
-    uh = urlopen(request)
+    uh = catch_request(request)
+    if uh is False:
+        print_('Could not retrieve speedtest.net configuration')
+        sys.exit(1)
     configxml = []
     while 1:
         configxml.append(uh.read(10240))
@@ -337,7 +360,7 @@ def getConfig():
                 'times': root.find('times').attrib,
                 'download': root.find('download').attrib,
                 'upload': root.find('upload').attrib}
-        except AttributeError:
+        except AttributeError:  # Python3 branch
             root = DOM.parseString(''.join(configxml))
             config = {
                 'client': getAttributesByTagName(root, 'client'),
@@ -357,43 +380,58 @@ def closestServers(client, all=False):
     distance
     """
 
-    url = 'http://www.speedtest.net/speedtest-servers-static.php'
-    request = build_request(url)
-    uh = urlopen(request)
-    serversxml = []
-    while 1:
-        serversxml.append(uh.read(10240))
-        if len(serversxml[-1]) == 0:
-            break
-    if int(uh.code) != 200:
-        return None
-    uh.close()
-    try:
-        try:
-            root = ET.fromstring(''.encode().join(serversxml))
-            elements = root.getiterator('server')
-        except AttributeError:
-            root = DOM.parseString(''.join(serversxml))
-            elements = root.getElementsByTagName('server')
-    except SyntaxError:
-        print_('Failed to parse list of speedtest.net servers')
-        sys.exit(1)
+    urls = [
+        'http://c.speedtest.net/speedtest-servers-static.php',
+        'http://www.speedtest.net/speedtest-servers-static.php',
+    ]
     servers = {}
-    for server in elements:
+    for url in urls:
         try:
-            attrib = server.attrib
-        except AttributeError:
-            attrib = dict(list(server.attributes.items()))
-        d = distance([float(client['lat']), float(client['lon'])],
-                     [float(attrib.get('lat')), float(attrib.get('lon'))])
-        attrib['d'] = d
-        if d not in servers:
-            servers[d] = [attrib]
-        else:
-            servers[d].append(attrib)
-    del root
-    del serversxml
-    del elements
+            request = build_request(url)
+            uh = catch_request(request)
+            if uh is False:
+                raise SpeedtestCliServerListError
+            serversxml = []
+            while 1:
+                serversxml.append(uh.read(10240))
+                if len(serversxml[-1]) == 0:
+                    break
+            if int(uh.code) != 200:
+                uh.close()
+                raise SpeedtestCliServerListError
+            uh.close()
+            try:
+                try:
+                    root = ET.fromstring(''.encode().join(serversxml))
+                    elements = root.getiterator('server')
+                except AttributeError:  # Python3 branch
+                    root = DOM.parseString(''.join(serversxml))
+                    elements = root.getElementsByTagName('server')
+            except SyntaxError:
+                raise SpeedtestCliServerListError
+            for server in elements:
+                try:
+                    attrib = server.attrib
+                except AttributeError:
+                    attrib = dict(list(server.attributes.items()))
+                d = distance([float(client['lat']),
+                              float(client['lon'])],
+                             [float(attrib.get('lat')),
+                              float(attrib.get('lon'))])
+                attrib['d'] = d
+                if d not in servers:
+                    servers[d] = [attrib]
+                else:
+                    servers[d].append(attrib)
+            del root
+            del serversxml
+            del elements
+        except SpeedtestCliServerListError:
+            continue
+
+    if not servers:
+        print_('Failed to retrieve list of speedtest.net servers')
+        sys.exit(1)
 
     closest = []
     for d in sorted(servers.keys()):
@@ -688,7 +726,10 @@ def speedtest():
         request = build_request('http://www.speedtest.net/api/api.php',
                                 data='&'.join(apiData).encode(),
                                 headers=headers)
-        f = urlopen(request)
+        f = catch_request(request)
+        if f is False:
+            print_('Could not submit results to speedtest.net')
+            sys.exit(1)
         response = f.read()
         code = f.code
         f.close()
