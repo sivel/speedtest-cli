@@ -29,6 +29,7 @@ import threading
 import re
 import signal
 import socket
+import datetime
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -596,6 +597,8 @@ def speedtest():
                    '%(latency)s ms' % best)
     else:
         if args.csv:
+            reporttime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print_('%s,' % reporttime, end='')
             print_('%(latency)s,' % best, end='')
         else:
             print_('Ping: %(latency)s ms' % best)
