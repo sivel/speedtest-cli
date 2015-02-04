@@ -1,0 +1,24 @@
+#! 
+
+# format output for speedtest-cli as CSV
+
+speedtest-cli | awk '
+BEGIN {
+print "date,latency_ms,download_mbits_per_sec,upload_mbits_per_sec"
+line = ""
+}
+
+/:/ {
+# print $0
+ line = line $(NF-1)  ","
+}
+
+END {
+"date +'%Y-%m-%dT%H:%M:%S'"|getline date;
+	print date ", " line
+}' > $HOME/log/speedtest_log.csv
+
+# EXAMPLE upload to bigquery
+
+# bq --project YOUR_PROJECT load --skip_leading_rows 1 DATASET_NAME.TABLE_NAME log/speedtest_log.csv date:timestamp,latency_ms:float,download_mbits_per_sec:float,upload_mbits_per_sec:float,empty:string
+
