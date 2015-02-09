@@ -178,7 +178,10 @@ class FileGetter(threading.Thread):
         self.result = [0]
         try:
             if (timeit.default_timer() - self.starttime) <= 10:
-                f = urlopen(self.url)
+                #XLASH 2015-02-09 This is to prevent Proxy Caching in the way
+                req = Request(self.url)
+                req.add_header('Cache-Control' , 'no-cache')
+                f = urlopen(req)
                 while 1 and not shutdown_event.isSet():
                     self.result.append(len(f.read(10240)))
                     if self.result[-1] == 0:
