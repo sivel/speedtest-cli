@@ -15,13 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-__version__ = '0.3.2'
-
-# Some global variables we use
-user_agent = 'speedtest-cli/%s' % __version__
-source = None
-shutdown_event = None
-
 import os
 import re
 import sys
@@ -30,6 +23,13 @@ import signal
 import socket
 import timeit
 import threading
+
+__version__ = '0.3.2'
+
+# Some global variables we use
+user_agent = 'speedtest-cli/%s' % __version__
+source = None
+shutdown_event = None
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -164,9 +164,10 @@ def distance(origin, destination):
 
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
-    a = (math.sin(dlat / 2) * math.sin(dlat / 2) + math.cos(math.radians(lat1))
-         * math.cos(math.radians(lat2)) * math.sin(dlon / 2)
-         * math.sin(dlon / 2))
+    a = (math.sin(dlat / 2) * math.sin(dlat / 2) +
+         math.cos(math.radians(lat1)) *
+         math.cos(math.radians(lat2)) * math.sin(dlon / 2) *
+         math.sin(dlon / 2))
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     d = radius * c
 
