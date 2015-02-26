@@ -429,6 +429,10 @@ def closestServers(client, all=False):
         except SpeedtestCliServerListError:
             continue
 
+        # We were able to fetch and parse the list of speedtest.net servers
+        if servers:
+            break
+
     if not servers:
         print_('Failed to retrieve list of speedtest.net servers')
         sys.exit(1)
