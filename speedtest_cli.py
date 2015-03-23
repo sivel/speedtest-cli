@@ -34,6 +34,13 @@ shutdown_event = None
 # Used for bound_interface
 socket_socket = socket.socket
 
+# Config server URL prefix
+conf_server_urls_prefix = [
+        'http://www.speedtest.net/',
+        'https://www.speedtest.net/',
+        'http://c.speedtest.net/',
+    ] 
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -142,6 +149,12 @@ else:
 class SpeedtestCliServerListError(Exception):
     """Internal Exception class used to indicate to move on to the next
     URL for retrieving speedtest.net server details
+
+    """
+
+class SpeedtestConfigDataError(Exception):
+    """Internal Exception class used to indicate to move on to the next
+    URL for retrieving speedtest.net configuration details
 
     """
 
@@ -339,40 +352,55 @@ def getConfig():
     """Download the speedtest.net configuration and return only the data
     we are interested in
     """
+    
+    config = {}
+    for url_prefix in conf_server_urls_prefix:
+        url = url_prefix+'speedtest-config.php'
+        try:
+            request = build_request(url)
+            uh = catch_request(request)
+            if uh is False:
+                raise SpeedtestConfigDataError
+            configxml = []
+            while 1:
+                configxml.append(uh.read(10240))
+                if len(configxml[-1]) == 0:
+                    break
+            if int(uh.code) != 200:
+                uh.close
+                raise SpeedtestConfigDataError
+            uh.close()
+            try:
+                try:
+                    root = ET.fromstring(''.encode().join(configxml))
+                    config = {
+                        'client': root.find('client').attrib,
+                        'times': root.find('times').attrib,
+                        'download': root.find('download').attrib,
+                        'upload': root.find('upload').attrib}
+                except AttributeError:  # Python3 branch
+                    root = DOM.parseString(''.join(configxml))
+                    config = {
+                        'client': getAttributesByTagName(root, 'client'),
+                        'times': getAttributesByTagName(root, 'times'),
+                        'download': getAttributesByTagName(root, 'download'),
+                        'upload': getAttributesByTagName(root, 'upload')}
+            except SyntaxError:
+                raise SpeedtestConfigDataError
+            del root
+            del configxml
+        except SpeedtestConfigDataError:
+            continue
 
-    request = build_request('https://www.speedtest.net/speedtest-config.php')
-    uh = catch_request(request)
-    if uh is False:
+        # We were able to fetch and parse the list of speedtest.net servers
+        if config:
+            break
+
+    if not config:
         print_('Could not retrieve speedtest.net configuration')
         sys.exit(1)
-    configxml = []
-    while 1:
-        configxml.append(uh.read(10240))
-        if len(configxml[-1]) == 0:
-            break
-    if int(uh.code) != 200:
-        return None
-    uh.close()
-    try:
-        try:
-            root = ET.fromstring(''.encode().join(configxml))
-            config = {
-                'client': root.find('client').attrib,
-                'times': root.find('times').attrib,
-                'download': root.find('download').attrib,
-                'upload': root.find('upload').attrib}
-        except AttributeError:  # Python3 branch
-            root = DOM.parseString(''.join(configxml))
-            config = {
-                'client': getAttributesByTagName(root, 'client'),
-                'times': getAttributesByTagName(root, 'times'),
-                'download': getAttributesByTagName(root, 'download'),
-                'upload': getAttributesByTagName(root, 'upload')}
-    except SyntaxError:
-        print_('Failed to parse speedtest.net configuration')
-        sys.exit(1)
-    del root
-    del configxml
+
+
     return config
 
 
@@ -381,12 +409,9 @@ def closestServers(client, all=False):
     distance
     """
 
-    urls = [
-        'https://www.speedtest.net/speedtest-servers-static.php',
-        'http://c.speedtest.net/speedtest-servers-static.php',
-    ]
     servers = {}
-    for url in urls:
+    for url_prefix in conf_server_urls_prefix:
+        url = url_prefix+'speedtest-servers-static.php'
         try:
             request = build_request(url)
             uh = catch_request(request)
