@@ -24,7 +24,7 @@ import socket
 import timeit
 import threading
 
-__version__ = '0.3.2'
+__version__ = '0.3.3a'
 
 # Some global variables we use
 user_agent = 'speedtest-cli/%s' % __version__
@@ -52,7 +52,15 @@ except ImportError:
 try:
     from httplib import HTTPConnection, HTTPSConnection
 except ImportError:
-    from http.client import HTTPConnection, HTTPSConnection
+    e_http_py2 = sys.exc_info()
+    try:
+        from http.client import HTTPConnection, HTTPSConnection
+    except ImportError:
+        e_http_py3 = sys.exc_info()
+        raise SystemExit('Your python installation is missing required HTTP '
+                         'client classes:\n\n'
+                         'Python 2: %s\n'
+                         'Python 3: %s' % (e_http_py2[1], e_http_py3[1]))
 
 try:
     from Queue import Queue
