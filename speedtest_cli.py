@@ -201,9 +201,10 @@ def catch_request(request):
 
     try:
         uh = urlopen(request)
-        return uh
+        return uh, False
     except (HTTPError, URLError, socket.error):
-        return False
+        e = sys.exc_info()[1]
+        return None, e
 
 
 class FileGetter(threading.Thread):
@@ -349,9 +350,9 @@ def getConfig():
     """
 
     request = build_request('https://www.speedtest.net/speedtest-config.php')
-    uh = catch_request(request)
-    if uh is False:
-        print_('Could not retrieve speedtest.net configuration')
+    uh, e = catch_request(request)
+    if e:
+        print_('Could not retrieve speedtest.net configuration: %s' % e)
         sys.exit(1)
     configxml = []
     while 1:
@@ -393,12 +394,14 @@ def closestServers(client, all=False):
         'https://www.speedtest.net/speedtest-servers-static.php',
         'http://c.speedtest.net/speedtest-servers-static.php',
     ]
+    errors = []
     servers = {}
     for url in urls:
         try:
             request = build_request(url)
-            uh = catch_request(request)
-            if uh is False:
+            uh, e = catch_request(request)
+            if e:
+                errors.append('%s' % e)
                 raise SpeedtestCliServerListError
             serversxml = []
             while 1:
@@ -443,7 +446,8 @@ def closestServers(client, all=False):
             break
 
     if not servers:
-        print_('Failed to retrieve list of speedtest.net servers')
+        print_('Failed to retrieve list of speedtest.net servers:\n\n %s' %
+               '\n'.join(errors))
         sys.exit(1)
 
     closest = []
@@ -739,9 +743,9 @@ def speedtest():
         request = build_request('https://www.speedtest.net/api/api.php',
                                 data='&'.join(apiData).encode(),
                                 headers=headers)
-        f = catch_request(request)
-        if f is False:
-            print_('Could not submit results to speedtest.net')
+        f, e = catch_request(request)
+        if e:
+            print_('Could not submit results to speedtest.net: %s' % e)
             sys.exit(1)
         response = f.read()
         code = f.code
