@@ -551,6 +551,9 @@ def speedtest():
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
+    parser.add_argument('--csv', action='store_true',
+                        help='Format results as CSV (ping, download, upload); '
+                             'enables --simple as well')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
@@ -579,6 +582,10 @@ def speedtest():
     if args.source:
         source = args.source
         socket.socket = bound_socket
+
+    # --csv enables --simple
+    if args.csv:
+        args.simple = True
 
     if not args.simple:
         print_('Retrieving speedtest.net configuration...')
@@ -686,7 +693,10 @@ def speedtest():
             print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                    '%(latency)s ms' % best)
     else:
-        print_('Ping: %(latency)s ms' % best)
+        if args.csv:
+            print_('%(latency)s,' % best, end='')
+        else:
+            print_('Ping: %(latency)s ms' % best)
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -697,10 +707,14 @@ def speedtest():
     if not args.simple:
         print_('Testing download speed', end='')
     dlspeed = downloadSpeed(urls, args.simple)
-    if not args.simple:
-        print_()
-    print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+
+    if args.csv:
+        print_('%0.2f,' % ((dlspeed / 1000 / 1000) * args.units[1]), end='')
+    else:
+        if not args.simple:
+            print_()
+        print_('Download: %0.2f M%s/s' %
+                ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -710,10 +724,14 @@ def speedtest():
     if not args.simple:
         print_('Testing upload speed', end='')
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
-    if not args.simple:
-        print_()
-    print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+
+    if args.csv:
+        print_('%0.2f' % ((ulspeed / 1000 / 1000) * args.units[1]))
+    else:
+        if not args.simple:
+            print_()
+        print_('Upload: %0.2f M%s/s' %
+                ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
