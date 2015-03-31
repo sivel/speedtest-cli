@@ -4,13 +4,13 @@ speedtest-cli
 Command line interface for testing internet bandwidth using
 speedtest.net
 
-.. image:: https://pypip.in/v/speedtest-cli/badge.png
+.. image:: https://pypip.in/v/speedtest-cli/badge.svg
         :target: https://pypi.python.org/pypi/speedtest-cli/
         :alt: Latest Version
-.. image:: https://pypip.in/d/speedtest-cli/badge.png
+.. image:: https://pypip.in/d/speedtest-cli/badge.svg
         :target: https://pypi.python.org/pypi/speedtest-cli/
         :alt: Downloads
-.. image:: https://pypip.in/license/speedtest-cli/badge.png
+.. image:: https://pypip.in/license/speedtest-cli/badge.svg
         :target: https://pypi.python.org/pypi/speedtest-cli/
         :alt: License
 
