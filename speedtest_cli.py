@@ -30,6 +30,8 @@ __version__ = '0.3.3a'
 user_agent = 'speedtest-cli/%s' % __version__
 source = None
 shutdown_event = None
+scheme = 'http'
+
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -189,8 +191,13 @@ def build_request(url, data=None, headers={}):
 
     """
 
+    if url[0] == ':':
+        schemed_url = '%s%s' % (scheme, url)
+    else:
+        schemed_url = url
+
     headers['User-Agent'] = user_agent
-    return Request(url, data=data, headers=headers)
+    return Request(schemed_url, data=data, headers=headers)
 
 
 def catch_request(request):
@@ -349,7 +356,7 @@ def getConfig():
     we are interested in
     """
 
-    request = build_request('http://www.speedtest.net/speedtest-config.php')
+    request = build_request('://www.speedtest.net/speedtest-config.php')
     uh, e = catch_request(request)
     if e:
         print_('Could not retrieve speedtest.net configuration: %s' % e)
@@ -391,8 +398,8 @@ def closestServers(client, all=False):
     """
 
     urls = [
-        'http://www.speedtest.net/speedtest-servers-static.php',
-        'http://c.speedtest.net/speedtest-servers-static.php',
+        '://www.speedtest.net/speedtest-servers-static.php',
+        '://c.speedtest.net/speedtest-servers-static.php',
     ]
     errors = []
     servers = {}
@@ -522,7 +529,7 @@ def version():
 def speedtest():
     """Run the full speedtest.net test"""
 
-    global shutdown_event, source
+    global shutdown_event, source, scheme
     shutdown_event = threading.Event()
 
     signal.signal(signal.SIGINT, ctrl_c)
@@ -559,6 +566,9 @@ def speedtest():
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=int,
                         help='HTTP timeout in seconds. Default 10')
+    parser.add_argument('--secure', action='store_true',
+                        help='Use HTTPS instead of HTTP when communicating'
+                             'with speedtest.net operated servers')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -579,6 +589,9 @@ def speedtest():
     if args.source:
         source = args.source
         socket.socket = bound_socket
+
+    if args.secure:
+        scheme = 'https'
 
     if not args.simple:
         print_('Retrieving speedtest.net configuration...')
@@ -739,8 +752,8 @@ def speedtest():
                              (ping, ulspeedk, dlspeedk, '297aae72'))
                             .encode()).hexdigest()]
 
-        headers = {'Referer': 'https://c.speedtest.net/flash/speedtest.swf'}
-        request = build_request('http://www.speedtest.net/api/api.php',
+        headers = {'Referer': 'http://c.speedtest.net/flash/speedtest.swf'}
+        request = build_request('://www.speedtest.net/api/api.php',
                                 data='&'.join(apiData).encode(),
                                 headers=headers)
         f, e = catch_request(request)
@@ -761,8 +774,8 @@ def speedtest():
             print_('Could not submit results to speedtest.net')
             sys.exit(1)
 
-        print_('Share results: https://www.speedtest.net/result/%s.png' %
-               resultid[0])
+        print_('Share results: %s://www.speedtest.net/result/%s.png' %
+               scheme, resultid[0])
 
 
 def main():
