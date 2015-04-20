@@ -22,12 +22,13 @@ import math
 import signal
 import socket
 import timeit
+import platform
 import threading
 
 __version__ = '0.3.3a'
 
 # Some global variables we use
-user_agent = 'speedtest-cli/%s' % __version__
+user_agent = None
 source = None
 shutdown_event = None
 scheme = 'http'
@@ -184,6 +185,24 @@ def distance(origin, destination):
     return d
 
 
+def build_user_agent():
+    """Build a Mozilla/5.0 compatible User-Agent string"""
+
+    global user_agent
+    if user_agent:
+        return user_agent
+
+    ua_tuple = (
+        'Mozilla/5.0',
+        '(%s; U; %s; en-us)' % (platform.system(), platform.architecture()[0]),
+        'Python/%s' % platform.python_version(),
+        '(KHTML, like Gecko)',
+        'speedtest-cli/%s' % __version__
+    )
+    user_agent = ' '.join(ua_tuple)
+    return user_agent
+
+
 def build_request(url, data=None, headers={}):
     """Build a urllib2 request object
 
@@ -196,7 +215,7 @@ def build_request(url, data=None, headers={}):
     else:
         schemed_url = url
 
-    headers['User-Agent'] = user_agent
+    headers['User-Agent'] = build_user_agent()
     return Request(schemed_url, data=data, headers=headers)
 
 
@@ -584,6 +603,9 @@ def speedtest():
         version()
 
     socket.setdefaulttimeout(args.timeout)
+
+    # Pre-cache the user agent string
+    build_user_agent()
 
     # If specified bind to a specific IP address
     if args.source:
