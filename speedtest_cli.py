@@ -215,7 +215,7 @@ def build_request(url, data=None, headers={}):
     else:
         schemed_url = url
 
-    headers['User-Agent'] = build_user_agent()
+    headers['User-Agent'] = user_agent
     return Request(schemed_url, data=data, headers=headers)
 
 
