@@ -580,39 +580,41 @@ def speedtest():
         source = args.source
         socket.socket = bound_socket
 
-    if not args.simple:
-        print_('Retrieving speedtest.net configuration...')
-    try:
-        config = getConfig()
-    except URLError:
-        print_('Cannot retrieve speedtest configuration')
-        sys.exit(1)
+    if not args.mini:
+        if not args.simple:
+            print_('Retrieving speedtest.net configuration...')
+        try:
+            config = getConfig()
+        except URLError:
+            print_('Cannot retrieve speedtest configuration')
+            sys.exit(1)
 
-    if not args.simple:
-        print_('Retrieving speedtest.net server list...')
-    if args.list or args.server:
-        servers = closestServers(config['client'], True)
-        if args.list:
-            serverList = []
-            for server in servers:
-                line = ('%(id)4s) %(sponsor)s (%(name)s, %(country)s) '
-                        '[%(d)0.2f km]' % server)
-                serverList.append(line)
-            # Python 2.7 and newer seem to be ok with the resultant encoding
-            # from parsing the XML, but older versions have some issues.
-            # This block should detect whether we need to encode or not
-            try:
-                unicode()
-                print_('\n'.join(serverList).encode('utf-8', 'ignore'))
-            except NameError:
-                print_('\n'.join(serverList))
-            except IOError:
-                pass
-            sys.exit(0)
-    else:
-        servers = closestServers(config['client'])
+    if not args.mini:
+        if not args.simple:
+            print_('Retrieving speedtest.net server list...')
+        if args.list or args.server:
+            servers = closestServers(config['client'], True)
+            if args.list:
+                serverList = []
+                for server in servers:
+                    line = ('%(id)4s) %(sponsor)s (%(name)s, %(country)s) '
+                            '[%(d)0.2f km]' % server)
+                    serverList.append(line)
+                # Python 2.7 or newer seem to be ok with the resultant encoding
+                # from parsing the XML, but older versions have some issues.
+                # This block should detect whether we need to encode or not
+                try:
+                    unicode()
+                    print_('\n'.join(serverList).encode('utf-8', 'ignore'))
+                except NameError:
+                    print_('\n'.join(serverList))
+                except IOError:
+                    pass
+                sys.exit(0)
+        else:
+            servers = closestServers(config['client'])
 
-    if not args.simple:
+    if not args.simple and not args.mini:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
 
     if args.server:
@@ -636,9 +638,9 @@ def speedtest():
             print_('Invalid Speedtest Mini URL')
             sys.exit(1)
         else:
-            text = f.read()
+            text = f.read().decode('utf-8', 'ignore')
             f.close()
-        extension = re.findall('upload_extension: "([^"]+)"', text.decode())
+        extension = re.findall('upload_extension: "([^"]+)"', text)
         if not extension:
             for ext in ['php', 'asp', 'aspx', 'jsp']:
                 try:
@@ -648,7 +650,7 @@ def speedtest():
                 except:
                     pass
                 else:
-                    data = f.read().strip()
+                    data = f.read().decode('utf-8', 'ignore').strip()
                     if (f.code == 200 and
                             len(data.splitlines()) == 1 and
                             re.match('size=[0-9]', data)):
