@@ -396,7 +396,7 @@ def getConfig():
                 'times': root.find('times').attrib,
                 'download': root.find('download').attrib,
                 'upload': root.find('upload').attrib}
-        except AttributeError:  # Python3 branch
+        except AttributeError:  # Python2.4 branch
             root = DOM.parseString(''.join(configxml))
             config = {
                 'client': getAttributesByTagName(root, 'client'),
@@ -442,12 +442,13 @@ def closestServers(client, all=False):
                 try:
                     root = ET.fromstring(''.encode().join(serversxml))
                     elements = root.getiterator('server')
-                except AttributeError, e:  # Python3 branch
+                except AttributeError:  # Python2.4 branch
                     try:
                         root = DOM.parseString(''.join(serversxml))
                         elements = root.getElementsByTagName('server')
                     except:
-                        raise e
+                        print_('---%s---' % serversxml)
+                        print_('---%s---' % ''.join(serversxml))
             except SyntaxError:
                 raise SpeedtestCliServerListError
             for server in elements:
