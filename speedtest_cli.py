@@ -411,7 +411,7 @@ def getConfig():
     return config
 
 
-def closestServers(client, all=False):
+def closestServers(client, download, all=False):
     """Determine the 5 closest speedtest.net servers based on geographic
     distance
     """
@@ -424,7 +424,8 @@ def closestServers(client, all=False):
     servers = {}
     for url in urls:
         try:
-            request = build_request(url)
+            request = build_request('%s?threads=%s' %
+                                    (url, download['threadsperurl']))
             uh, e = catch_request(request)
             if e:
                 errors.append('%s' % e)
@@ -626,7 +627,7 @@ def speedtest():
     if not args.simple:
         print_('Retrieving speedtest.net server list...')
     if args.list or args.server:
-        servers = closestServers(config['client'], True)
+        servers = closestServers(config['client'], config['download'], True)
         if args.list:
             serverList = []
             for server in servers:
@@ -645,7 +646,7 @@ def speedtest():
                 pass
             sys.exit(0)
     else:
-        servers = closestServers(config['client'])
+        servers = closestServers(config['client'], config['download'])
 
     if not args.simple:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
