@@ -375,7 +375,7 @@ def getConfig():
     we are interested in
     """
 
-    request = build_request('://www.speedtest.net/speedtest-config.php')
+    request = build_request('://c.speedtest.net/speedtest-config.php')
     uh, e = catch_request(request)
     if e:
         print_('Could not retrieve speedtest.net configuration: %s' % e)
