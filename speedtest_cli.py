@@ -442,9 +442,12 @@ def closestServers(client, all=False):
                 try:
                     root = ET.fromstring(''.encode().join(serversxml))
                     elements = root.getiterator('server')
-                except AttributeError:  # Python3 branch
-                    root = DOM.parseString(''.join(serversxml))
-                    elements = root.getElementsByTagName('server')
+                except AttributeError, e:  # Python3 branch
+                    try:
+                        root = DOM.parseString(''.join(serversxml))
+                        elements = root.getElementsByTagName('server')
+                    except:
+                        raise e
             except SyntaxError:
                 raise SpeedtestCliServerListError
             for server in elements:
