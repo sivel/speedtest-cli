@@ -586,7 +586,7 @@ def speedtest():
     parser.add_argument('--timeout', default=10, type=int,
                         help='HTTP timeout in seconds. Default 10')
     parser.add_argument('--secure', action='store_true',
-                        help='Use HTTPS instead of HTTP when communicating'
+                        help='Use HTTPS instead of HTTP when communicating '
                              'with speedtest.net operated servers')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
