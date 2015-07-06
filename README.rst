@@ -91,6 +91,7 @@ Usage
       --mini MINI        URL of the Speedtest Mini server
       --source SOURCE    Source IP address to bind to
       --timeout TIMEOUT  HTTP timeout in seconds. Default 10
+      --csv CSV          Write output to CSV file
       --version          Show the version number and exit
 
 Inconsistency

@@ -23,6 +23,8 @@ import signal
 import socket
 import timeit
 import threading
+import csv
+import datetime
 
 __version__ = '0.3.2'
 
@@ -547,6 +549,7 @@ def speedtest():
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=int,
                         help='HTTP timeout in seconds. Default 10')
+    parser.add_argument('--csv', help='Add data to file using csv format')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -702,6 +705,39 @@ def speedtest():
         print_()
     print_('Upload: %0.2f M%s/s' %
            ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+
+    if args.csv: 
+        filename = args.csv
+        file_exists = os.path.isfile(filename)
+
+        try:
+            with open(filename, 'ab+') as csvfile:
+
+                headers = ['Test server', 'Date/Time', 'Latency (ms)', 
+                           'Dowload Speed (Kb/s)', 'Upload Speed (Kb/s)']
+                csvwriter = csv.DictWriter(csvfile, delimiter=';',
+                                           lineterminator='\n',fieldnames=headers)
+
+                server = '%(sponsor)s (%(name)s) [%(d)0.2f km]' % best
+                current_time = datetime.datetime.now().isoformat()
+                dlspeedk = int(round((dlspeed / 1000) * 8, 0))
+                ping = float(round(best['latency'], 2))
+                ulspeedk = int(round((ulspeed / 1000) * 8, 0))
+
+
+                if not file_exists:
+                    csvwriter.writeheader()            
+
+                csvwriter.writerow({'Test server': server, 
+                                    'Date/Time': current_time, 
+                                    'Latency': ping,
+                                    'Dowload Speed (Kb/s)': dlspeedk, 
+                                    'Upload Speed (Kb/s)': ulspeedk
+                                     })
+                csvfile.close()
+        except IOError:
+            print_("Unable to write CSV file")
+            sys.exit(1)
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
