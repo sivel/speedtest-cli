@@ -22,16 +22,19 @@ import math
 import signal
 import socket
 import timeit
+import platform
 import threading
 import csv
 import datetime
 
-__version__ = '0.3.2'
+__version__ = '0.3.3b'
 
 # Some global variables we use
-user_agent = 'speedtest-cli/%s' % __version__
+user_agent = None
 source = None
 shutdown_event = None
+scheme = 'http'
+
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -54,7 +57,15 @@ except ImportError:
 try:
     from httplib import HTTPConnection, HTTPSConnection
 except ImportError:
-    from http.client import HTTPConnection, HTTPSConnection
+    e_http_py2 = sys.exc_info()
+    try:
+        from http.client import HTTPConnection, HTTPSConnection
+    except ImportError:
+        e_http_py3 = sys.exc_info()
+        raise SystemExit('Your python installation is missing required HTTP '
+                         'client classes:\n\n'
+                         'Python 2: %s\n'
+                         'Python 3: %s' % (e_http_py2[1], e_http_py3[1]))
 
 try:
     from Queue import Queue
@@ -176,6 +187,24 @@ def distance(origin, destination):
     return d
 
 
+def build_user_agent():
+    """Build a Mozilla/5.0 compatible User-Agent string"""
+
+    global user_agent
+    if user_agent:
+        return user_agent
+
+    ua_tuple = (
+        'Mozilla/5.0',
+        '(%s; U; %s; en-us)' % (platform.system(), platform.architecture()[0]),
+        'Python/%s' % platform.python_version(),
+        '(KHTML, like Gecko)',
+        'speedtest-cli/%s' % __version__
+    )
+    user_agent = ' '.join(ua_tuple)
+    return user_agent
+
+
 def build_request(url, data=None, headers={}):
     """Build a urllib2 request object
 
@@ -183,8 +212,13 @@ def build_request(url, data=None, headers={}):
 
     """
 
+    if url[0] == ':':
+        schemed_url = '%s%s' % (scheme, url)
+    else:
+        schemed_url = url
+
     headers['User-Agent'] = user_agent
-    return Request(url, data=data, headers=headers)
+    return Request(schemed_url, data=data, headers=headers)
 
 
 def catch_request(request):
@@ -195,9 +229,10 @@ def catch_request(request):
 
     try:
         uh = urlopen(request)
-        return uh
+        return uh, False
     except (HTTPError, URLError, socket.error):
-        return False
+        e = sys.exc_info()[1]
+        return None, e
 
 
 class FileGetter(threading.Thread):
@@ -342,10 +377,10 @@ def getConfig():
     we are interested in
     """
 
-    request = build_request('https://www.speedtest.net/speedtest-config.php')
-    uh = catch_request(request)
-    if uh is False:
-        print_('Could not retrieve speedtest.net configuration')
+    request = build_request('://www.speedtest.net/speedtest-config.php')
+    uh, e = catch_request(request)
+    if e:
+        print_('Could not retrieve speedtest.net configuration: %s' % e)
         sys.exit(1)
     configxml = []
     while 1:
@@ -384,15 +419,17 @@ def closestServers(client, all=False):
     """
 
     urls = [
-        'https://www.speedtest.net/speedtest-servers-static.php',
-        'http://c.speedtest.net/speedtest-servers-static.php',
+        '://www.speedtest.net/speedtest-servers-static.php',
+        '://c.speedtest.net/speedtest-servers-static.php',
     ]
+    errors = []
     servers = {}
     for url in urls:
         try:
             request = build_request(url)
-            uh = catch_request(request)
-            if uh is False:
+            uh, e = catch_request(request)
+            if e:
+                errors.append('%s' % e)
                 raise SpeedtestCliServerListError
             serversxml = []
             while 1:
@@ -437,7 +474,8 @@ def closestServers(client, all=False):
             break
 
     if not servers:
-        print_('Failed to retrieve list of speedtest.net servers')
+        print_('Failed to retrieve list of speedtest.net servers:\n\n %s' %
+               '\n'.join(errors))
         sys.exit(1)
 
     closest = []
@@ -512,7 +550,7 @@ def version():
 def speedtest():
     """Run the full speedtest.net test"""
 
-    global shutdown_event, source
+    global shutdown_event, source, scheme
     shutdown_event = threading.Event()
 
     signal.signal(signal.SIGINT, ctrl_c)
@@ -550,6 +588,9 @@ def speedtest():
     parser.add_argument('--timeout', default=10, type=int,
                         help='HTTP timeout in seconds. Default 10')
     parser.add_argument('--csv', help='Add data to file using csv format')
+    parser.add_argument('--secure', action='store_true',
+                        help='Use HTTPS instead of HTTP when communicating '
+                             'with speedtest.net operated servers')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -566,10 +607,16 @@ def speedtest():
 
     socket.setdefaulttimeout(args.timeout)
 
+    # Pre-cache the user agent string
+    build_user_agent()
+
     # If specified bind to a specific IP address
     if args.source:
         source = args.source
         socket.socket = bound_socket
+
+    if args.secure:
+        scheme = 'https'
 
     if not args.simple:
         print_('Retrieving speedtest.net configuration...')
@@ -589,16 +636,7 @@ def speedtest():
                 line = ('%(id)4s) %(sponsor)s (%(name)s, %(country)s) '
                         '[%(d)0.2f km]' % server)
                 serverList.append(line)
-            # Python 2.7 and newer seem to be ok with the resultant encoding
-            # from parsing the XML, but older versions have some issues.
-            # This block should detect whether we need to encode or not
-            try:
-                unicode()
-                print_('\n'.join(serverList).encode('utf-8', 'ignore'))
-            except NameError:
-                print_('\n'.join(serverList))
-            except IOError:
-                pass
+            print_('\n'.join(serverList).encode('utf-8', 'ignore'))
             sys.exit(0)
     else:
         servers = closestServers(config['client'])
@@ -666,16 +704,8 @@ def speedtest():
         best = getBestServer(servers)
 
     if not args.simple:
-        # Python 2.7 and newer seem to be ok with the resultant encoding
-        # from parsing the XML, but older versions have some issues.
-        # This block should detect whether we need to encode or not
-        try:
-            unicode()
-            print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                   '%(latency)s ms' % best).encode('utf-8', 'ignore'))
-        except NameError:
-            print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                   '%(latency)s ms' % best)
+        print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+               '%(latency)s ms' % best).encode('utf-8', 'ignore'))
     else:
         print_('Ping: %(latency)s ms' % best)
 
@@ -763,13 +793,13 @@ def speedtest():
                              (ping, ulspeedk, dlspeedk, '297aae72'))
                             .encode()).hexdigest()]
 
-        headers = {'Referer': 'https://c.speedtest.net/flash/speedtest.swf'}
-        request = build_request('https://www.speedtest.net/api/api.php',
+        headers = {'Referer': 'http://c.speedtest.net/flash/speedtest.swf'}
+        request = build_request('://www.speedtest.net/api/api.php',
                                 data='&'.join(apiData).encode(),
                                 headers=headers)
-        f = catch_request(request)
-        if f is False:
-            print_('Could not submit results to speedtest.net')
+        f, e = catch_request(request)
+        if e:
+            print_('Could not submit results to speedtest.net: %s' % e)
             sys.exit(1)
         response = f.read()
         code = f.code
@@ -785,8 +815,8 @@ def speedtest():
             print_('Could not submit results to speedtest.net')
             sys.exit(1)
 
-        print_('Share results: https://www.speedtest.net/result/%s.png' %
-               resultid[0])
+        print_('Share results: %s://www.speedtest.net/result/%s.png' %
+               scheme, resultid[0])
 
 
 def main():
