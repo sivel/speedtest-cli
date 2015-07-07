@@ -760,7 +760,7 @@ def speedtest():
 
                 csvwriter.writerow({'Test server': server, 
                                     'Date/Time': current_time, 
-                                    'Latency': ping,
+                                    'Latency (ms)': ping,
                                     'Dowload Speed (Kb/s)': dlspeedk, 
                                     'Upload Speed (Kb/s)': ulspeedk
                                      })
