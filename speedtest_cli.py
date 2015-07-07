@@ -750,7 +750,8 @@ def speedtest():
                                                fieldnames=headers)
 
                     server = '%(sponsor)s (%(name)s) [%(d)0.2f km]' % best
-                    current_time = datetime.datetime.now().isoformat()
+                    current_time = datetime.datetime.now().strftime(
+                        "%Y/%m/%d %H:%M:%S")
                     dlspeedk = int(round((dlspeed / 1000) * 8, 0))
                     ping = float(round(best['latency'], 2))
                     ulspeedk = int(round((ulspeed / 1000) * 8, 0))
