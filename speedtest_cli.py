@@ -736,34 +736,34 @@ def speedtest():
     print_('Upload: %0.2f M%s/s' %
            ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
-    if args.csv: 
+    if args.csv:
         filename = args.csv
         file_exists = os.path.isfile(filename)
-
         try:
-            with open(filename, 'ab+') as csvfile:
+            csvfile = open(filename, 'ab+')
+            try:
 
-                headers = ['Test server', 'Date/Time', 'Latency (ms)', 
-                           'Dowload Speed (Kb/s)', 'Upload Speed (Kb/s)']
-                csvwriter = csv.DictWriter(csvfile, delimiter=';',
-                                           lineterminator='\n',fieldnames=headers)
+                    headers = ['Test server', 'Date/Time', 'Latency (ms)',
+                               'Dowload Speed (Kb/s)', 'Upload Speed (Kb/s)']
+                    csvwriter = csv.DictWriter(csvfile, delimiter=';',
+                                               lineterminator='\n',
+                                               fieldnames=headers)
 
-                server = '%(sponsor)s (%(name)s) [%(d)0.2f km]' % best
-                current_time = datetime.datetime.now().isoformat()
-                dlspeedk = int(round((dlspeed / 1000) * 8, 0))
-                ping = float(round(best['latency'], 2))
-                ulspeedk = int(round((ulspeed / 1000) * 8, 0))
+                    server = '%(sponsor)s (%(name)s) [%(d)0.2f km]' % best
+                    current_time = datetime.datetime.now().isoformat()
+                    dlspeedk = int(round((dlspeed / 1000) * 8, 0))
+                    ping = float(round(best['latency'], 2))
+                    ulspeedk = int(round((ulspeed / 1000) * 8, 0))
 
+                    if not file_exists:
+                        csvwriter.writeheader()
 
-                if not file_exists:
-                    csvwriter.writeheader()            
-
-                csvwriter.writerow({'Test server': server, 
-                                    'Date/Time': current_time, 
-                                    'Latency (ms)': ping,
-                                    'Dowload Speed (Kb/s)': dlspeedk, 
-                                    'Upload Speed (Kb/s)': ulspeedk
-                                     })
+                    csvwriter.writerow({'Test server': server,
+                                        'Date/Time': current_time,
+                                        'Latency (ms)': ping,
+                                        'Dowload Speed (Kb/s)': dlspeedk,
+                                        'Upload Speed (Kb/s)': ulspeedk})
+            finally:
                 csvfile.close()
         except IOError:
             print_("Unable to write CSV file")
