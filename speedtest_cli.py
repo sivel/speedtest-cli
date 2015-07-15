@@ -24,6 +24,7 @@ import socket
 import timeit
 import platform
 import threading
+import subprocess
 
 __version__ = '0.3.3b'
 
@@ -545,6 +546,76 @@ def version():
     raise SystemExit(__version__)
 
 
+def callbackHelp():
+    """Print help for --callback"""
+
+    print_("""speedtest-cli callback script help
+----------------------------------
+
+If a callback script is given via --callback, that script will be run
+during operation.  The value passed to --callback may be the path to
+a script or a shell fragment which will be passed to the shell.
+
+The environment of the callback script is the same as the environment
+of speedtest-cli plus variables starting with 'STC_' that have information
+about the current state of the program.  Each execution of the callback
+script will retain all the previous 'STC_' variables and possibly add new
+variables.
+
+Following are the points at which the callback script will be executed and
+what 'STC_' enviornment variables will be available (only new or changed
+variables will be listed for each state):
+
+pre_ping - run before gathering ping time results
+    STC_STATE - set to 'pre_ping'
+    STC_UNITS - units used for the DL and UL speeds, e.g. Mbit/s
+
+post_ping
+    STC_STATE   - set to 'post_ping'
+    STC_PING_MS - the calculated ping latency in milliseconds
+
+pre_download
+    STC_STATE   - set to 'pre_download'
+
+post_download
+    STC_STATE        - set to 'post_download'
+    STC_DL_SPEED     - calculated speed in STC_UNITS units
+    STC_DL_SPEED_RAW - calculated speed in bits/sec
+
+pre_upload
+    STC_STATE - set to 'pre_upload'
+
+post_upload
+    STC_STATE        - set to 'post_upload'
+    STC_UL_SPEED     - calculated speed in STC_UNITS units
+    STC_UL_SPEED_RAW - calculated speed in bits/sec
+
+examples:
+  # show all STC_ variables set during each callback
+  speedtest-cli --simple --callback \
+'echo "$STC_STATE:"; env | grep "^STC_" | sort; echo'
+
+  # only take action when the post_upload state is reached
+  speedtest_cli --callback \
+'test $STC_STATE = 'post_upload' && env | grep "^STC_.*SPEED"'
+""")
+
+    sys.exit(0)
+
+
+def runCallback(script, add_env):
+    """Run the script specified by --callback"""
+    if not script:
+        return
+
+    env = os.environ
+
+    if add_env:
+        env.update(add_env)
+
+    subprocess.Popen(script, shell=True, env=env, close_fds=True).wait()
+
+
 def speedtest():
     """Run the full speedtest.net test"""
 
@@ -588,6 +659,10 @@ def speedtest():
     parser.add_argument('--secure', action='store_true',
                         help='Use HTTPS instead of HTTP when communicating '
                              'with speedtest.net operated servers')
+    parser.add_argument('--callback',
+                        help='Script to run at certain stages of operation')
+    parser.add_argument('--callback-help', help='Show help about --callback',
+                        action='store_true')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -601,6 +676,12 @@ def speedtest():
     # Print the version and exit
     if args.version:
         version()
+
+    # Print help for --callback and exit
+    if args.callback_help:
+        callbackHelp()
+
+    callback_env = {'STC_UNITS': 'M%s/s' % args.units[0]}
 
     socket.setdefaulttimeout(args.timeout)
 
@@ -640,6 +721,8 @@ def speedtest():
 
     if not args.simple:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
+
+    runCallback(args.callback, dict(STC_STATE='pre_ping', **callback_env))
 
     if args.server:
         try:
@@ -706,6 +789,9 @@ def speedtest():
     else:
         print_('Ping: %(latency)s ms' % best)
 
+    callback_env.update({'STC_PING_MS': '%(latency)s' % best})
+    runCallback(args.callback, dict(STC_STATE='post_ping', **callback_env))
+
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
     for size in sizes:
@@ -714,11 +800,16 @@ def speedtest():
                         (os.path.dirname(best['url']), size, size))
     if not args.simple:
         print_('Testing download speed', end='')
+    runCallback(args.callback, dict(STC_STATE='pre_download', **callback_env))
     dlspeed = downloadSpeed(urls, args.simple)
+    dlspeed_fmt = (dlspeed / 1000 / 1000) * args.units[1]
     if not args.simple:
         print_()
     print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+           (dlspeed_fmt, args.units[0]))
+    callback_env.update({'STC_DL_SPEED': '%0.2f' % dlspeed_fmt,
+                         'STC_DL_SPEED_RAW': '%0.2f' % dlspeed})
+    runCallback(args.callback, dict(STC_STATE='post_download', **callback_env))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -727,11 +818,16 @@ def speedtest():
             sizes.append(size)
     if not args.simple:
         print_('Testing upload speed', end='')
+    runCallback(args.callback, dict(STC_STATE='pre_upload', **callback_env))
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
+    ulspeed_fmt = ulspeed / 1000 / 1000 * args.units[1]
     if not args.simple:
         print_()
     print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+           (ulspeed_fmt, args.units[0]))
+    callback_env.update({'STC_UL_SPEED': '%0.2f' % ulspeed_fmt,
+                         'STC_UL_SPEED_RAW': '%0.2f' % ulspeed})
+    runCallback(args.callback, dict(STC_STATE='post_upload', **callback_env))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
