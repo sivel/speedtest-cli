@@ -70,10 +70,10 @@ Usage
 ::
 
     $ speedtest-cli -h
-    usage: speedtest_cli.py [-h] [--bytes] [--share] [--simple] [--list]
-                            [--server SERVER] [--mini MINI] [--source SOURCE]
-                            [--timeout TIMEOUT] [--secure] [--callback CALLBACK]
-                            [--callback-help] [--version]
+    usage: speedtest-cli [-h] [--bytes] [--share] [--simple] [--list]
+                         [--server SERVER] [--mini MINI] [--source SOURCE]
+                         [--timeout TIMEOUT] [--secure] [--callback CALLBACK]
+                         [--callback-help] [--version]
 
     Command line interface for testing internet bandwidth using speedtest.net.
     --------------------------------------------------------------------------
