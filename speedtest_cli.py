@@ -780,7 +780,7 @@ def speedtest():
             sys.exit(1)
 
         print_('Share results: %s://www.speedtest.net/result/%s.png' %
-               scheme, resultid[0])
+               (scheme, resultid[0]))
 
 
 def main():
