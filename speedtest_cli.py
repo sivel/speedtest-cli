@@ -686,9 +686,9 @@ def speedtest():
                    '%(latency)s ms' % best)
     else:
         if args.collectd:
-            print_('PUTVAL "%s/speedtest/latency-latency_ms" interval=%d N:%d' %
-                   (socket.gethostname(), args.collectd_interval,
-                    best['latency']))
+            print_('PUTVAL "%s/speedtest/latency-latency_ms" '
+                   'interval=%d N:%d' % (socket.gethostname(),
+                   args.collectd_interval, best['latency']))
         else:
             print_('Ping: %(latency)s ms' % best)
 
@@ -779,6 +779,7 @@ def speedtest():
     # Sleep before next cycle if collectd requested
     if args.collectd:
         time.sleep(args.collectd_interval)
+
 
 def main():
     try:
