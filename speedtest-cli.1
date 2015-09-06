@@ -38,6 +38,16 @@ Generate and provide a URL to the speedtest.net share results image
 Suppress verbose output, only show basic information
 .RE
 
+\fB\-\-collectd\fR
+.RS
+Emit output compatible with the \fBcollectd-exec(5)\fR collectd script.
+.RE
+
+\fB\-\-collectd_interval COLLECTD_INTERVAL\fR
+.RS
+The collection interval (in seconds) to be used when using the \fBcollectd-exec(5)\fR script.
+.RE
+
 \fB\-\-list\fR
 .RS
 Display a list of speedtest.net servers sorted by distance
