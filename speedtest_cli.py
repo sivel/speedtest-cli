@@ -21,6 +21,7 @@ import sys
 import math
 import signal
 import socket
+import time
 import timeit
 import threading
 
@@ -539,6 +540,12 @@ def speedtest():
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
+    parser.add_argument('--collectd', action='store_true',
+                        help='Outputs PUTVAL lines compatible with the '
+                             'collectd-exec script')
+    parser.add_argument('--collectd_interval', default=900, type=int,
+                        help='Collection interval for the collectd-exec '
+                             'plugin (in seconds)')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
@@ -567,6 +574,10 @@ def speedtest():
     if args.source:
         source = args.source
         socket.socket = bound_socket
+
+    # Assume 'simple' if collectd format was requested.
+    if args.collectd:
+        args.simple = True
 
     if not args.simple:
         print_('Retrieving speedtest.net configuration...')
@@ -674,7 +685,12 @@ def speedtest():
             print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                    '%(latency)s ms' % best)
     else:
-        print_('Ping: %(latency)s ms' % best)
+        if args.collectd:
+            print_('PUTVAL "%s/speedtest/latency-latency_ms" interval=%d N:%d' %
+                   (socket.gethostname(), args.collectd_interval,
+                    best['latency']))
+        else:
+            print_('Ping: %(latency)s ms' % best)
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -687,8 +703,12 @@ def speedtest():
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print_()
-    print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    if args.collectd:
+        print_('PUTVAL "%s/speedtest/bitrate-download_bps" interval=%d N:%d' %
+               (socket.gethostname(), args.collectd_interval, dlspeed * 8))
+    else:
+        print_('Download: %0.2f M%s/s' %
+               ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -700,8 +720,12 @@ def speedtest():
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if not args.simple:
         print_()
-    print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    if args.collectd:
+        print_('PUTVAL "%s/speedtest/bitrate-upload_bps" interval=%d N:%d' %
+               (socket.gethostname(), args.collectd_interval, ulspeed * 8))
+    else:
+        print_('Upload: %0.2f M%s/s' %
+               ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
@@ -752,6 +776,9 @@ def speedtest():
         print_('Share results: https://www.speedtest.net/result/%s.png' %
                resultid[0])
 
+    # Sleep before next cycle if collectd requested
+    if args.collectd:
+        time.sleep(args.collectd_interval)
 
 def main():
     try:
