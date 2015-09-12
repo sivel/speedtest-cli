@@ -97,6 +97,11 @@ Usage
       --timeout TIMEOUT  HTTP timeout in seconds. Default 10
       --secure           Use HTTPS instead of HTTP when communicating with
                          speedtest.net operated servers
+      --use_interface_counters USE_INTERFACE_COUNTERS
+                         Use the kernel counters for the specified network
+                         interface to calculate the total number of bytes
+                         transmitted/received (Linux only).
+                         --version             Show the version number and exit
       --version          Show the version number and exit
 
 Inconsistency
