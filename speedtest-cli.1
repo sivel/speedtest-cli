@@ -58,6 +58,15 @@ URL of the Speedtest Mini server
 Source IP address to bind to
 .RE
 
+\fB\-\-use_interface_counters INTF\fR
+.RS
+With this option the program uses the kernel counters for interface
+"intf" to calculate the number of bytes transferred. This option is
+useful when running this program on a computer that is the gateway
+to the Internet, as it will include the bandwidth used by every user
+of the system and thus provide more accurate bandwidth figures.
+.RE
+
 \fB\-\-version\fR
 .RS
 Show the version number and exit
