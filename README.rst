@@ -76,6 +76,7 @@ Usage
     $ speedtest-cli -h
     usage: speedtest-cli [-h] [--bytes] [--share] [--simple] [--list]
                          [--server SERVER] [--mini MINI] [--source SOURCE]
+                         [--download] [--upload]
                          [--timeout TIMEOUT] [--secure] [--version]
 
     Command line interface for testing internet bandwidth using speedtest.net.
@@ -94,6 +95,8 @@ Usage
       --server SERVER    Specify a server ID to test against
       --mini MINI        URL of the Speedtest Mini server
       --source SOURCE    Source IP address to bind to
+      --download         Only test download speed
+      --upload           Only test upload speed
       --timeout TIMEOUT  HTTP timeout in seconds. Default 10
       --secure           Use HTTPS instead of HTTP when communicating with
                          speedtest.net operated servers

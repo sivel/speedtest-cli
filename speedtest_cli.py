@@ -590,6 +590,10 @@ def speedtest():
     parser.add_argument('--secure', action='store_true',
                         help='Use HTTPS instead of HTTP when communicating '
                              'with speedtest.net operated servers')
+    parser.add_argument('--download', dest='downloadonly', action='store_true',
+                        help='Only test download speed')
+    parser.add_argument('--upload', dest='uploadonly', action='store_true',
+                        help='Only test upload speed')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -714,30 +718,35 @@ def speedtest():
         for i in range(0, 4):
             urls.append('%s/random%sx%s.jpg' %
                         (os.path.dirname(best['url']), size, size))
-    if not args.simple:
-        print_('Testing download speed', end='')
-    dlspeed = downloadSpeed(urls, args.simple)
-    if not args.simple:
-        print_()
-    print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    if not args.uploadonly:
+        if not args.simple:
+            print_('Testing download speed', end='')
+        dlspeed = downloadSpeed(urls, args.simple)
+        if not args.simple:
+            print_()
+        print_('Download: %0.2f M%s/s' %
+               ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
-    sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
-    sizes = []
-    for size in sizesizes:
-        for i in range(0, 25):
-            sizes.append(size)
-    if not args.simple:
-        print_('Testing upload speed', end='')
-    ulspeed = uploadSpeed(best['url'], sizes, args.simple)
-    if not args.simple:
-        print_()
-    print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    if not args.downloadonly:
+        sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
+        sizes = []
+        for size in sizesizes:
+            for i in range(0, 25):
+                sizes.append(size)
+        if not args.simple:
+            print_('Testing upload speed', end='')
+        ulspeed = uploadSpeed(best['url'], sizes, args.simple)
+        if not args.simple:
+            print_()
+        print_('Upload: %0.2f M%s/s' %
+               ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
                'testing against a Speedtest Mini server')
+    elif args.share and (args.uploadonly or args.downloadonly):
+        print_('Cannot generate a speedtest.net share results image while '
+               'testing only upload or download speed')
     elif args.share:
         dlspeedk = int(round((dlspeed / 1000) * 8, 0))
         ping = int(round(best['latency'], 0))
