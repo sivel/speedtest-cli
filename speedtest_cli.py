@@ -16,6 +16,7 @@
 #    under the License.
 
 import os
+import os.path
 import re
 import sys
 import math
@@ -233,6 +234,28 @@ def catch_request(request):
         return None, e
 
 
+def get_interface_counter(intf, counter):
+    """Retrieve a specific interface counter for interface 'intf'.
+    This requires a mounted /sys filesystem and is linux specific.
+    Will raise IOError if the /sys file cannot be opened."""
+
+    sysfile = os.path.join('/sys/class/net', intf, 'statistics', counter)
+    fd = open(sysfile)
+    val = int(fd.readline().rstrip())
+    fd.close()
+    return val
+
+
+def counter_diff(start, end):
+    """Returns the difference between end and start, considering counter
+    wrap-arounds. Values are assumed to wrap at 64-bit boundaries."""
+
+    if end > start:
+        return end - start
+    else:
+        return ((2**64) - start) + end
+
+
 class FileGetter(threading.Thread):
     """Thread class for retrieving a URL"""
 
@@ -257,10 +280,13 @@ class FileGetter(threading.Thread):
             pass
 
 
-def downloadSpeed(files, quiet=False):
+def downloadSpeed(files, quiet=False, net_interface=None):
     """Function to launch FileGetter threads and calculate download speeds"""
 
     start = timeit.default_timer()
+
+    if net_interface:
+        start_bytes = get_interface_counter(net_interface, 'rx_bytes')
 
     def producer(q, files):
         for file in files:
@@ -291,7 +317,17 @@ def downloadSpeed(files, quiet=False):
         prod_thread.join(timeout=0.1)
     while cons_thread.isAlive():
         cons_thread.join(timeout=0.1)
-    return (sum(finished) / (timeit.default_timer() - start))
+
+    elapsed = timeit.default_timer() - start
+
+    # If 'net_interface' is set, calculate the total bytes received
+    # based on the interface counters. Otherwise, use the total
+    # number of bytes in 'finished'.
+    if net_interface:
+        end_bytes = get_interface_counter(net_interface, 'rx_bytes')
+        return counter_diff(start_bytes, end_bytes) / elapsed
+    else:
+        return sum(finished) / elapsed
 
 
 class FilePutter(threading.Thread):
@@ -322,10 +358,13 @@ class FilePutter(threading.Thread):
             self.result = 0
 
 
-def uploadSpeed(url, sizes, quiet=False):
+def uploadSpeed(url, sizes, quiet=False, net_interface=None):
     """Function to launch FilePutter threads and calculate upload speeds"""
 
     start = timeit.default_timer()
+
+    if net_interface:
+        start_bytes = get_interface_counter(net_interface, 'tx_bytes')
 
     def producer(q, sizes):
         for size in sizes:
@@ -356,7 +395,17 @@ def uploadSpeed(url, sizes, quiet=False):
         prod_thread.join(timeout=0.1)
     while cons_thread.isAlive():
         cons_thread.join(timeout=0.1)
-    return (sum(finished) / (timeit.default_timer() - start))
+
+    elapsed = timeit.default_timer() - start
+
+    # If 'net_interface' is set, calculate the total bytes transmitted
+    # based on the interface counters. Otherwise, use the total
+    # number of bytes in 'finished'.
+    if net_interface:
+        end_bytes = get_interface_counter(net_interface, 'tx_bytes')
+        return counter_diff(start_bytes, end_bytes) / elapsed
+    else:
+        return sum(finished) / elapsed
 
 
 def getAttributesByTagName(dom, tagName):
@@ -590,6 +639,11 @@ def speedtest():
     parser.add_argument('--secure', action='store_true',
                         help='Use HTTPS instead of HTTP when communicating '
                              'with speedtest.net operated servers')
+    parser.add_argument('--use_interface_counters',
+                        help='Use the kernel counters for the specified '
+                             'network interface to calculate the total '
+                             'number of bytes transmitted/received '
+                             '(Linux only).')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -716,7 +770,7 @@ def speedtest():
                         (os.path.dirname(best['url']), size, size))
     if not args.simple:
         print_('Testing download speed', end='')
-    dlspeed = downloadSpeed(urls, args.simple)
+    dlspeed = downloadSpeed(urls, args.simple, args.use_interface_counters)
     if not args.simple:
         print_()
     print_('Download: %0.2f M%s/s' %
@@ -729,7 +783,8 @@ def speedtest():
             sizes.append(size)
     if not args.simple:
         print_('Testing upload speed', end='')
-    ulspeed = uploadSpeed(best['url'], sizes, args.simple)
+    ulspeed = uploadSpeed(best['url'], sizes,
+                          args.simple, args.use_interface_counters)
     if not args.simple:
         print_()
     print_('Upload: %0.2f M%s/s' %
