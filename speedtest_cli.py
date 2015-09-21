@@ -25,7 +25,7 @@ import timeit
 import platform
 import threading
 
-__version__ = '0.3.3'
+__version__ = '0.3.4'
 
 # Some global variables we use
 user_agent = None
