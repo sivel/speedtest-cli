@@ -617,7 +617,7 @@ def speedtest():
     if args.secure:
         scheme = 'https'
 
-    if not args.simple:
+    if not args.simple and not args.mini:
         print_('Retrieving speedtest.net configuration...')
     try:
         config = getConfig()
@@ -625,7 +625,7 @@ def speedtest():
         print_('Cannot retrieve speedtest configuration')
         sys.exit(1)
 
-    if not args.simple:
+    if not args.simple and not args.mini:
         print_('Retrieving speedtest.net server list...')
     if args.list or args.server:
         servers = closestServers(config['client'], True)
@@ -698,11 +698,11 @@ def speedtest():
         except:
             best = servers[0]
     else:
-        if not args.simple:
+        if not args.simple and not args.mini:
             print_('Selecting best server based on latency...')
         best = getBestServer(servers)
 
-    if not args.simple:
+    if not args.simple and not args.mini:
         print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                '%(latency)s ms' % best).encode('utf-8', 'ignore'))
     else:
