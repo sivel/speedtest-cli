@@ -37,77 +37,108 @@ outfmt = 2
 # Messages format
 msgsfmts = []
 msgsfmts.append(['STCE0010',
-                '{"CODE":"STCE0010","VALUE":{"DESCRIPTION":"Could not retrieve speedtest.net configuration: %s"}}',
-                'Could not retrieve speedtest.net configuration: %s'])
+                 '{"CODE":"STCE0010","VALUE":{"DESCRIPTION":'
+                 '"Could not retrieve speedtest.net'
+                 ' configuration: %s"}}',
+                 'Could not retrieve speedtest.net'
+                 ' configuration: %s'])
 msgsfmts.append(['STCE0020',
-                '{"CODE":"STCE0020","VALUE":{"DESCRIPTION":"Failed to parse speedtest.net configuration"}}',
-                'Could not retrieve speedtest.net configuration: %s'])
+                 '{"CODE":"STCE0020","VALUE":{"DESCRIPTION":"Failed to parse'
+                 ' speedtest.net configuration"}}',
+                 'Could not retrieve speedtest.net configuration: %s'])
 msgsfmts.append(['STCE0030',
-                '{"CODE":"STCE0030","VALUE":{"DESCRIPTION":"Failed to retrieve list of speedtest.net servers: %s"}}',
-                'Failed to retrieve list of speedtest.net servers:\n\n %s'])
+                 '{"CODE":"STCE0030","VALUE":{"DESCRIPTION":'
+                 '"Failed to retrieve'
+                 ' list of speedtest.net servers: %s"}}',
+                 'Failed to retrieve list of speedtest.net servers:\n\n %s'])
 msgsfmts.append(['STCI0010',
-                '{"CODE":"STCI0010","VALUE":{"DESCRIPTION":"Retrieving speedtest.net configuration"}}',
-                'Retrieving speedtest.net configuration...'])
+                 '{"CODE":"STCI0010","VALUE":{"DESCRIPTION":"Retrieving'
+                 ' speedtest.net configuration"}}',
+                 'Retrieving speedtest.net configuration...'])
 msgsfmts.append(['STCE0050',
-                '{"CODE":"STCE0050","VALUE":{"DESCRIPTION":"Cannot retrieve speedtest configuration"}}',
-                'Cannot retrieve speedtest configuration'])
+                 '{"CODE":"STCE0050","VALUE":{"DESCRIPTION":"Cannot retrieve'
+                 ' speedtest configuration"}}',
+                 'Cannot retrieve speedtest configuration'])
 msgsfmts.append(['STCI0020',
-                '{"CODE":"STCI0020","VALUE":{"DESCRIPTION":"Retrieving speedtest.net server list"}}',
-                'Retrieving speedtest.net server list...'])
+                 '{"CODE":"STCI0020","VALUE":{"DESCRIPTION":"Retrieving'
+                 ' speedtest.net server list"}}',
+                 'Retrieving speedtest.net server list...'])
 msgsfmts.append(['STCI0030',
-                '{"CODE":"STCI0030","VALUE":{"DESCRIPTION":"Testing from", "ISP":"%(isp)s","IP":"%(ip)s"}}',
-                'Testing from %(isp)s (%(ip)s)...'])
+                 '{"CODE":"STCI0030","VALUE":{"DESCRIPTION":"Testing from",'
+                 ' "ISP":"%(isp)s","IP":"%(ip)s"}}',
+                 'Testing from %(isp)s (%(ip)s)...'])
 msgsfmts.append(['STCE0060',
-                '{"CODE":"STCE0060","VALUE":{"DESCRIPTION":"Invalid server ID"}}',
-                'Invalid server ID'])
+                 '{"CODE":"STCE0060","VALUE":{"DESCRIPTION":"Invalid server'
+                 ' ID"}}',
+                 'Invalid server ID'])
 msgsfmts.append(['STCE0070',
-                '{"CODE":"STCE0070","VALUE":{"DESCRIPTION":"Invalid Speedtest Mini URL"}}',
-                'Invalid Speedtest Mini URL'])
+                 '{"CODE":"STCE0070","VALUE":{"DESCRIPTION":"Invalid'
+                 ' Speedtest Mini URL"}}',
+                 'Invalid Speedtest Mini URL'])
 msgsfmts.append(['STCI0040',
-                '{"CODE":"STCI0040","VALUE":{"DESCRIPTION":"Please provide the full URL of your Speedtest Mini server"}}',
-                'Please provide the full URL of your Speedtest Mini server'])
+                 '{"CODE":"STCI0040","VALUE":{"DESCRIPTION":"Please'
+                 ' provide the full URL of your Speedtest Mini server"}}',
+                 'Please provide the full URL of your Speedtest Mini server'])
 msgsfmts.append(['STCI0050',
-                '{"CODE":"STCI0050","VALUE":{"DESCRIPTION":"Selecting best server based on latency"}}',
-                'Selecting best server based on latency...'])
+                 '{"CODE":"STCI0050","VALUE":{"DESCRIPTION":"Selecting best'
+                 ' server based on latency"}}',
+                 'Selecting best server based on latency...'])
 msgsfmts.append(['STCI0060',
-                '{"CODE":"STCI0060","VALUE":{"DESCRIPTION":"Hosted by", "NAME":"%(sponsor)s","LOCATION":"%(name)s","DISTANCE":"%(d)0.2f km","LATENCY":"%(latency)s ms"}}',
-                'Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: %(latency)s ms'])
+                 '{"CODE":"STCI0060","VALUE":{"DESCRIPTION":"Hosted by",'
+                 ' "NAME":"%(sponsor)s","LOCATION":"%(name)s","DISTANCE"'
+                 ':"%(d)0.2f km","LATENCY":"%(latency)s ms"}}',
+                 'Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]:'
+                 ' %(latency)s ms'])
 msgsfmts.append(['STCI0070',
-                '{"CODE":"STCI0070","VALUE":{"DESCRIPTION":"Ping","LATENCY":"%(latency)s ms"}}',
-                'Ping: %(latency)s ms'])
+                 '{"CODE":"STCI0070","VALUE":{"DESCRIPTION":"Ping",'
+                 '"LATENCY":"%(latency)s ms"}}',
+                 'Ping: %(latency)s ms'])
 msgsfmts.append(['STCI0080',
-                '{"CODE":"STCI0080","VALUE":{"DESCRIPTION":"Testing download speed"}}',
-                'Testing download speed...'])
+                 '{"CODE":"STCI0080","VALUE":{"DESCRIPTION":"Testing download'
+                 ' speed"}}',
+                 'Testing download speed...'])
 msgsfmts.append(['STCI0090',
-                '{"CODE":"STCI0090","VALUE":{"DESCRIPTION":"Download Speed","SPEED":"%0.2f M%s/s"}}',
-                'Download: %0.2f M%s/s'])
+                 '{"CODE":"STCI0090","VALUE":{"DESCRIPTION":"Download Speed",'
+                 '"SPEED":"%0.2f M%s/s"}}',
+                 'Download: %0.2f M%s/s'])
 msgsfmts.append(['STCI0100',
-                '{"CODE":"STCI0100","VALUE":{"DESCRIPTION":"Testing upload speed"}}',
-                'Testing upload speed...'])
+                 '{"CODE":"STCI0100","VALUE":{"DESCRIPTION":"Testing upload'
+                 ' speed"}}',
+                 'Testing upload speed...'])
 msgsfmts.append(['STCI0110',
-                '{"CODE":"STCI0110","VALUE":{"DESCRIPTION":"Upload Speed","SPEED":"%0.2f M%s/s"}}',
-                'Upload: %0.2f M%s/s'])
+                 '{"CODE":"STCI0110","VALUE":{"DESCRIPTION":"Upload Speed",'
+                 '"SPEED":"%0.2f M%s/s"}}',
+                 'Upload: %0.2f M%s/s'])
 msgsfmts.append(['STCE0080',
-                '{"CODE":"STCE0080","VALUE":{"DESCRIPTION":"Cannot generate a speedtest.net share results image while testing against a Speedtest Mini server"}}',
-                'Cannot generate a speedtest.net share results image while testing against a Speedtest Mini server'])
+                 '{"CODE":"STCE0080","VALUE":{"DESCRIPTION":"Cannot generate'
+                 ' a speedtest.net share results image while testing against'
+                 ' a Speedtest Mini server"}}',
+                 'Cannot generate a speedtest.net share results image while'
+                 ' testing against a Speedtest Mini server'])
 msgsfmts.append(['STCE0090',
-                '{"CODE":"STCE0090","VALUE":{"DESCRIPTION":"Could not submit results to speedtest.net: %s"}}',
-                'Could not submit results to speedtest.net: %s'])
+                 '{"CODE":"STCE0090","VALUE":{"DESCRIPTION":"Could not submit'
+                 ' results to speedtest.net: %s"}}',
+                 'Could not submit results to speedtest.net: %s'])
 msgsfmts.append(['STCE0100',
-                '{"CODE":"STCE0100","VALUE":{"DESCRIPTION":"Could not submit results to speedtest.net"}}',
-                'Could not submit results to speedtest.net'])
+                 '{"CODE":"STCE0100","VALUE":{"DESCRIPTION":"Could not submit'
+                 ' results to speedtest.net"}}',
+                 'Could not submit results to speedtest.net'])
 msgsfmts.append(['STCE0110',
-                '{"CODE":"STCE0110","VALUE":{"DESCRIPTION":"Could not submit results to speedtest.net"}}',
-                'Could not submit results to speedtest.net'])
+                 '{"CODE":"STCE0110","VALUE":{"DESCRIPTION":"Could not submit'
+                 ' results to speedtest.net"}}',
+                 'Could not submit results to speedtest.net'])
 msgsfmts.append(['STCI0120',
-                '{"CODE":"STCI0120","VALUE":{"DESCRIPTION":"Share results","LINK":"%s://www.speedtest.net/result/%s.png"}}',
-                'Share results: %s://www.speedtest.net/result/%s.png'])
+                 '{"CODE":"STCI0120","VALUE":{"DESCRIPTION":"Share results",'
+                 '"LINK":"%s://www.speedtest.net/result/%s.png"}}',
+                 'Share results: %s://www.speedtest.net/result/%s.png'])
 msgsfmts.append(['STCI0130',
-                '{"CODE":"STCI0130","VALUE":{"DESCRIPTION":"Cancelling"}}',
-                'Cancelling...'])
+                 '{"CODE":"STCI0130","VALUE":{"DESCRIPTION":"Cancelling"}}',
+                 'Cancelling...'])
 msgsfmts.append(['STCI0140',
-                '{"CODE":"STCI0140","VALUE":{"DESCRIPTION":"Entry","ID":"%(id)4s","SPONSOR":"%(sponsor)s","NAME":"%(name)s","COUNTRY":"%(country)s", "DISTANCE":"%(d)0.2f km"}}',
-                '%(id)4s) %(sponsor)s (%(name)s, %(country)s) [%(d)0.2f km]'])
+                 '{"CODE":"STCI0140","VALUE":{"DESCRIPTION":"Entry","ID":'
+                 '"%(id)4s","SPONSOR":"%(sponsor)s","NAME":"%(name)s",'
+                 '"COUNTRY":"%(country)s", "DISTANCE":"%(d)0.2f km"}}',
+                 '%(id)4s) %(sponsor)s (%(name)s, %(country)s) [%(d)0.2f km]'])
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -211,6 +242,7 @@ except ImportError:
         else:
             newline = "\n"
             space = " "
+
         if sep is None:
             sep = space
         if end is None:
@@ -231,9 +263,10 @@ class SpeedtestCliServerListError(Exception):
 
     """
 
+
 def msgfmt(code):
     for i in range(len(msgsfmts)):
-        current = msgsfmts[i];
+        current = msgsfmts[i]
         if current[0] == code:
             return current[outfmt]
     return "<NOMSGFMT>"
@@ -251,6 +284,7 @@ def endmsg():
         return ']'
     else:
         return '\n'
+
 
 def bound_socket(*args, **kwargs):
     """Bind socket to a specified source IP address"""
@@ -504,9 +538,11 @@ def getConfig():
     del configxml
     return config
 
+
 def html_escape(text):
-    html_escape_table = { '"': "&quot;" }
-    return "".join(html_escape_table.get(c,c) for c in text)
+    html_escape_table = {'"': "&quot;"}
+    return "".join(html_escape_table.get(c, c) for c in text)
+
 
 def closestServers(client, all=False):
     """Determine the 5 closest speedtest.net servers based on geographic
@@ -677,8 +713,8 @@ def speedtest():
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
-    parser.add_argument('--json', dest='outfmt', action='store_const', 
-                        const=('json', 1), default=('text', 2), 
+    parser.add_argument('--json', dest='outfmt', action='store_const',
+                        const=('json', 1), default=('text', 2),
                         help='Display info in JSON format')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
@@ -703,7 +739,7 @@ def speedtest():
     outfmt = args.outfmt[1]
 
     if outfmt == 1:
-        print_('[',end='')
+        print_('[', end='')
 
     # Print the version and exit
     if args.version:
@@ -738,12 +774,14 @@ def speedtest():
             serverList = []
             for server in servers:
                 serverList.append(msgfmt('STCI0140') % server)
-                if (not server is servers[-1]):
+                if (not (server is servers[-1])):
                     serverList.append(endln())
             if outfmt == 2:
-                print_(''.join(serverList).encode('utf-8', 'ignore'), end=endmsg())
+                print_(''.join(serverList).encode('utf-8', 'ignore'),
+                       end=endmsg())
             else:
-                print_(''.join(serverList).encode('utf-8', 'ignore'), end=endmsg())
+                print_(''.join(serverList).encode('utf-8', 'ignore'),
+                       end=endmsg())
             sys.exit(0)
     else:
         servers = closestServers(config['client'])
@@ -753,7 +791,7 @@ def speedtest():
 
     if args.server:
         try:
-            best = getBestServer(filter(lambda x: x['id'] == args.server, 
+            best = getBestServer(filter(lambda x: x['id'] == args.server,
                                         servers))
         except IndexError:
             print_(msgfmt('STCE0060'), end=endmsg())
@@ -769,7 +807,7 @@ def speedtest():
             request = build_request(args.mini)
             f = urlopen(request)
         except:
-            print_(msgfmt('STCE0070'),end=endmsg())
+            print_(msgfmt('STCE0070'), end=endmsg())
             sys.exit(1)
         else:
             text = f.read()
@@ -791,7 +829,7 @@ def speedtest():
                         extension = [ext]
                         break
         if not urlparts or not extension:
-            print_(msgfmt('STCI0040'),end=endmsg())
+            print_(msgfmt('STCI0040'), end=endmsg())
             sys.exit(1)
         servers = [{
             'sponsor': 'Speedtest Mini',
@@ -807,13 +845,14 @@ def speedtest():
             best = servers[0]
     else:
         if not args.simple:
-            print_(msgfmt('STCI0050'),end=endln())
+            print_(msgfmt('STCI0050'), end=endln())
         best = getBestServer(servers)
 
     if not args.simple:
-        print_((msgfmt('STCI0060') % best).encode('utf-8', 'ignore'),end=endln())
+        print_((msgfmt('STCI0060') % best).encode('utf-8', 'ignore'),
+               end=endln())
     else:
-        print_(msgfmt('STCI0070') % best,end=endln())
+        print_(msgfmt('STCI0070') % best, end=endln())
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -829,7 +868,9 @@ def speedtest():
     dlspeed = downloadSpeed(urls, args.simple)
     if outfmt == 2 and not args.simple:
         print_()
-    print_(msgfmt('STCI0090') %((dlspeed / 1000 / 1000) * args.units[1], args.units[0]),end=endln())
+    print_(msgfmt('STCI0090') % ((dlspeed / 1000 / 1000) * args.units[1],
+           args.units[0]),
+           end=endln())
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -844,7 +885,9 @@ def speedtest():
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if outfmt == 2 and not args.simple:
         print_()
-    print_(msgfmt('STCI0110') % ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]), end=endmsg())
+    print_(msgfmt('STCI0110') % ((ulspeed / 1000 / 1000) * args.units[1],
+           args.units[0]),
+           end=endmsg())
 
     if args.share and args.mini:
         print_(msgfmt('STCE0080'), end=endln())
