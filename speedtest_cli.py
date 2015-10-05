@@ -25,14 +25,120 @@ import timeit
 import platform
 import threading
 
-__version__ = '0.3.4'
+__version__ = '0.3.4-e'
 
 # Some global variables we use
 user_agent = None
 source = None
 shutdown_event = None
 scheme = 'http'
+outfmt = 2
 
+# Messages format
+msgsfmts = []
+msgsfmts.append(['STCE0010',
+                 '{"CODE":"STCE0010","VALUE":{"DESCRIPTION":'
+                 '"Could not retrieve speedtest.net'
+                 ' configuration: %s"}}',
+                 'Could not retrieve speedtest.net'
+                 ' configuration: %s'])
+msgsfmts.append(['STCE0020',
+                 '{"CODE":"STCE0020","VALUE":{"DESCRIPTION":"Failed to parse'
+                 ' speedtest.net configuration"}}',
+                 'Could not retrieve speedtest.net configuration: %s'])
+msgsfmts.append(['STCE0030',
+                 '{"CODE":"STCE0030","VALUE":{"DESCRIPTION":'
+                 '"Failed to retrieve'
+                 ' list of speedtest.net servers: %s"}}',
+                 'Failed to retrieve list of speedtest.net servers:\n\n %s'])
+msgsfmts.append(['STCI0010',
+                 '{"CODE":"STCI0010","VALUE":{"DESCRIPTION":"Retrieving'
+                 ' speedtest.net configuration"}}',
+                 'Retrieving speedtest.net configuration...'])
+msgsfmts.append(['STCE0050',
+                 '{"CODE":"STCE0050","VALUE":{"DESCRIPTION":"Cannot retrieve'
+                 ' speedtest configuration"}}',
+                 'Cannot retrieve speedtest configuration'])
+msgsfmts.append(['STCI0020',
+                 '{"CODE":"STCI0020","VALUE":{"DESCRIPTION":"Retrieving'
+                 ' speedtest.net server list"}}',
+                 'Retrieving speedtest.net server list...'])
+msgsfmts.append(['STCI0030',
+                 '{"CODE":"STCI0030","VALUE":{"DESCRIPTION":"Testing from",'
+                 ' "ISP":"%(isp)s","IP":"%(ip)s"}}',
+                 'Testing from %(isp)s (%(ip)s)...'])
+msgsfmts.append(['STCE0060',
+                 '{"CODE":"STCE0060","VALUE":{"DESCRIPTION":"Invalid server'
+                 ' ID"}}',
+                 'Invalid server ID'])
+msgsfmts.append(['STCE0070',
+                 '{"CODE":"STCE0070","VALUE":{"DESCRIPTION":"Invalid'
+                 ' Speedtest Mini URL"}}',
+                 'Invalid Speedtest Mini URL'])
+msgsfmts.append(['STCI0040',
+                 '{"CODE":"STCI0040","VALUE":{"DESCRIPTION":"Please'
+                 ' provide the full URL of your Speedtest Mini server"}}',
+                 'Please provide the full URL of your Speedtest Mini server'])
+msgsfmts.append(['STCI0050',
+                 '{"CODE":"STCI0050","VALUE":{"DESCRIPTION":"Selecting best'
+                 ' server based on latency"}}',
+                 'Selecting best server based on latency...'])
+msgsfmts.append(['STCI0060',
+                 '{"CODE":"STCI0060","VALUE":{"DESCRIPTION":"Hosted by",'
+                 ' "NAME":"%(sponsor)s","LOCATION":"%(name)s","DISTANCE"'
+                 ':"%(d)0.2f km","LATENCY":"%(latency)s ms"}}',
+                 'Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]:'
+                 ' %(latency)s ms'])
+msgsfmts.append(['STCI0070',
+                 '{"CODE":"STCI0070","VALUE":{"DESCRIPTION":"Ping",'
+                 '"LATENCY":"%(latency)s ms"}}',
+                 'Ping: %(latency)s ms'])
+msgsfmts.append(['STCI0080',
+                 '{"CODE":"STCI0080","VALUE":{"DESCRIPTION":"Testing download'
+                 ' speed"}}',
+                 'Testing download speed...'])
+msgsfmts.append(['STCI0090',
+                 '{"CODE":"STCI0090","VALUE":{"DESCRIPTION":"Download Speed",'
+                 '"SPEED":"%0.2f M%s/s"}}',
+                 'Download: %0.2f M%s/s'])
+msgsfmts.append(['STCI0100',
+                 '{"CODE":"STCI0100","VALUE":{"DESCRIPTION":"Testing upload'
+                 ' speed"}}',
+                 'Testing upload speed...'])
+msgsfmts.append(['STCI0110',
+                 '{"CODE":"STCI0110","VALUE":{"DESCRIPTION":"Upload Speed",'
+                 '"SPEED":"%0.2f M%s/s"}}',
+                 'Upload: %0.2f M%s/s'])
+msgsfmts.append(['STCE0080',
+                 '{"CODE":"STCE0080","VALUE":{"DESCRIPTION":"Cannot generate'
+                 ' a speedtest.net share results image while testing against'
+                 ' a Speedtest Mini server"}}',
+                 'Cannot generate a speedtest.net share results image while'
+                 ' testing against a Speedtest Mini server'])
+msgsfmts.append(['STCE0090',
+                 '{"CODE":"STCE0090","VALUE":{"DESCRIPTION":"Could not submit'
+                 ' results to speedtest.net: %s"}}',
+                 'Could not submit results to speedtest.net: %s'])
+msgsfmts.append(['STCE0100',
+                 '{"CODE":"STCE0100","VALUE":{"DESCRIPTION":"Could not submit'
+                 ' results to speedtest.net"}}',
+                 'Could not submit results to speedtest.net'])
+msgsfmts.append(['STCE0110',
+                 '{"CODE":"STCE0110","VALUE":{"DESCRIPTION":"Could not submit'
+                 ' results to speedtest.net"}}',
+                 'Could not submit results to speedtest.net'])
+msgsfmts.append(['STCI0120',
+                 '{"CODE":"STCI0120","VALUE":{"DESCRIPTION":"Share results",'
+                 '"LINK":"%s://www.speedtest.net/result/%s.png"}}',
+                 'Share results: %s://www.speedtest.net/result/%s.png'])
+msgsfmts.append(['STCI0130',
+                 '{"CODE":"STCI0130","VALUE":{"DESCRIPTION":"Cancelling"}}',
+                 'Cancelling...'])
+msgsfmts.append(['STCI0140',
+                 '{"CODE":"STCI0140","VALUE":{"DESCRIPTION":"Entry","ID":'
+                 '"%(id)4s","SPONSOR":"%(sponsor)s","NAME":"%(name)s",'
+                 '"COUNTRY":"%(country)s", "DISTANCE":"%(d)0.2f km"}}',
+                 '%(id)4s) %(sponsor)s (%(name)s, %(country)s) [%(d)0.2f km]'])
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -136,6 +242,7 @@ except ImportError:
         else:
             newline = "\n"
             space = " "
+
         if sep is None:
             sep = space
         if end is None:
@@ -155,6 +262,28 @@ class SpeedtestCliServerListError(Exception):
     URL for retrieving speedtest.net server details
 
     """
+
+
+def msgfmt(code):
+    for i in range(len(msgsfmts)):
+        current = msgsfmts[i]
+        if current[0] == code:
+            return current[outfmt]
+    return "<NOMSGFMT>"
+
+
+def endln():
+    if outfmt == 1:
+        return ','
+    else:
+        return '\n'
+
+
+def endmsg():
+    if outfmt == 1:
+        return ']'
+    else:
+        return '\n'
 
 
 def bound_socket(*args, **kwargs):
@@ -267,7 +396,7 @@ def downloadSpeed(files, quiet=False):
             thread = FileGetter(file, start)
             thread.start()
             q.put(thread, True)
-            if not quiet and not shutdown_event.isSet():
+            if outfmt == 2 and not quiet and not shutdown_event.isSet():
                 sys.stdout.write('.')
                 sys.stdout.flush()
 
@@ -332,10 +461,9 @@ def uploadSpeed(url, sizes, quiet=False):
             thread = FilePutter(url, start, size)
             thread.start()
             q.put(thread, True)
-            if not quiet and not shutdown_event.isSet():
+            if outfmt == 2 and not quiet and not shutdown_event.isSet():
                 sys.stdout.write('.')
                 sys.stdout.flush()
-
     finished = []
 
     def consumer(q, total_sizes):
@@ -378,7 +506,7 @@ def getConfig():
     request = build_request('://www.speedtest.net/speedtest-config.php')
     uh, e = catch_request(request)
     if e:
-        print_('Could not retrieve speedtest.net configuration: %s' % e)
+        print_(msgfmt('STCE0010') % e, end=endmsg())
         sys.exit(1)
     configxml = []
     while 1:
@@ -404,11 +532,16 @@ def getConfig():
                 'download': getAttributesByTagName(root, 'download'),
                 'upload': getAttributesByTagName(root, 'upload')}
     except SyntaxError:
-        print_('Failed to parse speedtest.net configuration')
+        print_(msgfmt('STCE0020'), end=endmsg())
         sys.exit(1)
     del root
     del configxml
     return config
+
+
+def html_escape(text):
+    html_escape_table = {'"': "&quot;"}
+    return "".join(html_escape_table.get(c, c) for c in text)
 
 
 def closestServers(client, all=False):
@@ -463,6 +596,8 @@ def closestServers(client, all=False):
                     servers[d] = [attrib]
                 else:
                     servers[d].append(attrib)
+                if outfmt == 1:
+                    attrib['sponsor'] = html_escape(attrib['sponsor'])
             del root
             del serversxml
             del elements
@@ -474,8 +609,7 @@ def closestServers(client, all=False):
             break
 
     if not servers:
-        print_('Failed to retrieve list of speedtest.net servers:\n\n %s' %
-               '\n'.join(errors))
+        print_(msgfmt('STCE0030') % '\n'.join(errors), end=endmsg())
         sys.exit(1)
 
     closest = []
@@ -538,7 +672,7 @@ def ctrl_c(signum, frame):
 
     global shutdown_event
     shutdown_event.set()
-    raise SystemExit('\nCancelling...')
+    raise SystemExit(msgfmt('STCI0130'))
 
 
 def version():
@@ -550,7 +684,7 @@ def version():
 def speedtest():
     """Run the full speedtest.net test"""
 
-    global shutdown_event, source, scheme
+    global shutdown_event, source, scheme, outfmt
     shutdown_event = threading.Event()
 
     signal.signal(signal.SIGINT, ctrl_c)
@@ -579,6 +713,9 @@ def speedtest():
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
+    parser.add_argument('--json', dest='outfmt', action='store_const',
+                        const=('json', 1), default=('text', 2),
+                        help='Display info in JSON format')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
@@ -599,6 +736,10 @@ def speedtest():
     else:
         args = options
     del options
+    outfmt = args.outfmt[1]
+
+    if outfmt == 1:
+        print_('[', end='')
 
     # Print the version and exit
     if args.version:
@@ -618,37 +759,42 @@ def speedtest():
         scheme = 'https'
 
     if not args.simple:
-        print_('Retrieving speedtest.net configuration...')
+        print_(msgfmt('STCI0010'), end=endln())
     try:
         config = getConfig()
     except URLError:
-        print_('Cannot retrieve speedtest configuration')
+        print_(msgfmt('STCE0050'), end=endmsg())
         sys.exit(1)
 
     if not args.simple:
-        print_('Retrieving speedtest.net server list...')
+        print_(msgfmt('STCI0020'), end=endln())
     if args.list or args.server:
         servers = closestServers(config['client'], True)
         if args.list:
             serverList = []
             for server in servers:
-                line = ('%(id)4s) %(sponsor)s (%(name)s, %(country)s) '
-                        '[%(d)0.2f km]' % server)
-                serverList.append(line)
-            print_('\n'.join(serverList).encode('utf-8', 'ignore'))
+                serverList.append(msgfmt('STCI0140') % server)
+                if (not (server is servers[-1])):
+                    serverList.append(endln())
+            if outfmt == 2:
+                print_(''.join(serverList).encode('utf-8', 'ignore'),
+                       end=endmsg())
+            else:
+                print_(''.join(serverList).encode('utf-8', 'ignore'),
+                       end=endmsg())
             sys.exit(0)
     else:
         servers = closestServers(config['client'])
 
     if not args.simple:
-        print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
+        print_(msgfmt('STCI0030') % config['client'], end=endln())
 
     if args.server:
         try:
             best = getBestServer(filter(lambda x: x['id'] == args.server,
                                         servers))
         except IndexError:
-            print_('Invalid server ID')
+            print_(msgfmt('STCE0060'), end=endmsg())
             sys.exit(1)
     elif args.mini:
         name, ext = os.path.splitext(args.mini)
@@ -661,7 +807,7 @@ def speedtest():
             request = build_request(args.mini)
             f = urlopen(request)
         except:
-            print_('Invalid Speedtest Mini URL')
+            print_(msgfmt('STCE0070'), end=endmsg())
             sys.exit(1)
         else:
             text = f.read()
@@ -683,7 +829,7 @@ def speedtest():
                         extension = [ext]
                         break
         if not urlparts or not extension:
-            print_('Please provide the full URL of your Speedtest Mini server')
+            print_(msgfmt('STCI0040'), end=endmsg())
             sys.exit(1)
         servers = [{
             'sponsor': 'Speedtest Mini',
@@ -699,14 +845,14 @@ def speedtest():
             best = servers[0]
     else:
         if not args.simple:
-            print_('Selecting best server based on latency...')
+            print_(msgfmt('STCI0050'), end=endln())
         best = getBestServer(servers)
 
     if not args.simple:
-        print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-               '%(latency)s ms' % best).encode('utf-8', 'ignore'))
+        print_((msgfmt('STCI0060') % best).encode('utf-8', 'ignore'),
+               end=endln())
     else:
-        print_('Ping: %(latency)s ms' % best)
+        print_(msgfmt('STCI0070') % best, end=endln())
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -715,12 +861,16 @@ def speedtest():
             urls.append('%s/random%sx%s.jpg' %
                         (os.path.dirname(best['url']), size, size))
     if not args.simple:
-        print_('Testing download speed', end='')
+        if outfmt == 2:
+            print_(msgfmt('STCI0080'), end='')
+        else:
+            print_(msgfmt('STCI0080'), end=endln())
     dlspeed = downloadSpeed(urls, args.simple)
-    if not args.simple:
+    if outfmt == 2 and not args.simple:
         print_()
-    print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    print_(msgfmt('STCI0090') % ((dlspeed / 1000 / 1000) * args.units[1],
+           args.units[0]),
+           end=endln())
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -728,16 +878,19 @@ def speedtest():
         for i in range(0, 25):
             sizes.append(size)
     if not args.simple:
-        print_('Testing upload speed', end='')
+        if outfmt == 2:
+            print_(msgfmt('STCI0100'), end='')
+        else:
+            print_(msgfmt('STCI0100'), end=endln())
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
-    if not args.simple:
+    if outfmt == 2 and not args.simple:
         print_()
-    print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    print_(msgfmt('STCI0110') % ((ulspeed / 1000 / 1000) * args.units[1],
+           args.units[0]),
+           end=endmsg())
 
     if args.share and args.mini:
-        print_('Cannot generate a speedtest.net share results image while '
-               'testing against a Speedtest Mini server')
+        print_(msgfmt('STCE0080'), end=endln())
     elif args.share:
         dlspeedk = int(round((dlspeed / 1000) * 8, 0))
         ping = int(round(best['latency'], 0))
@@ -765,31 +918,30 @@ def speedtest():
                                 headers=headers)
         f, e = catch_request(request)
         if e:
-            print_('Could not submit results to speedtest.net: %s' % e)
+            print_(msgfmt('STCE0090') % e, end=endmsg())
             sys.exit(1)
         response = f.read()
         code = f.code
         f.close()
 
         if int(code) != 200:
-            print_('Could not submit results to speedtest.net')
+            print_(msgfmt('STCE0100'), end=endmsg())
             sys.exit(1)
 
         qsargs = parse_qs(response.decode())
         resultid = qsargs.get('resultid')
         if not resultid or len(resultid) != 1:
-            print_('Could not submit results to speedtest.net')
+            print_(msgfmt('STCE0110'), end=endmsg())
             sys.exit(1)
 
-        print_('Share results: %s://www.speedtest.net/result/%s.png' %
-               (scheme, resultid[0]))
+        print_(msgfmt('STCI0120') % (scheme, resultid[0]), end=endmsg())
 
 
 def main():
     try:
         speedtest()
     except KeyboardInterrupt:
-        print_('\nCancelling...')
+        print_(msgfmt('STCI0130'), end=endmsg())
 
 
 if __name__ == '__main__':
