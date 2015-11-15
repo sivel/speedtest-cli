@@ -522,7 +522,7 @@ def getBestServer(servers):
             else:
                 cum.append(3600)
             h.close()
-        avg = round((sum(cum) / 6) * 1000, 3)
+        avg = round((sum(cum) / 3) * 1000, 3)
         results[avg] = server
     fastest = sorted(results.keys())[0]
     best = results[fastest]
