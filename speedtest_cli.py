@@ -715,7 +715,7 @@ def speedtest():
             urls.append('%s/random%sx%s.jpg' %
                         (os.path.dirname(best['url']), size, size))
     if not args.simple:
-        print_('Testing download speed', end='')
+        print_('Testing download speed ', end='')
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print_()
@@ -783,6 +783,13 @@ def speedtest():
 
         print_('Share results: %s://www.speedtest.net/result/%s.png' %
                (scheme, resultid[0]))
+
+    speeds = {
+        'DL': (dlspeed / 1000 / 1000) * args.units[1],
+        'UL': (ulspeed / 1000 / 1000) * args.units[1]
+        }
+
+    return speeds
 
 
 def main():
