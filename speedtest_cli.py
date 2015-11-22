@@ -547,7 +547,7 @@ def version():
     raise SystemExit(__version__)
 
 
-def speedtest(**kwargs):
+def speedtest():
     """Run the full speedtest.net test"""
 
     global shutdown_event, source, scheme
@@ -715,7 +715,7 @@ def speedtest(**kwargs):
             urls.append('%s/random%sx%s.jpg' %
                         (os.path.dirname(best['url']), size, size))
     if not args.simple:
-        print_('Testing download speed PJW', end='')
+        print_('Testing download speed ', end='')
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print_()
