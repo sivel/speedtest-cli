@@ -704,7 +704,7 @@ def speedtest():
 
     if not args.simple:
         print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-               '%(latency)s ms' % best).encode('utf-8', 'ignore'))
+               '%(latency)s ms' % best))
     else:
         print_('Ping: %(latency)s ms' % best)
 
