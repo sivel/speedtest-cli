@@ -50,9 +50,11 @@ or
 
 ::
 
+    
     git clone https://github.com/sivel/speedtest-cli.git
+    sudo apt-get install python3-setuptools #or python-setuptools
     python speedtest-cli/setup.py install
-
+    
 Just download (Like the way it used to be)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
