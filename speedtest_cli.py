@@ -784,6 +784,14 @@ def speedtest():
         print_('Share results: %s://www.speedtest.net/result/%s.png' %
                (scheme, resultid[0]))
 
+    results = [
+        (dlspeed / 1000 / 1000) * args.units[1],
+        (ulspeed / 1000 / 1000) * args.units[1],
+        best['latency']
+    ]
+
+    return results
+
 
 def main():
     try:
