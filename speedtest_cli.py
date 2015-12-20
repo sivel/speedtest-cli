@@ -547,7 +547,7 @@ def version():
     raise SystemExit(__version__)
 
 
-def speedtest():
+def speedtest(**kwargs):
     """Run the full speedtest.net test"""
 
     global shutdown_event, source, scheme
@@ -593,12 +593,30 @@ def speedtest():
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
-    options = parser.parse_args()
-    if isinstance(options, tuple):
-        args = options[0]
+    if kwargs == {}:
+        options = parser.parse_args()
+        if isinstance(options, tuple):
+            args = options[0]
+        else:
+            args = options
+        del options
     else:
-        args = options
-    del options
+        opts_dict = {}
+        opts_dict['units'] = ('byte', 1) if 'bytes' in kwargs else (
+            'bit', 8)
+        opts_dict['share'] = kwargs['share'] if 'share' in kwargs else False
+        opts_dict['list'] = kwargs['list'] if 'list' in kwargs else False
+        opts_dict['server'] = str(
+            kwargs['server']) if 'server' in kwargs else None
+        opts_dict['mini'] = kwargs['mini'] if 'mini' in kwargs else None
+        opts_dict['source'] = kwargs['source'] if 'source' in kwargs else None
+        opts_dict['timeout'] = kwargs['timeout'] if 'timeout' in kwargs else 10
+        opts_dict['secure'] = True if 'secure' in kwargs else False
+        opts_dict['version'] = True if 'version' in kwargs else False
+        opts_dict['simple'] = kwargs['simple'] if 'simple' in kwargs else False
+
+        # Object to access dictionary values by attribute lookup
+        args = type('TestOptions', (object,), opts_dict)
 
     # Print the version and exit
     if args.version:
