@@ -614,10 +614,19 @@ def speedtest(**kwargs):
         opts_dict['secure'] = True if 'secure' in kwargs else False
         opts_dict['version'] = True if 'version' in kwargs else False
         opts_dict['simple'] = kwargs['simple'] if 'simple' in kwargs else False
+        opts_dict['verbose'] = kwargs[
+            'verbose'] if 'verbose' in kwargs else True if opts_dict[
+                'simple'] else False
+        if not opts_dict['verbose']:
+            opts_dict['simple'] = True
 
         # Object to access dictionary values by attribute lookup
         args = type('TestOptions', (object,), opts_dict)
 
+    try:
+        args.verbose
+    except:
+        args.verbose = True
     # Print the version and exit
     if args.version:
         version()
@@ -723,7 +732,7 @@ def speedtest(**kwargs):
     if not args.simple:
         print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                '%(latency)s ms' % best).encode('utf-8', 'ignore'))
-    else:
+    elif args.verbose:
         print_('Ping: %(latency)s ms' % best)
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
@@ -737,8 +746,9 @@ def speedtest(**kwargs):
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print_()
-    print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    if args.verbose:
+        print_('Download: %0.2f M%s/s' %
+               ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -750,8 +760,9 @@ def speedtest(**kwargs):
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if not args.simple:
         print_()
-    print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    if args.verbose:
+        print_('Upload: %0.2f M%s/s' %
+               ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
