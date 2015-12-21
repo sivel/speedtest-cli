@@ -547,7 +547,66 @@ def version():
     raise SystemExit(__version__)
 
 
-def speedtest():
+def parse_args(kwargs):
+    """Receives a dictionary with the arguments passed to speedtest function
+    and returns an object which has one accesible attribute for each available
+    option.
+    """
+
+    opts_dict = {}
+    if 'bytes' in kwargs:
+        opts_dict['units'] = ('byte', 1)
+    else:
+        opts_dict['units'] = ('bit', 8)
+    if 'share' in kwargs:
+        opts_dict['share'] = kwargs['share']
+    else:
+        opts_dict['share'] = False
+    if 'list' in kwargs:
+        opts_dict['list'] = kwargs['list']
+    else:
+        opts_dict['list'] = False
+    if 'server' in kwargs:
+        opts_dict['server'] = str(kwargs['server'])
+    else:
+        opts_dict['server'] = None
+    if 'mini' in kwargs:
+        opts_dict['mini'] = kwargs['mini']
+    else:
+        opts_dict['mini'] = None
+    if 'source' in kwargs:
+        opts_dict['source'] = kwargs['source']
+    else:
+        opts_dict['source'] = None
+    if 'timeout' in kwargs:
+        opts_dict['timeout'] = kwargs['timeout']
+    else:
+        opts_dict['timeout'] = 10
+    if 'secure' in kwargs:
+        opts_dict['secure'] = True
+    else:
+        opts_dict['secure'] = False
+    if 'version' in kwargs:
+        opts_dict['version'] = True
+    else:
+        opts_dict['version'] = False
+    if 'simple' in kwargs:
+        opts_dict['simple'] = kwargs['simple']
+    else:
+        opts_dict['simple'] = False
+    if 'verbose' in kwargs:
+        opts_dict['verbose'] = kwargs['verbose']
+    elif opts_dict['simple']:
+        opts_dict['verbose'] = True
+    else:
+        opts_dict['verbose'] = False
+    if not opts_dict['verbose']:
+        opts_dict['simple'] = True
+
+    return type('TestOptions', (object,), opts_dict)
+
+
+def speedtest(**kwargs):
     """Run the full speedtest.net test"""
 
     global shutdown_event, source, scheme
@@ -593,13 +652,20 @@ def speedtest():
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
-    options = parser.parse_args()
-    if isinstance(options, tuple):
-        args = options[0]
+    if kwargs == {}:
+        options = parser.parse_args()
+        if isinstance(options, tuple):
+            args = options[0]
+        else:
+            args = options
+        del options
     else:
-        args = options
-    del options
+        args = parse_args(kwargs)
 
+    try:
+        args.verbose
+    except:
+        args.verbose = True
     # Print the version and exit
     if args.version:
         version()
@@ -705,7 +771,7 @@ def speedtest():
     if not args.simple:
         print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                '%(latency)s ms' % best).encode('utf-8', 'ignore'))
-    else:
+    elif args.verbose:
         print_('Ping: %(latency)s ms' % best)
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
@@ -719,8 +785,9 @@ def speedtest():
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print_()
-    print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    if args.verbose:
+        print_('Download: %0.2f M%s/s' %
+               ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -732,8 +799,9 @@ def speedtest():
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if not args.simple:
         print_()
-    print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    if args.verbose:
+        print_('Upload: %0.2f M%s/s' %
+               ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
@@ -783,6 +851,14 @@ def speedtest():
 
         print_('Share results: %s://www.speedtest.net/result/%s.png' %
                (scheme, resultid[0]))
+
+    results = [
+        (dlspeed / 1000 / 1000) * args.units[1],
+        (ulspeed / 1000 / 1000) * args.units[1],
+        best['latency']
+    ]
+
+    return results
 
 
 def main():
