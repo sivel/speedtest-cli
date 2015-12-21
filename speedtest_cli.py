@@ -547,6 +547,65 @@ def version():
     raise SystemExit(__version__)
 
 
+def parse_args(kwargs):
+    """Receives a dictionary with the arguments passed to speedtest function
+    and returns an object which has one accesible attribute for each available
+    option.
+    """
+
+    opts_dict = {}
+    if 'bytes' in kwargs:
+        opts_dict['units'] = ('byte', 1)
+    else:
+        opts_dict['units'] = ('bit', 8)
+    if 'share' in kwargs:
+        opts_dict['share'] = kwargs['share']
+    else:
+        opts_dict['share'] = False
+    if 'list' in kwargs:
+        opts_dict['list'] = kwargs['list']
+    else:
+        opts_dict['list'] = False
+    if 'server' in kwargs:
+        opts_dict['server'] = str(kwargs['server'])
+    else:
+        opts_dict['server'] = None
+    if 'mini' in kwargs:
+        opts_dict['mini'] = kwargs['mini']
+    else:
+        opts_dict['mini'] = None
+    if 'source' in kwargs:
+        opts_dict['source'] = kwargs['source']
+    else:
+        opts_dict['source'] = None
+    if 'timeout' in kwargs:
+        opts_dict['timeout'] = kwargs['timeout']
+    else:
+        opts_dict['timeout'] = 10
+    if 'secure' in kwargs:
+        opts_dict['secure'] = True
+    else:
+        opts_dict['secure'] = False
+    if 'version' in kwargs:
+        opts_dict['version'] = True
+    else:
+        opts_dict['version'] = False
+    if 'simple' in kwargs:
+        opts_dict['simple'] = kwargs['simple']
+    else:
+        opts_dict['simple'] = False
+    if 'verbose' in kwargs:
+        opts_dict['verbose'] = kwargs['verbose']
+    elif opts_dict['simple']:
+        opts_dict['verbose'] = True
+    else:
+        opts_dict['verbose'] = False
+    if not opts_dict['verbose']:
+        opts_dict['simple'] = True
+
+    return type('TestOptions', (object,), opts_dict)
+
+
 def speedtest(**kwargs):
     """Run the full speedtest.net test"""
 
@@ -601,27 +660,7 @@ def speedtest(**kwargs):
             args = options
         del options
     else:
-        opts_dict = {}
-        opts_dict['units'] = ('byte', 1) if 'bytes' in kwargs else (
-            'bit', 8)
-        opts_dict['share'] = kwargs['share'] if 'share' in kwargs else False
-        opts_dict['list'] = kwargs['list'] if 'list' in kwargs else False
-        opts_dict['server'] = str(
-            kwargs['server']) if 'server' in kwargs else None
-        opts_dict['mini'] = kwargs['mini'] if 'mini' in kwargs else None
-        opts_dict['source'] = kwargs['source'] if 'source' in kwargs else None
-        opts_dict['timeout'] = kwargs['timeout'] if 'timeout' in kwargs else 10
-        opts_dict['secure'] = True if 'secure' in kwargs else False
-        opts_dict['version'] = True if 'version' in kwargs else False
-        opts_dict['simple'] = kwargs['simple'] if 'simple' in kwargs else False
-        opts_dict['verbose'] = kwargs[
-            'verbose'] if 'verbose' in kwargs else True if opts_dict[
-                'simple'] else False
-        if not opts_dict['verbose']:
-            opts_dict['simple'] = True
-
-        # Object to access dictionary values by attribute lookup
-        args = type('TestOptions', (object,), opts_dict)
+        args = parse_args(kwargs)
 
     try:
         args.verbose
