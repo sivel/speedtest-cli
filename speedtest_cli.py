@@ -299,6 +299,9 @@ def build_request(url, data=None, headers={}):
 
     """
 
+    if not USER_AGENT:
+        build_user_agent()
+
     if url[0] == ':':
         schemed_url = '%s%s' % (SCHEME, url)
     else:
