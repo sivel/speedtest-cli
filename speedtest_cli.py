@@ -464,39 +464,8 @@ class SpeedtestResults(object):
         self._share = None
         self.timestamp = datetime.datetime.utcnow().isoformat()
 
-    def dict(self):
-        """Return dictionary of result data"""
-
-        return {
-            'download': self.download,
-            'upload': self.upload,
-            'ping': self.ping,
-            'server': self.server,
-            'timestamp': self.timestamp
-        }
-
-    def csv(self, delimiter=','):
-        """Return data in CSV format"""
-
-        data = self.dict()
-        out = StringIO()
-        writer = csv.writer(out, delimiter=delimiter, lineterminator='')
-        writer.writerow([data['server']['id'], data['server']['sponsor'],
-                         data['server']['name'], data['timestamp'],
-                         data['server']['d'], data['ping'], data['download'],
-                         data['upload']])
-        return out.getvalue()
-
-    def json(self, pretty=False):
-        """Return data in JSON format"""
-
-        kwargs = {}
-        if pretty:
-            kwargs.update({
-                'indent': 4,
-                'sort_keys': True
-            })
-        return json.dumps(self.dict(), **kwargs)
+    def __repr__(self):
+        return repr(self.dict())
 
     def share(self):
         """POST data to the speedtest.net API to obtain a share results
@@ -551,6 +520,40 @@ class SpeedtestResults(object):
         self._share = 'http://www.speedtest.net/result/%s.png' % resultid[0]
 
         return self._share
+
+    def dict(self):
+        """Return dictionary of result data"""
+
+        return {
+            'download': self.download,
+            'upload': self.upload,
+            'ping': self.ping,
+            'server': self.server,
+            'timestamp': self.timestamp
+        }
+
+    def csv(self, delimiter=','):
+        """Return data in CSV format"""
+
+        data = self.dict()
+        out = StringIO()
+        writer = csv.writer(out, delimiter=delimiter, lineterminator='')
+        writer.writerow([data['server']['id'], data['server']['sponsor'],
+                         data['server']['name'], data['timestamp'],
+                         data['server']['d'], data['ping'], data['download'],
+                         data['upload']])
+        return out.getvalue()
+
+    def json(self, pretty=False):
+        """Return data in JSON format"""
+
+        kwargs = {}
+        if pretty:
+            kwargs.update({
+                'indent': 4,
+                'sort_keys': True
+            })
+        return json.dumps(self.dict(), **kwargs)
 
     def simple(self, units=('bit', 8)):
         return """Ping: %s ms
