@@ -46,7 +46,7 @@ USER_AGENT = None
 SOURCE = None
 SHUTDOWN_EVENT = FakeShutdownEvent()
 SCHEME = 'http'
-
+DEBUG = False
 
 # Used for bound_interface
 SOCKET_SOCKET = socket.socket
@@ -117,10 +117,12 @@ except ImportError:
 
 try:
     from argparse import ArgumentParser as ArgParser
+    from argparse import SUPPRESS as ARG_SUPPRESS
     PARSER_TYPE_INT = int
     PARSER_TYPE_STR = str
 except ImportError:
     from optparse import OptionParser as ArgParser
+    from optparse import SUPPRESS_HELP as ARG_SUPPRESS
     PARSER_TYPE_INT = 'int'
     PARSER_TYPE_STR = 'string'
 
@@ -317,6 +319,10 @@ def build_request(url, data=None, headers={}):
                               int(timeit.time.time() * 1000))
 
     headers['User-Agent'] = USER_AGENT
+
+    printer('%s %s' % (('GET', 'POST')[bool(data)], final_url),
+            debug=True)
+
     return Request(final_url, data=data, headers=headers)
 
 
@@ -612,6 +618,8 @@ class Speedtest(object):
 
         uh.close()
 
+        printer(''.encode().join(configxml), debug=True)
+
         try:
             root = ET.fromstring(''.encode().join(configxml))
             server_config = root.find('server-config').attrib
@@ -759,6 +767,8 @@ class Speedtest(object):
                     except KeyError:
                         self.servers[d] = [attrib]
 
+                printer(''.encode().join(serversxml), debug=True)
+
                 del root
                 del serversxml
                 del elements
@@ -840,6 +850,7 @@ class Speedtest(object):
                 continue
             break
 
+        printer(self.closest, debug=True)
         return self.closest
 
     def get_best_server(self, servers=[]):
@@ -890,6 +901,7 @@ class Speedtest(object):
         self.results.server = best
 
         self.best.update(best)
+        printer(best, debug=True)
         return best
 
     def download(self, callback=None):
@@ -1065,6 +1077,8 @@ def parse_args():
                              'with speedtest.net operated servers')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
+    parser.add_argument('--debug', action='store_true',
+                        help=ARG_SUPPRESS, default=ARG_SUPPRESS)
 
     options = parser.parse_args()
     if isinstance(options, tuple):
@@ -1091,17 +1105,25 @@ def validate_optional_args(args):
                              'unavailable' % (info[0], arg))
 
 
-def printer(string, quiet=False, **kwargs):
+def printer(string, quiet=False, debug=False, **kwargs):
     """Helper function to print a string only when not quiet"""
 
+    if debug and not DEBUG:
+        return
+
+    if debug:
+        out = '\033[1;30mDEBUG: %s\033[0m' % string
+    else:
+        out = string
+
     if not quiet:
-        print_(string, **kwargs)
+        print_(out, **kwargs)
 
 
 def shell():
     """Run the full speedtest.net test"""
 
-    global SHUTDOWN_EVENT, SOURCE, SCHEME
+    global SHUTDOWN_EVENT, SOURCE, SCHEME, DEBUG
     SHUTDOWN_EVENT = threading.Event()
 
     signal.signal(signal.SIGINT, ctrl_c)
@@ -1130,13 +1152,17 @@ def shell():
     if args.secure:
         SCHEME = 'https'
 
+    debug = getattr(args, 'debug', False)
+    if debug:
+        DEBUG = True
+
     if args.simple or args.csv or args.json:
         quiet = True
     else:
         quiet = False
 
     # Don't set a callback if we are running quietly
-    if quiet:
+    if quiet or debug:
         callback = None
     else:
         callback = print_dots
@@ -1212,13 +1238,13 @@ def shell():
         printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                 '%(latency)s ms' % results.server, quiet)
 
-    printer('Testing download speed', quiet, end='')
+    printer('Testing download speed', quiet, end=('\n', '')[bool(callback)])
     speedtest.download(callback=callback)
     printer('Download: %0.2f M%s/s' %
             ((results.download / 1000 / 1000) * args.units[1], args.units[0]),
             quiet)
 
-    printer('Testing upload speed', quiet, end='')
+    printer('Testing upload speed', quiet, end=('\n', '')[bool(callback)])
     speedtest.upload(callback=callback)
     printer('Upload: %0.2f M%s/s' %
             ((results.upload / 1000 / 1000) * args.units[1], args.units[0]),
