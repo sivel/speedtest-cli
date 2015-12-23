@@ -621,24 +621,41 @@ class Speedtest(object):
 
         ignore_servers = map(int, server_config['ignoreids'].split(','))
 
-        sizes = dict(upload=[], download=[])
-        for desc, size in times.items():
-            if desc.startswith('ul'):
-                sizes['upload'].append(int(size))
-            elif desc.startswith('dl'):
-                sizes['download'].append(int(int(size) / 10000))
+        # sizes = dict(upload=[], download=[])
+        # sizes = {}
+        # for desc, size in times.items():
+        #     if desc.startswith('ul'):
+        #         sizes['upload'].append(int(size))
+        #     elif desc.startswith('dl'):
+        #         sizes['download'].append(int(int(size) / 10000))
+        ratio = int(upload['ratio'])
+        upload_max = int(upload['maxchunkcount'])
+        up_sizes = [32768, 65536, 131072, 262144, 524288, 1048576, 7340032]
+        sizes = {
+            'upload': up_sizes[ratio - 1:],
+            'download': [350, 500, 750, 1000, 1500, 2000, 2500,
+                         3000, 3500, 4000]
+        }
 
-        sizes['upload'].sort()
-        sizes['download'].sort()
+        # sizes['upload'].sort()
+        # sizes['download'].sort()
 
-        counts = dict(upload=int(upload['threadsperurl']),
-                      download=int(download['threadsperurl']))
+        counts = {
+            # 'upload': int(upload['threadsperurl']),
+            'upload': int(upload_max * 2 / len(sizes['upload'])),
+            'download': int(download['threadsperurl'])
+        }
 
-        threads = dict(upload=int(upload['threads']),
-                       download=int(server_config['threadcount']))
+        threads = {
+            'upload': int(upload['threads']),
+            # 'download': int(server_config['threadcount'])
+            'download': int(server_config['threadcount']) * 2
+        }
 
-        length = dict(upload=int(upload['testlength']),
-                      download=int(download['testlength']))
+        length = {
+            'upload': int(upload['testlength']),
+            'download': int(download['testlength'])
+        }
 
         self.config.update({
             'client': client,
@@ -647,6 +664,7 @@ class Speedtest(object):
             'counts': counts,
             'threads': threads,
             'length': length,
+            'upload_max': upload_max
         })
 
         self.lat_lon = (float(client['lat']), float(client['lon']))
@@ -925,12 +943,14 @@ class Speedtest(object):
             for _ in range(0, self.config['counts']['upload']):
                 sizes.append(size)
 
-        size_count = len(sizes)
+        # size_count = len(sizes)
+        size_count = self.config['upload_max']
 
         start = timeit.default_timer()
 
         def producer(q, sizes, size_count):
-            for i, size in enumerate(sizes):
+            # for i, size in enumerate(sizes):
+            for i, size in enumerate(sizes[:size_count]):
                 thread = HTTPUploader(i, self.best['url'], start, size,
                                       self.config['length']['upload'])
                 thread.start()
