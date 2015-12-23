@@ -626,7 +626,7 @@ class Speedtest(object):
             server_config = root.find('server-config').attrib
             download = root.find('download').attrib
             upload = root.find('upload').attrib
-            times = root.find('times').attrib
+            # times = root.find('times').attrib
             client = root.find('client').attrib
 
         except AttributeError:
@@ -634,7 +634,7 @@ class Speedtest(object):
             server_config = get_attributes_by_tag_name(root, 'server-config')
             download = get_attributes_by_tag_name(root, 'download')
             upload = get_attributes_by_tag_name(root, 'upload')
-            times = get_attributes_by_tag_name(root, 'times')
+            # times = get_attributes_by_tag_name(root, 'times')
             client = get_attributes_by_tag_name(root, 'client')
 
         ignore_servers = map(int, server_config['ignoreids'].split(','))
