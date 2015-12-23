@@ -307,8 +307,17 @@ def build_request(url, data=None, headers={}):
     else:
         schemed_url = url
 
+    if '?' in url:
+        delim = '&'
+    else:
+        delim = '?'
+
+    # WHO YOU GONNA CALL? CACHE BUSTERS!
+    final_url = '%s%sx=%s' % (schemed_url, delim,
+                              int(timeit.time.time() * 1000))
+
     headers['User-Agent'] = USER_AGENT
-    return Request(schemed_url, data=data, headers=headers)
+    return Request(final_url, data=data, headers=headers)
 
 
 def catch_request(request):
@@ -695,7 +704,9 @@ class Speedtest(object):
         errors = []
         for url in urls:
             try:
-                request = build_request(url)
+                request = build_request('%s?threads=%s' %
+                                        (url,
+                                         self.config['threads']['download']))
                 uh, e = catch_request(request)
                 if e:
                     errors.append('%s' % e)
