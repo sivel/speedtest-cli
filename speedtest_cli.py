@@ -291,6 +291,7 @@ def build_user_agent():
         'speedtest-cli/%s' % __version__
     )
     USER_AGENT = ' '.join(ua_tuple)
+    printer(USER_AGENT, debug=True)
     return USER_AGENT
 
 
@@ -1141,9 +1142,6 @@ def shell():
 
     socket.setdefaulttimeout(args.timeout)
 
-    # Pre-cache the user agent string
-    build_user_agent()
-
     # If specified bind to a specific IP address
     if args.source:
         SOURCE = args.source
@@ -1155,6 +1153,9 @@ def shell():
     debug = getattr(args, 'debug', False)
     if debug:
         DEBUG = True
+
+    # Pre-cache the user agent string
+    build_user_agent()
 
     if args.simple or args.csv or args.json:
         quiet = True
