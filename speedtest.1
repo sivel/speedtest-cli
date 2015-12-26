@@ -1,8 +1,8 @@
-.TH "speedtest-cli" 1 "2014-04-23" "speedtest-cli"
+.TH "speedtest" 1 "2014-04-23" "speedtest"
 .SH NAME
-speedtest\-cli \- Test your bandwidth througput using speedtest.net
+speedtest \- Test your bandwidth througput using speedtest.net
 .SH SYNOPSIS
-.B speedtest\-cli
+.B speedtest
 [OPTION]...
 .SH DESCRIPTION
 Speedtest.net is a web service for testing your broadband connection by downloading a file
@@ -12,7 +12,7 @@ from the command line.
 Speedtest mini is a version of the Speedtest.net server that you can host locally.
 
 .SH OPTIONS
-Usage: speedtest\-cli [OPTION...]
+Usage: speedtest [OPTION...]
 
 .B Help Options
 
@@ -67,17 +67,17 @@ Show the version number and exit
 
 \fBAutomatically find closest server and start testing\fR
 .RS
-speedtest\-cli
+speedtest
 .RE
 
 \fBSpecify testing against server 1491\fR
 .RS
-speedtest-cli \-\-server 1491
+speedtest \-\-server 1491
 .RE
 
 \fBTesting against Speedtest Mini\fR
 .RS
-speedtest-cli \-\-mini 172.18.66.1
+speedtest \-\-mini 172.18.66.1
 .RE
 
 .SH REPORTING BUGS

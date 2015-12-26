@@ -17,10 +17,10 @@ speedtest.net
 Versions
 --------
 
-speedtest-cli works with Python 2.4-3.4
+`speedtest` works with Python 2.4-3.4
 
-.. image:: https://img.shields.io/pypi/pyversions/speedtest-cli.svg
-        :target: https://pypi.python.org/pypi/speedtest-cli/
+.. image:: https://img.shields.io/pypi/pyversions/speedtest.svg
+        :target: https://pypi.python.org/pypi/speedtest/
         :alt: Versions
 
 Installation
@@ -58,23 +58,23 @@ Just download (Like the way it used to be)
 
 ::
 
-    wget -O speedtest-cli https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest_cli.py
-    chmod +x speedtest-cli
+    wget -O speedtest https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py
+    chmod +x speedtest
 
 or
 
 ::
 
-    curl -Lo speedtest-cli https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest_cli.py
-    chmod +x speedtest-cli
+    curl -Lo speedtest https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py
+    chmod +x speedtest
 
 Usage
 -----
 
 ::
 
-    $ speedtest-cli -h
-    usage: speedtest-cli [-h] [--bytes] [--share] [--simple] [--list]
+    $ speedtest -h
+    usage: speedtest [-h] [--bytes] [--share] [--simple] [--list]
                          [--server SERVER] [--mini MINI] [--source SOURCE]
                          [--timeout TIMEOUT] [--secure] [--version]
 
