@@ -197,7 +197,7 @@ def build_user_agent():
         '(%s; U; %s; en-us)' % (platform.system(), platform.architecture()[0]),
         'Python/%s' % platform.python_version(),
         '(KHTML, like Gecko)',
-        'speedtest-cli/%s' % __version__
+        'speedtest/%s' % __version__
     )
     user_agent = ' '.join(ua_tuple)
     return user_agent
@@ -560,7 +560,7 @@ def speedtest():
         'speedtest.net.\n'
         '------------------------------------------------------------'
         '--------------\n'
-        'https://github.com/sivel/speedtest-cli')
+        'https://github.com/sivel/speedtest')
 
     parser = ArgParser(description=description)
     # Give optparse.OptionParser an `add_argument` method for
