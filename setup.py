@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright 2012-2014 Matt Martz
+# Copyright 2012-2015 Matt Martz
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -57,7 +57,7 @@ except:
 
 setup(
     name='speedtest-cli',
-    version=find_version('speedtest_cli.py'),
+    version=find_version('speedtest.py'),
     description=('Command line interface for testing internet bandwidth using '
                  'speedtest.net'),
     long_description=long_description,
@@ -66,11 +66,11 @@ setup(
     author_email='matt@sivel.net',
     url='https://github.com/sivel/speedtest-cli',
     license='Apache License, Version 2.0',
-    py_modules=['speedtest_cli'],
+    py_modules=['speedtest'],
     entry_points={
         'console_scripts': [
-            'speedtest=speedtest_cli:main',
-            'speedtest-cli=speedtest_cli:main'
+            'speedtest=speedtest:main',
+            'speedtest-cli=speedtest:main'
         ]
     },
     classifiers=[
