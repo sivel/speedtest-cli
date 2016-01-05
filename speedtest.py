@@ -207,6 +207,10 @@ class SpeedtestException(Exception):
     """Base exception for this module"""
 
 
+class SpeedtestConfigError(SpeedtestException):
+    """Configuration provided is invalid"""
+
+
 class ConfigRetrievalError(SpeedtestException):
     """Could not retrieve config.php"""
 
@@ -459,6 +463,25 @@ class HTTPUploader(threading.Thread):
         del self.data
 
 
+class UnitsDataDescriptor(object):
+    """Data Descriptor class, that converts values from Bytes to specified
+    units when setting the value.
+    """
+
+    def __init__(self, name, default=None):
+        self.name = name
+        self.default = default
+
+    def __get__(self, obj, objtype=None):
+        return getattr(obj, '_%s' % self.name, self.default)
+
+    def __set__(self, obj, val):
+        setattr(obj, '_%s' % self.name, val * obj.units[1])
+
+    def __delete__(self, obj):
+        raise NotImplementedError()
+
+
 class SpeedtestResults(object):
     """Class for holding the results of a speedtest, including:
 
@@ -472,9 +495,13 @@ class SpeedtestResults(object):
     to get a share results image link.
     """
 
-    def __init__(self, download=0, upload=0, ping=0, server=None):
-        self.download = download
-        self.upload = upload
+    download = UnitsDataDescriptor('download', default=0)
+    upload = UnitsDataDescriptor('upload', default=0)
+
+    def __init__(self, download=0, upload=0, ping=0, server=None,
+                 units=('bit', 8)):
+        self._download = download
+        self._upload = upload
         self.ping = ping
         if server is None:
             self.server = {}
@@ -482,6 +509,8 @@ class SpeedtestResults(object):
             self.server = server
         self._share = None
         self.timestamp = datetime.datetime.utcnow().isoformat()
+
+        self.units = units
 
     def __repr__(self):
         return repr(self.dict())
@@ -494,9 +523,19 @@ class SpeedtestResults(object):
         if self._share:
             return self._share
 
-        download = int(round((self.download / 1000) * 8, 0))
+        if self.units[1] == 1:
+            bit_download = self.download * 8
+            bit_upload = self.upload * 8
+        elif self.units[1] == 8:
+            bit_download = self.download
+            bit_upload = self.upload
+        else:
+            raise SpeedtestConfigError('Unknown units, valid configurations '
+                                       'are ("bit", 8) and ("byte", 1)')
+
+        download = int(round(bit_download / 1000, 0))
         ping = int(round(self.ping, 0))
-        upload = int(round((self.upload / 1000) * 8, 0))
+        upload = int(round(bit_upload / 1000, 0))
 
         # Build the request to send results back to speedtest.net
         # We use a list instead of a dict because the API expects parameters
@@ -574,20 +613,20 @@ class SpeedtestResults(object):
             })
         return json.dumps(self.dict(), **kwargs)
 
-    def simple(self, units=('bit', 8)):
+    def simple(self):
         return """Ping: %s ms
 Download: %0.2f M%s/s
 Upload: %0.2f M%s/s""" % (self.ping,
-                          (self.download / 1000 / 1000) * units[1],
-                          units[0],
-                          (self.upload / 1000 / 1000) * units[1],
-                          units[0])
+                          (self.download / 1000 / 1000),
+                          self.units[0],
+                          (self.upload / 1000 / 1000),
+                          self.units[0])
 
 
 class Speedtest(object):
     """Class for performing standard speedtest.net testing operations"""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, units=('bit', 8)):
         self.config = {}
         self.get_config()
         if config is not None:
@@ -597,7 +636,7 @@ class Speedtest(object):
         self.closest = []
         self.best = {}
 
-        self.results = SpeedtestResults()
+        self.results = SpeedtestResults(units=units)
 
     def get_config(self):
         """Download the speedtest.net configuration and return only the data
@@ -1170,7 +1209,7 @@ def shell():
 
     printer('Retrieving speedtest.net configuration...', quiet)
     try:
-        speedtest = Speedtest()
+        speedtest = Speedtest(units=args.units)
     except ConfigRetrievalError:
         printer('Cannot retrieve speedtest configuration')
         sys.exit(1)
@@ -1242,17 +1281,17 @@ def shell():
     printer('Testing download speed', quiet, end=('\n', '')[bool(callback)])
     speedtest.download(callback=callback)
     printer('Download: %0.2f M%s/s' %
-            ((results.download / 1000 / 1000) * args.units[1], args.units[0]),
+            ((results.download / 1000 / 1000), args.units[0]),
             quiet)
 
     printer('Testing upload speed', quiet, end=('\n', '')[bool(callback)])
     speedtest.upload(callback=callback)
     printer('Upload: %0.2f M%s/s' %
-            ((results.upload / 1000 / 1000) * args.units[1], args.units[0]),
+            ((results.upload / 1000 / 1000), args.units[0]),
             quiet)
 
     if args.simple:
-        print_(results.simple(args.units))
+        print_(results.simple())
     elif args.csv:
         print_(results.csv(delimiter=args.csv_delimiter))
     elif args.json:
