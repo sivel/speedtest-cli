@@ -383,7 +383,7 @@ class HTTPDownloader(threading.Thread):
                 while (1 and not SHUTDOWN_EVENT.isSet() and
                         (timeit.default_timer() - self.starttime) <=
                         self.timeout):
-                    self.result.append(len(f.read(1500)))
+                    self.result.append(len(f.read(10240)))
                     if self.result[-1] == 0:
                         break
                 f.close()
@@ -408,7 +408,7 @@ class HTTPUploaderData(object):
 
         self.total = [0]
 
-    def read(self, n=1500):
+    def read(self, n=10240):
         if ((timeit.default_timer() - self.start) <= self.timeout and
                 not SHUTDOWN_EVENT.isSet()):
             chunk = self.data.read(n).encode()
@@ -611,7 +611,7 @@ class Speedtest(object):
         configxml = []
 
         while 1:
-            configxml.append(uh.read(1500))
+            configxml.append(uh.read(10240))
             if len(configxml[-1]) == 0:
                 break
         if int(uh.code) != 200:
@@ -723,7 +723,7 @@ class Speedtest(object):
 
                 serversxml = []
                 while 1:
-                    serversxml.append(uh.read(1500))
+                    serversxml.append(uh.read(10240))
                     if len(serversxml[-1]) == 0:
                         break
                 if int(uh.code) != 200:
