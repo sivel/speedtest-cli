@@ -74,9 +74,9 @@ Usage
 ::
 
     $ speedtest-cli -h
-    usage: speedtest_cli.py [-h] [--bytes] [--share] [--simple] [--list]
-                            [--server SERVER] [--mini MINI] [--source SOURCE]
-                            [--timeout TIMEOUT] [--csv CSV] [--secure] [--version]
+    usage: speedtest-cli [-h] [--bytes] [--share] [--simple] [--list]
+                         [--server SERVER] [--mini MINI] [--source SOURCE]
+                         [--timeout TIMEOUT] [--csv CSV] [--secure] [--version]
 
     Command line interface for testing internet bandwidth using speedtest.net.
     --------------------------------------------------------------------------
