@@ -108,6 +108,8 @@ except ImportError:
         def write(data):
             if not isinstance(data, basestring):
                 data = str(data)
+            if isinstance(data, unicode):
+                data = data.encode('utf-8', 'ignore')
             fp.write(data)
 
         want_unicode = False
@@ -635,7 +637,7 @@ def speedtest():
                 line = ('%(id)4s) %(sponsor)s (%(name)s, %(country)s) '
                         '[%(d)0.2f km]' % server)
                 serverList.append(line)
-            print_('\n'.join(serverList).encode('utf-8', 'ignore'))
+            print_('\n'.join(serverList))
             sys.exit(0)
     else:
         servers = closestServers(config['client'])
@@ -703,8 +705,8 @@ def speedtest():
         best = getBestServer(servers)
 
     if not args.simple:
-        print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-               '%(latency)s ms' % best).encode('utf-8', 'ignore'))
+        print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+               '%(latency)s ms' % best)
     else:
         print_('Ping: %(latency)s ms' % best)
 
