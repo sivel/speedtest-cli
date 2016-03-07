@@ -204,11 +204,6 @@ else:
 
 # Exception "constants" to support Python 2 through Python 3
 try:
-    BROKEN_PIPE_ERROR = (BrokenPipeError,)
-except NameError:
-    BROKEN_PIPE_ERROR = (IOError,)
-
-try:
     import ssl
     HTTP_ERRORS = (HTTPError, URLError, socket.error, ssl.SSLError)
 except ImportError:
