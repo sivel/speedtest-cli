@@ -689,7 +689,9 @@ class Speedtest(object):
             # times = get_attributes_by_tag_name(root, 'times')
             client = get_attributes_by_tag_name(root, 'client')
 
-        ignore_servers = map(int, server_config['ignoreids'].split(','))
+        ignore_servers = list(
+            map(int, server_config['ignoreids'].split(','))
+        )
 
         # sizes = dict(upload=[], download=[])
         # sizes = {}
