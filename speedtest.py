@@ -20,6 +20,7 @@ import re
 import csv
 import sys
 import math
+import errno
 import signal
 import socket
 import timeit
@@ -1240,8 +1241,10 @@ def shell():
                 try:
                     print_(line)
                     server_list.append(line)
-                except BROKEN_PIPE_ERROR:
-                    pass
+                except IOError:
+                    e = sys.exc_info()[1]
+                    if e.errno != errno.EPIPE:
+                        raise
         sys.exit(0)
 
     # Set a filter of servers to retrieve
