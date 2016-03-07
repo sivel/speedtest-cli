@@ -81,17 +81,17 @@ except ImportError:
     from urllib.request import urlopen, Request, HTTPError, URLError
 
 try:
-    from httplib import HTTPConnection, HTTPSConnection
+    from httplib import HTTPConnection
 except ImportError:
-    e_http_py2 = sys.exc_info()
+    from http.client import HTTPConnection
+
+try:
+    from httplib import HTTPSConnection
+except ImportError:
     try:
-        from http.client import HTTPConnection, HTTPSConnection
+        from http.client import HTTPSConnection
     except ImportError:
-        e_http_py3 = sys.exc_info()
-        raise SystemExit('Your python installation is missing required HTTP '
-                         'client classes:\n\n'
-                         'Python 2: %s\n'
-                         'Python 3: %s' % (e_http_py2[1], e_http_py3[1]))
+        HTTPSConnection = None
 
 try:
     from Queue import Queue
@@ -1148,12 +1148,13 @@ def validate_optional_args(args):
     with an error stating which module is missing.
     """
     optional_args = {
-        'json': ('json/simplejson', json),
+        'json': ('json/simplejson python module', json),
+        'secure': ('SSL support', HTTPSConnection),
     }
 
     for arg, info in optional_args.items():
         if getattr(args, arg, False) and info[1] is None:
-            raise SystemExit('%s python module is not installed. --%s is '
+            raise SystemExit('%s is not installed. --%s is '
                              'unavailable' % (info[0], arg))
 
 
