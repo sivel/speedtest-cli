@@ -368,30 +368,36 @@ def print_dots(current, total, start=False, end=False):
     status
     """
 
+    if SHUTDOWN_EVENT.isSet():
+        return
+
     sys.stdout.write('.')
     if current + 1 == total and end is True:
         sys.stdout.write('\n')
     sys.stdout.flush()
 
 
+def do_nothing(*args, **kwargs):
+    pass
+
+
 class HTTPDownloader(threading.Thread):
     """Thread class for retrieving a URL"""
 
     def __init__(self, i, url, start, timeout):
+        threading.Thread.__init__(self)
         self.url = url
-        self.result = None
+        self.result = [0]
         self.starttime = start
         self.timeout = timeout
         self.i = i
-        threading.Thread.__init__(self)
 
     def run(self):
-        self.result = [0]
         try:
             if (timeit.default_timer() - self.starttime) <= self.timeout:
                 request = build_request(self.url)
                 f = urlopen(request)
-                while (1 and not SHUTDOWN_EVENT.isSet() and
+                while (not SHUTDOWN_EVENT.isSet() and
                         (timeit.default_timer() - self.starttime) <=
                         self.timeout):
                     self.result.append(len(f.read(10240)))
@@ -436,6 +442,7 @@ class HTTPUploader(threading.Thread):
     """Thread class for putting a URL"""
 
     def __init__(self, i, url, start, size, timeout):
+        threading.Thread.__init__(self)
         self.url = url
         self.data = HTTPUploaderData(size, start, timeout)
         self.size = size
@@ -443,7 +450,6 @@ class HTTPUploader(threading.Thread):
         self.starttime = start
         self.timeout = timeout
         self.i = i
-        threading.Thread.__init__(self)
 
     def run(self):
         try:
@@ -951,7 +957,7 @@ class Speedtest(object):
         printer(best, debug=True)
         return best
 
-    def download(self, callback=None):
+    def download(self, callback=do_nothing):
         """Test download speed against speedtest.net"""
 
         urls = []
@@ -970,8 +976,7 @@ class Speedtest(object):
                                         self.config['length']['download'])
                 thread.start()
                 q.put(thread, True)
-                if not SHUTDOWN_EVENT.isSet() and callback:
-                    callback(i, url_count, start=True)
+                callback(i, url_count, start=True)
 
         finished = []
 
@@ -981,8 +986,7 @@ class Speedtest(object):
                 while thread.isAlive():
                     thread.join(timeout=0.1)
                 finished.append(sum(thread.result))
-                if not SHUTDOWN_EVENT.isSet() and callback:
-                    callback(thread.i, url_count, end=True)
+                callback(thread.i, url_count, end=True)
                 del thread
 
         q = Queue(self.config['threads']['download'])
@@ -1004,7 +1008,7 @@ class Speedtest(object):
             self.config['threads']['upload'] = 8
         return self.results.download
 
-    def upload(self, callback=None):
+    def upload(self, callback=do_nothing):
         """Test upload speed against speedtest.net"""
 
         sizes = []
@@ -1025,8 +1029,7 @@ class Speedtest(object):
                                       self.config['length']['upload'])
                 thread.start()
                 q.put(thread, True)
-                if not SHUTDOWN_EVENT.isSet() and callback:
-                    callback(i, size_count, start=True)
+                callback(i, size_count, start=True)
 
         finished = []
 
@@ -1036,8 +1039,7 @@ class Speedtest(object):
                 while thread.isAlive():
                     thread.join(timeout=0.1)
                 finished.append(thread.result)
-                if not SHUTDOWN_EVENT.isSet() and callback:
-                    callback(thread.i, size_count, end=True)
+                callback(thread.i, size_count, end=True)
                 del thread
 
         q = Queue(self.config['threads']['upload'])
@@ -1211,7 +1213,7 @@ def shell():
 
     # Don't set a callback if we are running quietly
     if quiet or debug:
-        callback = None
+        callback = do_nothing
     else:
         callback = print_dots
 
@@ -1275,13 +1277,15 @@ def shell():
     printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
             '%(latency)s ms' % results.server, quiet)
 
-    printer('Testing download speed', quiet, end=('\n', '')[bool(callback)])
+    printer('Testing download speed', quiet,
+            end=('', '\n')[bool(debug)])
     speedtest.download(callback=callback)
     printer('Download: %0.2f M%s/s' %
             ((results.download / 1000 / 1000), args.units[0]),
             quiet)
 
-    printer('Testing upload speed', quiet, end=('\n', '')[bool(callback)])
+    printer('Testing upload speed', quiet,
+            end=('', '\n')[bool(debug)])
     speedtest.upload(callback=callback)
     printer('Upload: %0.2f M%s/s' %
             ((results.upload / 1000 / 1000), args.units[0]),
