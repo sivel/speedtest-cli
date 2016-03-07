@@ -138,9 +138,12 @@ try:
     import builtins
 except ImportError:
     def print_(*args, **kwargs):
-        """The new-style print function taken from
-        https://pypi.python.org/pypi/six/
+        """The new-style print function for Python 2.4 and 2.5.
 
+        Taken from https://pypi.python.org/pypi/six/
+
+        Modified to set encoding to UTF-8 if not set when stdout may not be
+        a tty such as when piping to head
         """
         fp = kwargs.pop("file", sys.stdout)
         if fp is None:
@@ -149,8 +152,16 @@ except ImportError:
         def write(data):
             if not isinstance(data, basestring):
                 data = str(data)
+            # If the file has an encoding, encode unicode with it.
+            encoding = fp.encoding or 'UTF-8'  # Diverges for notty
+            if (isinstance(fp, file) and
+                    isinstance(data, unicode) and
+                    encoding is not None):
+                errors = getattr(fp, "errors", None)
+                if errors is None:
+                    errors = "strict"
+                data = data.encode(encoding, errors)
             fp.write(data)
-
         want_unicode = False
         sep = kwargs.pop("sep", None)
         if sep is not None:
@@ -1227,11 +1238,7 @@ def shell():
                 line = ('%(id)5s) %(sponsor)s (%(name)s, %(country)s) '
                         '[%(d)0.2f km]' % server)
                 try:
-                    try:
-                        unicode()
-                        print_(line.encode('utf-8', 'ignore'))
-                    except NameError:
-                        print_(line)
+                    print_(line)
                     server_list.append(line)
                 except BROKEN_PIPE_ERROR:
                     pass
@@ -1266,17 +1273,8 @@ def shell():
 
     results = speedtest.results
 
-    # Python 2.7 and newer seem to be ok with the resultant encoding
-    # from parsing the XML, but older versions have some issues.
-    # This block should detect whether we need to encode or not
-    try:
-        unicode()
-        printer(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                 '%(latency)s ms' %
-                 results.server).encode('utf-8', 'ignore'), quiet)
-    except NameError:
-        printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-                '%(latency)s ms' % results.server, quiet)
+    printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+            '%(latency)s ms' % results.server, quiet)
 
     printer('Testing download speed', quiet, end=('\n', '')[bool(callback)])
     speedtest.download(callback=callback)
