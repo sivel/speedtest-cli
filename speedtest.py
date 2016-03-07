@@ -205,7 +205,8 @@ else:
 # Exception "constants" to support Python 2 through Python 3
 try:
     import ssl
-    HTTP_ERRORS = (HTTPError, URLError, socket.error, ssl.SSLError)
+    HTTP_ERRORS = (HTTPError, URLError, socket.error, ssl.SSLError,
+                   ssl.CertificateError)
 except ImportError:
     HTTP_ERRORS = (HTTPError, URLError, socket.error)
 
@@ -759,9 +760,9 @@ class Speedtest(object):
 
         urls = [
             '://www.speedtest.net/speedtest-servers-static.php',
-            '://c.speedtest.net/speedtest-servers-static.php',
+            'http://c.speedtest.net/speedtest-servers-static.php',
             '://www.speedtest.net/speedtest-servers.php',
-            '://c.speedtest.net/speedtest-servers.php',
+            'http://c.speedtest.net/speedtest-servers.php',
         ]
 
         errors = []
