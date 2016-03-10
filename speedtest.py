@@ -205,8 +205,13 @@ else:
 # Exception "constants" to support Python 2 through Python 3
 try:
     import ssl
-    HTTP_ERRORS = (HTTPError, URLError, socket.error, ssl.SSLError,
-                   ssl.CertificateError)
+    try:
+        CERT_ERROR = (ssl.CertificateError,)
+    except AttributeError:
+        CERT_ERROR = tuple()
+
+    HTTP_ERRORS = ((HTTPError, URLError, socket.error, ssl.SSLError) +
+                   CERT_ERROR)
 except ImportError:
     HTTP_ERRORS = (HTTPError, URLError, socket.error)
 
