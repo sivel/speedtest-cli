@@ -27,6 +27,7 @@ import timeit
 import datetime
 import platform
 import threading
+import xml.parsers.expat
 
 __version__ = '1.0.0'
 
@@ -65,7 +66,6 @@ except ImportError:
     except ImportError:
         json = None
 
-import xml.parsers.expat
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
