@@ -755,6 +755,7 @@ class Speedtest(object):
         """Retrieve a the list of speedtest.net servers, optionally filtered
         to servers matching those specified in the ``servers`` argument
         """
+        self.servers.clear()
 
         for i, s in enumerate(servers):
             try:
@@ -833,6 +834,8 @@ class Speedtest(object):
                 del root
                 del serversxml
                 del elements
+
+                break
 
             except ServersRetrievalError:
                 continue
@@ -1239,14 +1242,12 @@ def shell():
             print_('Cannot retrieve speedtest server list')
             sys.exit(1)
 
-        server_list = []
         for _, servers in sorted(speedtest.servers.items()):
             for server in servers:
                 line = ('%(id)5s) %(sponsor)s (%(name)s, %(country)s) '
                         '[%(d)0.2f km]' % server)
                 try:
                     print_(line)
-                    server_list.append(line)
                 except IOError:
                     e = sys.exc_info()[1]
                     if e.errno != errno.EPIPE:
