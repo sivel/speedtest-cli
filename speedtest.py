@@ -480,11 +480,11 @@ class HTTPUploader(threading.Thread):
                     f = urlopen(request)
                 f.read(11)
                 f.close()
-                self.result = sum(request.data.total)
+                self.result = sum(self.request.data.total)
             else:
                 self.result = 0
         except (IOError, SpeedtestUploadTimeout):
-            self.result = sum(request.data.total)
+            self.result = sum(self.request.data.total)
 
 
 class UnitsDataDescriptor(object):
