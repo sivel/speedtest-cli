@@ -53,10 +53,6 @@ DEBUG = False
 # Used for bound_interface
 SOCKET_SOCKET = socket.socket
 
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
-PY34 = sys.version_info[0:2] >= (3, 4)
-
 # Begin import game to handle Python 2 and Python 3
 try:
     import json
