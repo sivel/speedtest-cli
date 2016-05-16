@@ -1012,8 +1012,10 @@ class Speedtest(object):
         while cons_thread.isAlive():
             cons_thread.join(timeout=0.1)
 
+        stop = timeit.default_timer()
+
         self.results.download = (
-            sum(finished) / (timeit.default_timer() - start)
+            sum(finished) / (stop - start)
         )
         if self.results.download > 100000:
             self.config['threads']['upload'] = 8
@@ -1065,8 +1067,10 @@ class Speedtest(object):
         while cons_thread.isAlive():
             cons_thread.join(timeout=0.1)
 
+        stop = timeit.default_timer()
+
         self.results.upload = (
-            sum(finished) / (timeit.default_timer() - start)
+            sum(finished) / (stop - start)
         )
         return self.results.upload
 
