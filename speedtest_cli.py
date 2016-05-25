@@ -676,7 +676,7 @@ def speedtest():
                 except:
                     pass
                 else:
-                    data = f.read().strip()
+                    data = f.read().strip().decode('utf-8')
                     if (f.code == 200 and
                             len(data.splitlines()) == 1 and
                             re.match('size=[0-9]', data)):
@@ -704,7 +704,7 @@ def speedtest():
 
     if not args.simple:
         print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-               '%(latency)s ms' % best).encode('utf-8', 'ignore'))
+               '%(latency)s ms' % best))
     else:
         print_('Ping: %(latency)s ms' % best)
 
