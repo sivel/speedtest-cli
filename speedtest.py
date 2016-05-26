@@ -845,13 +845,13 @@ class Speedtest(object):
         speedtest mini server
         """
 
-        name, ext = os.path.splitext(server)
+        urlparts = urlparse(server)
+
+        name, ext = os.path.splitext(urlparts[2])
         if ext:
             url = os.path.dirname(server)
         else:
             url = server
-
-        urlparts = urlparse(url)
 
         request = build_request(url)
         uh, e = catch_request(request)
