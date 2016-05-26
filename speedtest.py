@@ -871,7 +871,7 @@ class Speedtest(object):
                 except:
                     pass
                 else:
-                    data = f.read().strip()
+                    data = f.read().strip().decode()
                     if (f.code == 200 and
                             len(data.splitlines()) == 1 and
                             re.match('size=[0-9]', data)):
