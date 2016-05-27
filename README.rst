@@ -58,14 +58,14 @@ Just download (Like the way it used to be)
 
 ::
 
-    wget -O speedtest-cli https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest_cli.py
+    wget -O speedtest-cli https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py
     chmod +x speedtest-cli
 
 or
 
 ::
 
-    curl -Lo speedtest-cli https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest_cli.py
+    curl -Lo speedtest-cli https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py
     chmod +x speedtest-cli
 
 Usage
