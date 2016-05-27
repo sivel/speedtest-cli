@@ -17,7 +17,7 @@ speedtest.net
 Versions
 --------
 
-speedtest-cli works with Python 2.4-3.4
+speedtest-cli works with Python 2.4-3.5
 
 .. image:: https://img.shields.io/pypi/pyversions/speedtest-cli.svg
         :target: https://pypi.python.org/pypi/speedtest-cli/
