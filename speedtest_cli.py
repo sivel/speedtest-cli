@@ -720,7 +720,7 @@ def speedtest():
     if not args.simple:
         print_()
     print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+           ((dlspeed / 1000.0 / 1000.0) * args.units[1], args.units[0]))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -733,15 +733,15 @@ def speedtest():
     if not args.simple:
         print_()
     print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+           ((ulspeed / 1000.0 / 1000.0) * args.units[1], args.units[0]))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
                'testing against a Speedtest Mini server')
     elif args.share:
-        dlspeedk = int(round((dlspeed / 1000) * 8, 0))
+        dlspeedk = int(round((dlspeed / 1000.0) * 8, 0))
         ping = int(round(best['latency'], 0))
-        ulspeedk = int(round((ulspeed / 1000) * 8, 0))
+        ulspeedk = int(round((ulspeed / 1000.0) * 8, 0))
 
         # Build the request to send results back to speedtest.net
         # We use a list instead of a dict because the API expects parameters
