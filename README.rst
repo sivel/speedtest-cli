@@ -52,6 +52,11 @@ or
 
     git clone https://github.com/sivel/speedtest-cli.git
     python speedtest-cli/setup.py install
+    
+Just execute it without storing the file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+python <(curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest_cli.py)
 
 Just download (Like the way it used to be)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
