@@ -594,7 +594,7 @@ def speedtest():
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
-    parser.add_argument('--log', help='Specify a log file to append results to')
+    parser.add_argument('--log', help='Append results to log file')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
@@ -787,25 +787,28 @@ def speedtest():
         print_('Share results: %s://www.speedtest.net/result/%s.png' %
                (scheme, resultid[0]))
 
-
     if args.log:
 	log_output = ['{:%Y-%b-%d %H:%M:%S}'.format(datetime.datetime.now()),
-			'%0.2f'%(dlspeed /1000000 * 8),  #Always megabits
-			'%0.2f'%(ulspeed /1000000 * 8),
-			config['client']['isp'],
-			config['client']['ip'],
-			'%(sponsor)s,(%(name)s),%(d)0.2f km,%(latency)s ms' % best
-			]
+                      '%0.2f' % (dlspeed / 1000000 * 8), 
+                      '%0.2f' % (ulspeed / 1000000 * 8),
+                      config['client']['isp'],
+                      config['client']['ip'],
+                      '%(sponsor)s,(%(name)s),%(d)0.2f km,%(latency)s ms' % best
+                     ]
 
-	if args.share:
-	    log_output.append('%s://www.speedtest.net/result/%s.png' % (scheme, resultid[0]))
+        if args.share:
+            log_output.append('%s://www.speedtest.net/result/%s.png' % 
+                              (scheme, resultid[0]))
 	
-	fresh_file = not os.path.isfile(args.log)
+        fresh_file = not os.path.isfile(args.log)
 
-	with open(args.log, "a") as log_file:
-	    if fresh_file:
-		log_file.write("Date,download,upload,isp,ip,sponsor,location,distance,latency,share link")
-	    log_file.write("%s\n" % ",".join(log_output))
+        try:
+            log_file = open(args.log, "a")
+            if fresh_file:
+                log_file.write("Date,download,upload,isp,ip,spons,loc,dist,lat,share")
+            log_file.write("%s\n" % ",".join(log_output))
+        except:
+            print_('\nLog file update failed')
 
 
 def main():
