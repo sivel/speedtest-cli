@@ -95,7 +95,7 @@ Usage
       --mini MINI        URL of the Speedtest Mini server
       --source SOURCE    Source IP address to bind to
       --timeout TIMEOUT  HTTP timeout in seconds. Default 10
-      --log LOGFILE	 Generate simple CSV logfile
+      --log LOGFILE	 Append a one line CSV entry to LOGFILE
       --secure           Use HTTPS instead of HTTP when communicating with
                          speedtest.net operated servers
       --version          Show the version number and exit
