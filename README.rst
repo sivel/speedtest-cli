@@ -76,7 +76,7 @@ Usage
     $ speedtest-cli -h
     usage: speedtest-cli [-h] [--bytes] [--share] [--simple] [--list]
                          [--server SERVER] [--mini MINI] [--source SOURCE]
-                         [--timeout TIMEOUT] [--secure] [--version]
+                         [--timeout TIMEOUT] [--log LOGFILE] [--secure] [--version]
 
     Command line interface for testing internet bandwidth using speedtest.net.
     --------------------------------------------------------------------------
