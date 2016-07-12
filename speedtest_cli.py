@@ -803,10 +803,11 @@ def speedtest():
         fresh_file = not os.path.isfile(args.log)
 
         try:
-            log_file = open(args.log, "a")
+            log_file = open(args.log, 'a')
             if fresh_file:
-                log_file.write("Date,download,upload,isp,ip,spons,loc,dist,lat,share\n")
-            log_file.write("%s\n" % ",".join(log_output))
+                log_file.write('Date,download,upload,isp,ip,'
+                               'spons,loc,dist,lat,share\n')
+            log_file.write('%s\n' % ','.join(log_output))
         except:
             print_('\nLog file update failed')
 
