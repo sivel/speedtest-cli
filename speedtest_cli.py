@@ -789,11 +789,11 @@ def speedtest():
 
     if args.log:
         log_output = ['{:%Y-%b-%d %H:%M:%S}'.format(datetime.datetime.now()),
-                     '%0.2f' % (dlspeed / 1000000 * 8),
-                     '%0.2f' % (ulspeed / 1000000 * 8),
-                     config['client']['isp'],
-                     config['client']['ip'],
-                     '%(sponsor)s,(%(name)s),%(d)0.2f km,%(latency)s ms' % best
+                      '%0.2f' % (dlspeed / 1000000 * 8),
+                      '%0.2f' % (ulspeed / 1000000 * 8),
+                      config['client']['isp'],
+                      config['client']['ip'],
+                      '%(sponsor)s,(%(name)s),%(d)0.2f km,%(latency)s ms' % best
                      ]
 
         if args.share:
