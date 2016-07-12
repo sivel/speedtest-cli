@@ -793,8 +793,7 @@ def speedtest():
                       '%0.2f' % (ulspeed / 1000000 * 8),
                       config['client']['isp'],
                       config['client']['ip'],
-                      '%(sponsor)s,(%(name)s),%(d)0.2f km,%(latency)s ms' % best
-                     ]
+                      '%(sponsor)s,(%(name)s),%(d)0.2f km,%(latency)s' % best]
 
         if args.share:
             log_output.append('%s://www.speedtest.net/result/%s.png' %
