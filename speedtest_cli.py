@@ -788,12 +788,14 @@ def speedtest():
                (scheme, resultid[0]))
 
     if args.log:
-        log_output = ['{:%Y-%b-%d %H:%M:%S}'.format(datetime.datetime.now()),
+        log_output = ['{:%Y-%b-%d, %H:%M:%S}'.format(datetime.datetime.now()),
                       '%0.2f' % (dlspeed / 1000000 * 8),
                       '%0.2f' % (ulspeed / 1000000 * 8),
                       config['client']['isp'],
                       config['client']['ip'],
-                      '%(sponsor)s,(%(name)s),%(d)0.2f km,%(latency)s' % best]
+                      best['sponsor'],
+                      best['name'],
+                      '%(d)0.2f, %(latency)0.2f' % best]
 
         if args.share:
             log_output.append('%s://www.speedtest.net/result/%s.png' %
@@ -804,9 +806,11 @@ def speedtest():
         try:
             log_file = open(args.log, 'a')
             if fresh_file:
-                log_file.write('Date,download,upload,isp,ip,'
-                               'spons,loc,dist,lat,share\n')
-            log_file.write('%s\n' % ','.join(log_output))
+                log_file.write('Date, Time, Download (Mbps), Upload (Mbps), '
+                               'Your ISP, Your IP, '
+                               'Sponsor, Location, Distance (km), '
+                               'Latency (ms), Sharing link\n')
+            log_file.write('%s\n' % ', '.join(log_output))
         except:
             print_('\nLog file update failed')
 
