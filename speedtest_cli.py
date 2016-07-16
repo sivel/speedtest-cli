@@ -24,6 +24,7 @@ import socket
 import timeit
 import platform
 import threading
+import datetime
 
 __version__ = '0.3.4'
 
@@ -593,6 +594,8 @@ def speedtest():
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
+    parser.add_argument('--log', help='Append results to log file')
+
     options = parser.parse_args()
     if isinstance(options, tuple):
         args = options[0]
@@ -783,6 +786,33 @@ def speedtest():
 
         print_('Share results: %s://www.speedtest.net/result/%s.png' %
                (scheme, resultid[0]))
+
+    if args.log:
+        log_output = ['{:%Y-%b-%d, %H:%M:%S}'.format(datetime.datetime.now()),
+                      '%0.2f' % (dlspeed / 1000000 * 8),
+                      '%0.2f' % (ulspeed / 1000000 * 8),
+                      config['client']['isp'],
+                      config['client']['ip'],
+                      best['sponsor'],
+                      best['name'],
+                      '%(d)0.2f, %(latency)0.2f' % best]
+
+        if args.share:
+            log_output.append('%s://www.speedtest.net/result/%s.png' %
+                              (scheme, resultid[0]))
+
+        fresh_file = not os.path.isfile(args.log)
+
+        try:
+            log_file = open(args.log, 'a')
+            if fresh_file:
+                log_file.write('Date, Time, Download (Mbps), Upload (Mbps), '
+                               'Your ISP, Your IP, '
+                               'Sponsor, Location, Distance (km), '
+                               'Latency (ms), Sharing link\n')
+            log_file.write('%s\n' % ', '.join(log_output))
+        except:
+            print_('\nLog file update failed')
 
 
 def main():
