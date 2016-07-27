@@ -642,7 +642,7 @@ def speedtest():
 
     if not args.simple:
         print_(('Testing from %(isp)s (%(ip)s)...'
-            % config['client']).encode('utf-8', 'ignore'))
+               % config['client']).encode('utf-8', 'ignore'))
 
     if args.server:
         try:
