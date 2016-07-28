@@ -18,7 +18,7 @@ env:
  - TOXENV=py25
  - TOXENV=py26
  - TOXENV=py27
- - TOXENV=py32
+# - TOXENV=py32 # Testing suite reports python 3.2 not supported
  - TOXENV=py33
  - TOXENV=py34
  - TOXENV=pypy
