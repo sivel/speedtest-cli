@@ -714,13 +714,6 @@ def speedtest():
         for i in range(0, 4):
             urls.append('%s/random%sx%s.jpg' %
                         (os.path.dirname(best['url']), size, size))
-    if not args.simple:
-        print_('Testing download speed', end='')
-    dlspeed = downloadSpeed(urls, args.simple)
-    if not args.simple:
-        print_()
-    print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -735,6 +728,14 @@ def speedtest():
     print_('Upload: %0.2f M%s/s' %
            ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
+    if not args.simple:
+        print_('Testing download speed \n', end='')
+    dlspeed = downloadSpeed(urls, args.simple)
+    if not args.simple:
+        print_()
+    print_('Download: %0.2f M%s/s' %
+           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+           
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
                'testing against a Speedtest Mini server')
