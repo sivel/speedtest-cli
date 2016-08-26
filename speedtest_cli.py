@@ -31,7 +31,7 @@ __version__ = '0.3.4'
 user_agent = None
 source = None
 shutdown_event = None
-scheme = 'http'
+scheme = 'https'
 
 
 # Used for bound_interface
