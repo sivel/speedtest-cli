@@ -1100,6 +1100,14 @@ def version():
     sys.exit(0)
 
 
+def csv_header():
+    """Print the CSV Headers"""
+
+    print_('Server ID,Sponsor,Server Name,Timestamp,Distance,Ping,Download,'
+           'Upload')
+    sys.exit(0)
+
+
 def parse_args():
     """Function to handle building and parsing of command line arguments"""
     description = (
@@ -1132,6 +1140,8 @@ def parse_args():
     parser.add_argument('--csv-delimiter', default=',', type=PARSER_TYPE_STR,
                         help='Single character delimiter to use in CSV '
                              'output. Default ","')
+    parser.add_argument('--csv-header', action='store_true', default=False,
+                        help='Print CSV headers')
     parser.add_argument('--json', action='store_true', default=False,
                         help='Suppress verbose output, only show basic '
                              'information in JSON format')
@@ -1206,6 +1216,9 @@ def shell():
     # Print the version and exit
     if args.version:
         version()
+
+    if args.csv_header:
+        csv_header()
 
     if len(args.csv_delimiter) != 1:
         raise SystemExit('--csv-delimiter must be a single character')
