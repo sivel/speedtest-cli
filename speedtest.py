@@ -553,9 +553,9 @@ class SpeedtestResults(object):
             raise SpeedtestConfigError('Unknown units, valid configurations '
                                        'are ("bit", 8) and ("byte", 1)')
 
-        download = int(round(bit_download / 1000, 0))
+        download = int(round(bit_download / 1000.0, 0))
         ping = int(round(self.ping, 0))
-        upload = int(round(bit_upload / 1000, 0))
+        upload = int(round(bit_upload / 1000.0, 0))
 
         # Build the request to send results back to speedtest.net
         # We use a list instead of a dict because the API expects parameters
@@ -637,9 +637,9 @@ class SpeedtestResults(object):
         return """Ping: %s ms
 Download: %0.2f M%s/s
 Upload: %0.2f M%s/s""" % (self.ping,
-                          (self.download / 1000 / 1000),
+                          (self.download / 1000.0 / 1000.0),
                           self.units[0],
-                          (self.upload / 1000 / 1000),
+                          (self.upload / 1000.0 / 1000.0),
                           self.units[0])
 
 
@@ -949,7 +949,7 @@ class Speedtest(object):
                     cum.append(3600)
                 h.close()
 
-            avg = round((sum(cum) / 6) * 1000, 3)
+            avg = round((sum(cum) / 6) * 1000.0, 3)
             results[avg] = server
 
         fastest = sorted(results.keys())[0]
@@ -1315,14 +1315,14 @@ def shell():
             end=('', '\n')[bool(debug)])
     speedtest.download(callback=callback)
     printer('Download: %0.2f M%s/s' %
-            ((results.download / 1000 / 1000), args.units[0]),
+            ((results.download / 1000.0 / 1000.0), args.units[0]),
             quiet)
 
     printer('Testing upload speed', quiet,
             end=('', '\n')[bool(debug)])
     speedtest.upload(callback=callback)
     printer('Upload: %0.2f M%s/s' %
-            ((results.upload / 1000 / 1000), args.units[0]),
+            ((results.upload / 1000.0 / 1000.0), args.units[0]),
             quiet)
 
     if args.simple:
