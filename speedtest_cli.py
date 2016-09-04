@@ -143,7 +143,7 @@ except ImportError:
         for i, arg in enumerate(args):
             if i:
                 write(sep)
-            write(arg)
+            write(arg.encode('utf-8'))
         write(end)
 else:
     print_ = getattr(builtins, 'print')
