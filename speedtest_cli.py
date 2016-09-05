@@ -383,7 +383,11 @@ def getConfig():
 
     response = uh.open(request)
 
-    text = gzip.GzipFile(fileobj=StringIO.StringIO(response.read())).read()
+    if (response.headers['content-encoding'] == 'gzip'):
+        text = gzip.GzipFile(fileobj=StringIO.StringIO(response.read())).read()
+    else:
+        text = response.read()
+        
     configxml = []
     configxml.append(text)
     
