@@ -21,6 +21,7 @@ import sys
 import math
 import signal
 import socket
+import requests
 import timeit
 import platform
 import threading
@@ -375,19 +376,12 @@ def getConfig():
     we are interested in
     """
 
-    request = build_request('://www.speedtest.net/speedtest-config.php')
-    uh, e = catch_request(request)
-    if e:
-        print_('Could not retrieve speedtest.net configuration: %s' % e)
-        sys.exit(1)
-    configxml = []
-    while 1:
-        configxml.append(uh.read(10240))
-        if len(configxml[-1]) == 0:
-            break
-    if int(uh.code) != 200:
+    uh = requests.get('http://www.speedtest.net/speedtest-config.php', headers = {'user-agent':user_agent})
+    configxml = uh.text
+    
+    if(int(uh.status_code) != 200):
         return None
-    uh.close()
+
     try:
         try:
             root = ET.fromstring(''.encode().join(configxml))
