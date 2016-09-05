@@ -19,8 +19,6 @@ import os
 import re
 import sys
 import math
-import gzip
-from StringIO import StringIO
 import signal
 import socket
 import requests
@@ -203,7 +201,7 @@ def build_user_agent():
         'speedtest-cli/%s' % __version__
     )
     user_agent = ' '.join(ua_tuple)
-    return 'User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36'
+    return user_agent
 
 
 def build_request(url, data=None, headers={}):
@@ -379,12 +377,13 @@ def getConfig():
     """
 
     uh = requests.get('http://www.speedtest.net/speedtest-config.php', headers = {'user-agent':user_agent})
-    configxml = []
-    configxml.append(uh.text)
-    uh.close()
+    configxml = uh.text
+    
+    if(int(uh.status_code) != 200):
+        return None
+
     try:
         try:
-            #print_(configxml)
             root = ET.fromstring(''.encode().join(configxml))
             config = {
                 'client': root.find('client').attrib,
