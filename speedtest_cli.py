@@ -24,8 +24,6 @@ import socket
 import timeit
 import platform
 import threading
-import urllib2
-import StringIO
 import gzip
 
 __version__ = '0.3.4'
@@ -51,8 +49,15 @@ except ImportError:
 
 # Begin import game to handle Python 2 and Python 3
 try:
+    from StringIO import StringIO, BytesIO
+except ImportError:
+    from io import StringIO, BytesIO
+
+try:
+    import urllib2 as urllib
     from urllib2 import urlopen, Request, HTTPError, URLError
 except ImportError:
+    import urllib.request as urllib
     from urllib.request import urlopen, Request, HTTPError, URLError
 
 try:
@@ -379,15 +384,15 @@ def getConfig():
     """
 
     request = build_request('://www.speedtest.net/speedtest-config.php', headers = {'user-agent':user_agent, 'accept-encoding': 'gzip'})
-    uh = urllib2.build_opener()
+    uh = urllib.build_opener()
 
     response = uh.open(request)
 
     if (response.headers['content-encoding'] == 'gzip'):
-        text = gzip.GzipFile(fileobj=StringIO.StringIO(response.read())).read()
+        text = gzip.GzipFile(fileobj=BytesIO(response.read())).read()
     else:
         text = response.read()
-        
+
     configxml = []
     configxml.append(text)
     
