@@ -24,6 +24,7 @@ import socket
 import timeit
 import platform
 import threading
+import gzip
 
 __version__ = '0.3.4'
 
@@ -48,8 +49,15 @@ except ImportError:
 
 # Begin import game to handle Python 2 and Python 3
 try:
+    from StringIO import StringIO, BytesIO
+except ImportError:
+    from io import StringIO, BytesIO
+
+try:
+    import urllib2 as urllib
     from urllib2 import urlopen, Request, HTTPError, URLError
 except ImportError:
+    import urllib.request as urllib
     from urllib.request import urlopen, Request, HTTPError, URLError
 
 try:
@@ -375,19 +383,22 @@ def getConfig():
     we are interested in
     """
 
-    request = build_request('://www.speedtest.net/speedtest-config.php')
-    uh, e = catch_request(request)
-    if e:
-        print_('Could not retrieve speedtest.net configuration: %s' % e)
-        sys.exit(1)
+    request = build_request('://www.speedtest.net/speedtest-config.php', headers = {'user-agent':user_agent, 'accept-encoding': 'gzip'})
+    uh = urllib.build_opener()
+
+    response = uh.open(request)
+
+    if (response.headers['content-encoding'] == 'gzip'):
+        text = gzip.GzipFile(fileobj=BytesIO(response.read())).read()
+    else:
+        text = response.read()
+
     configxml = []
-    while 1:
-        configxml.append(uh.read(10240))
-        if len(configxml[-1]) == 0:
-            break
-    if int(uh.code) != 200:
+    configxml.append(text)
+    
+    if(int(response.code) != 200):
         return None
-    uh.close()
+
     try:
         try:
             root = ET.fromstring(''.encode().join(configxml))
