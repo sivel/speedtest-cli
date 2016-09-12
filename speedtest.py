@@ -674,13 +674,6 @@ class Speedtest(object):
             map(int, server_config['ignoreids'].split(','))
         )
 
-        # sizes = dict(upload=[], download=[])
-        # sizes = {}
-        # for desc, size in times.items():
-        #     if desc.startswith('ul'):
-        #         sizes['upload'].append(int(size))
-        #     elif desc.startswith('dl'):
-        #         sizes['download'].append(int(int(size) / 10000))
         ratio = int(upload['ratio'])
         upload_max = int(upload['maxchunkcount'])
         up_sizes = [32768, 65536, 131072, 262144, 524288, 1048576, 7340032]
@@ -690,18 +683,13 @@ class Speedtest(object):
                          3000, 3500, 4000]
         }
 
-        # sizes['upload'].sort()
-        # sizes['download'].sort()
-
         counts = {
-            # 'upload': int(upload['threadsperurl']),
             'upload': int(upload_max * 2 / len(sizes['upload'])),
             'download': int(download['threadsperurl'])
         }
 
         threads = {
             'upload': int(upload['threads']),
-            # 'download': int(server_config['threadcount'])
             'download': int(server_config['threadcount']) * 2
         }
 
