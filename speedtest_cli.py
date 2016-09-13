@@ -541,6 +541,16 @@ def ctrl_c(signum, frame):
     raise SystemExit('\nCancelling...')
 
 
+def sig_pipe(signum, frame):
+    """Ignore the PIPE signal when trying to output on a closed file handle,
+    and simply exit
+
+    """
+    global shutdown_event
+    shutdown_event.set()
+    raise SystemExit
+
+
 def version():
     """Print the version"""
 
@@ -554,6 +564,7 @@ def speedtest():
     shutdown_event = threading.Event()
 
     signal.signal(signal.SIGINT, ctrl_c)
+    signal.signal(signal.SIGPIPE, sig_pipe)
 
     description = (
         'Command line interface for testing internet bandwidth using '
