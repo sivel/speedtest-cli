@@ -1,9 +1,9 @@
 .TH "speedtest-cli" 1 "2014-04-23" "speedtest-cli"
 .SH NAME
-speedtest\-cli \- Test your bandwidth througput using speedtest.net
+speedtest\-cli \- Command line interface for testing internet bandwidth using speedtest.net
 .SH SYNOPSIS
 .B speedtest\-cli
-[OPTION]...
+[OPTION...]
 .SH DESCRIPTION
 Speedtest.net is a web service for testing your broadband connection by downloading a file
 from a nearby speedtest.net server on the web. This tool allows you to access the service
@@ -38,6 +38,26 @@ Generate and provide a URL to the speedtest.net share results image
 Suppress verbose output, only show basic information
 .RE
 
+\fB\-\-csv\fR
+.RS
+Suppress verbose output, only show basic information in CSV format. Speeds listed in bit/s and not affected by \-\-bytes
+.RE
+
+\fB\-\-csv-delimiter CSV_DELIMITER\fR
+.RS
+Single character delimiter to use in CSV output. Default ","
+.RE
+
+\fB\-\-csv-header\fR
+.RS
+Print CSV headers
+.RE
+
+\fB\-\-json\fR
+.RS
+Suppress verbose output, only show basic information in JSON format. Speeds listed in bit/s and not affected by \-\-bytes
+.RE
+
 \fB\-\-list\fR
 .RS
 Display a list of speedtest.net servers sorted by distance
@@ -56,6 +76,16 @@ URL of the Speedtest Mini server
 \fB\-\-source SOURCE\fR
 .RS
 Source IP address to bind to
+.RE
+
+\fB\-\-timeout TIMEOUT\fR
+.RS
+HTTP timeout in seconds. Default 10
+.RE
+
+\fB\-\-secure\fR
+.RS
+Use HTTPS instead of HTTP when communicating with speedtest.net operated servers
 .RE
 
 \fB\-\-version\fR

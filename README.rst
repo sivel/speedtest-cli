@@ -75,8 +75,8 @@ Usage
 
     $ speedtest-cli -h
     usage: speedtest-cli [-h] [--bytes] [--share] [--simple] [--csv]
-                         [--csv-delimiter CSV_DELIMITER] [--json] [--list]
-                         [--server SERVER] [--mini MINI] [--source SOURCE]
+                         [--csv-delimiter CSV_DELIMITER] [--csv-header] [--json]
+                         [--list] [--server SERVER] [--mini MINI] [--source SOURCE]
                          [--timeout TIMEOUT] [--secure] [--version]
 
     Command line interface for testing internet bandwidth using speedtest.net.
@@ -91,12 +91,15 @@ Usage
                             results image
       --simple              Suppress verbose output, only show basic information
       --csv                 Suppress verbose output, only show basic information
-                            in CSV format
+                            in CSV format. Speeds listed in bit/s and not affected
+                            by --bytes
       --csv-delimiter CSV_DELIMITER
                             Single character delimiter to use in CSV output.
                             Default ","
+      --csv-header          Print CSV headers
       --json                Suppress verbose output, only show basic information
-                            in JSON format
+                            in JSON format. Speeds listed in bit/s and not
+                            affected by --bytes
       --list                Display a list of speedtest.net servers sorted by
                             distance
       --server SERVER       Specify a server ID to test against
