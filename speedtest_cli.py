@@ -15,6 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import os
 import re
 import sys
@@ -579,6 +580,8 @@ def speedtest():
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
+    parser.add_argument('--json',
+                        help='Write results to specified JSON file')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
@@ -734,6 +737,13 @@ def speedtest():
         print_()
     print_('Upload: %0.2f M%s/s' %
            ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+
+    if args.json:
+        results = {"download": (dlspeed / 1000 / 1000) * args.units[1],
+                   "upload": (ulspeed / 1000 / 1000) * args.units[1]}
+        with open(args.json, 'w') as jsonfile:
+            json.dump(results, jsonfile)
+            print_("Wrote results to JSON file: %s" % args.json)
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
