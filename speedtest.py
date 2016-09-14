@@ -496,12 +496,9 @@ class SpeedtestResults(object):
     to get a share results image link.
     """
 
-    download = 0
-    upload = 0
-
     def __init__(self, download=0, upload=0, ping=0, server=None):
-        self._download = download
-        self._upload = upload
+        self.download = download
+        self.upload = upload
         self.ping = ping
         if server is None:
             self.server = {}
