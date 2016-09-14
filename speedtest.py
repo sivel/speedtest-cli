@@ -506,6 +506,8 @@ class SpeedtestResults(object):
             self.server = server
         self._share = None
         self.timestamp = datetime.datetime.utcnow().isoformat()
+        self.bytes_received = 0
+        self.bytes_sent = 0
 
     def __repr__(self):
         return repr(self.dict())
@@ -526,17 +528,24 @@ class SpeedtestResults(object):
         # We use a list instead of a dict because the API expects parameters
         # in a certain order
         api_data = [
-            'download=%s' % download,
-            'ping=%s' % ping,
-            'upload=%s' % upload,
-            'promo=',
-            'startmode=%s' % 'pingselect',
             'recommendedserverid=%s' % self.server['id'],
-            'accuracy=%s' % 1,
-            'serverid=%s' % self.server['id'],
+            'ping=%s' % ping,
+            'screenresolution=',
+            'promo=',
+            'download=%s' % download,
+            'screendpi=',
+            'upload=%s' % upload,
+            'testmethod=http',
             'hash=%s' % md5(('%s-%s-%s-%s' %
                              (ping, upload, download, '297aae72'))
-                            .encode()).hexdigest()]
+                            .encode()).hexdigest(),
+            'touchscreen=none',
+            'startmode=pingselect',
+            'accuracy=1',
+            'bytesreceived=%s' % self.bytes_received,
+            'bytessent=%s' % self.bytes_sent,
+            'serverid=%s' % self.server['id'],
+        ]
 
         headers = {'Referer': 'http://c.speedtest.net/flash/speedtest.swf'}
         request = build_request('://www.speedtest.net/api/api.php',
@@ -953,9 +962,9 @@ class Speedtest(object):
             cons_thread.join(timeout=0.1)
 
         stop = timeit.default_timer()
-
+        self.results.bytes_received = sum(finished)
         self.results.download = (
-            (sum(finished) / (stop - start)) * 8.0
+            (self.results.bytes_received / (stop - start)) * 8.0
         )
         if self.results.download > 100000:
             self.config['threads']['upload'] = 8
@@ -1020,9 +1029,9 @@ class Speedtest(object):
             cons_thread.join(timeout=0.1)
 
         stop = timeit.default_timer()
-
+        self.results.bytes_sent = sum(finished)
         self.results.upload = (
-            (sum(finished) / (stop - start)) * 8.0
+            (self.results.bytes_sent / (stop - start)) * 8.0
         )
         return self.results.upload
 
