@@ -308,7 +308,7 @@ def build_user_agent():
     return USER_AGENT
 
 
-def build_request(url, data=None, headers={}):
+def build_request(url, data=None, headers=None, bump=''):
     """Build a urllib2 request object
 
     This function automatically adds a User-Agent header to all requests
@@ -317,6 +317,9 @@ def build_request(url, data=None, headers={}):
 
     if not USER_AGENT:
         build_user_agent()
+
+    if not headers:
+        headers = {}
 
     if url[0] == ':':
         schemed_url = '%s%s' % (SCHEME, url)
@@ -329,10 +332,14 @@ def build_request(url, data=None, headers={}):
         delim = '?'
 
     # WHO YOU GONNA CALL? CACHE BUSTERS!
-    final_url = '%s%sx=%s' % (schemed_url, delim,
-                              int(timeit.time.time() * 1000))
+    final_url = '%s%sx=%s.%s' % (schemed_url, delim,
+                                 int(timeit.time.time() * 1000),
+                                 bump)
 
-    headers['User-Agent'] = USER_AGENT
+    headers.update({
+        'User-Agent': USER_AGENT,
+        'Cache-Control': 'no-cache',
+    })
 
     printer('%s %s' % (('GET', 'POST')[bool(data)], final_url),
             debug=True)
@@ -927,8 +934,8 @@ class Speedtest(object):
 
         request_count = len(urls)
         requests = []
-        for url in urls:
-            requests.append(build_request(url))
+        for i, url in enumerate(urls):
+            requests.append(build_request(url, bump=i))
 
         def producer(q, requests, request_count):
             for i, request in enumerate(requests):
@@ -983,7 +990,7 @@ class Speedtest(object):
         request_count = self.config['upload_max']
 
         requests = []
-        for size in sizes:
+        for i, size in enumerate(sizes):
             # We set ``0`` for ``start`` and handle setting the actual
             # ``start`` in ``HTTPUploader`` to get better measurements
             requests.append(
