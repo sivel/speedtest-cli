@@ -24,6 +24,7 @@ import socket
 import timeit
 import platform
 import threading
+import random
 
 __version__ = '0.3.4'
 
@@ -546,6 +547,12 @@ def version():
 
     raise SystemExit(__version__)
 
+def simplerandom():
+    print_('Ping: %0.2f ms' % random.uniform(0.0,10.0))
+    print_('Download: %0.2f Mbps' % random.uniform(1.0,100.0))
+    print_('Upload: %0.2f mbps' % random.uniform(1.0,100.0))
+
+    sys.exit(1)
 
 def speedtest():
     """Run the full speedtest.net test"""
@@ -590,6 +597,8 @@ def speedtest():
     parser.add_argument('--secure', action='store_true',
                         help='Use HTTPS instead of HTTP when communicating '
                              'with speedtest.net operated servers')
+    parser.add_argument('--simplerandom', action='store_true',
+                        help='Output random data to test')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
 
@@ -599,6 +608,10 @@ def speedtest():
     else:
         args = options
     del options
+
+    # Random
+    if args.simplerandom:
+        simplerandom()
 
     # Print the version and exit
     if args.version:
