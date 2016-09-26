@@ -262,6 +262,10 @@ class SpeedtestUploadTimeout(SpeedtestException):
     """
 
 
+class SpeedtestBestServerFailure(SpeedtestException):
+    """Unable to determine best server"""
+
+
 def bound_socket(*args, **kwargs):
     """Bind socket to a specified source IP address"""
 
@@ -912,7 +916,11 @@ class Speedtest(object):
             avg = round((sum(cum) / 6) * 1000.0, 3)
             results[avg] = server
 
-        fastest = sorted(results.keys())[0]
+        try:
+            fastest = sorted(results.keys())[0]
+        except IndexError:
+            raise SpeedtestBestServerFailure('Unable to connect to servers to '
+                                             'test latency.')
         best = results[fastest]
         best['latency'] = fastest
 
