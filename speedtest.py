@@ -756,6 +756,8 @@ class Speedtest(object):
 
                 uh.close()
 
+                printer(''.encode().join(serversxml), debug=True)
+
                 try:
                     try:
                         root = ET.fromstring(''.encode().join(serversxml))
