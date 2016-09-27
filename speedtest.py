@@ -891,6 +891,7 @@ class Speedtest(object):
             cum = []
             url = os.path.dirname(server['url'])
             urlparts = urlparse('%s/latency.txt' % url)
+            printer('%s %s/latency.txt' % ('GET', url), debug=True)
             for _ in range(0, 3):
                 try:
                     if urlparts[0] == 'https':
@@ -903,6 +904,8 @@ class Speedtest(object):
                     r = h.getresponse()
                     total = (timeit.default_timer() - start)
                 except HTTP_ERRORS:
+                    e = sys.exc_info()[1]
+                    printer('%r' % e, debug=True)
                     cum.append(3600)
                     continue
 
