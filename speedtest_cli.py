@@ -31,7 +31,7 @@ __version__ = '0.3.4'
 user_agent = None
 source = None
 shutdown_event = None
-scheme = 'http'
+scheme = 'https'
 
 
 # Used for bound_interface
@@ -587,8 +587,8 @@ def speedtest():
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=int,
                         help='HTTP timeout in seconds. Default 10')
-    parser.add_argument('--secure', action='store_true',
-                        help='Use HTTPS instead of HTTP when communicating '
+    parser.add_argument('--insecure', action='store_true',
+                        help='Use HTTP instead of HTTPS when communicating '
                              'with speedtest.net operated servers')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
@@ -614,8 +614,8 @@ def speedtest():
         source = args.source
         socket.socket = bound_socket
 
-    if args.secure:
-        scheme = 'https'
+    if args.insecure:
+        scheme = 'http'
 
     if not args.simple:
         print_('Retrieving speedtest.net configuration...')
