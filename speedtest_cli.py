@@ -583,6 +583,8 @@ def speedtest():
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
     parser.add_argument('--server', help='Specify a server ID to test against')
+    parser.add_argument('--country', type=str.lower,
+                        help='Select the best server matching country name')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=int,
@@ -627,7 +629,7 @@ def speedtest():
 
     if not args.simple:
         print_('Retrieving speedtest.net server list...')
-    if args.list or args.server:
+    if args.list or args.server or args.country:
         servers = closestServers(config['client'], True)
         if args.list:
             serverList = []
@@ -649,6 +651,16 @@ def speedtest():
                                         servers))
         except IndexError:
             print_('Invalid server ID')
+            sys.exit(1)
+    elif args.country:
+        try:
+            if not args.simple:
+                print_('Selecting best server in %s based on latency...' %
+                       args.country.capitalize())
+            best = getBestServer(filter(lambda x: x['country'].lower() ==
+                                        args.country, servers))
+        except IndexError:
+            print_('No server available for this country')
             sys.exit(1)
     elif args.mini:
         name, ext = os.path.splitext(args.mini)
