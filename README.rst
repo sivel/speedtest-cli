@@ -92,6 +92,7 @@ Usage
       --list             Display a list of speedtest.net servers sorted by
                          distance
       --server SERVER    Specify a server ID to test against
+      --country COUNTRY  Select the best server matching country name
       --mini MINI        URL of the Speedtest Mini server
       --source SOURCE    Source IP address to bind to
       --timeout TIMEOUT  HTTP timeout in seconds. Default 10
