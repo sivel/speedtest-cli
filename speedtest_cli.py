@@ -32,6 +32,7 @@ user_agent = None
 source = None
 shutdown_event = None
 scheme = 'http'
+json_available = True
 
 
 # Used for bound_interface
@@ -148,6 +149,11 @@ except ImportError:
 else:
     print_ = getattr(builtins, 'print')
     del builtins
+
+try:
+    import json
+except ImportError:
+    json_available = False
 
 
 class SpeedtestCliServerListError(Exception):
@@ -547,11 +553,18 @@ def version():
     raise SystemExit(__version__)
 
 
+def badArgument(reason):
+    """Show argument error and exit"""
+
+    raise SystemExit(reason)
+
+
 def speedtest():
     """Run the full speedtest.net test"""
 
-    global shutdown_event, source, scheme
+    global shutdown_event, source, scheme, json_available
     shutdown_event = threading.Event()
+    json_result = {}
 
     signal.signal(signal.SIGINT, ctrl_c)
 
@@ -592,6 +605,10 @@ def speedtest():
                              'with speedtest.net operated servers')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
+    if json_available:
+        parser.add_argument('--json', action='store_true',
+                            help='Output results in JSON format, '
+                                 'requires --simple')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
@@ -603,6 +620,9 @@ def speedtest():
     # Print the version and exit
     if args.version:
         version()
+
+    if json_available and args.json and not args.simple:
+        badArgument('error: --json requires --simple')
 
     socket.setdefaulttimeout(args.timeout)
 
@@ -706,7 +726,17 @@ def speedtest():
         print_(('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                '%(latency)s ms' % best).encode('utf-8', 'ignore'))
     else:
-        print_('Ping: %(latency)s ms' % best)
+        if json_available and args.json:
+            json_result['host'] = {
+                'sponsor': best['sponsor'],
+                'name': best['name']
+            }
+            json_result['ping'] = {
+                'value': best['latency'],
+                'units': 'ms'
+            }
+        else:
+            print_('Ping: %(latency)s ms' % best)
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -719,8 +749,15 @@ def speedtest():
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print_()
-    print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+
+    if json_available and args.json:
+        json_result['download'] = {
+            'value': ((dlspeed / 1000 / 1000) * args.units[1]),
+            'units': 'M%s/s' % args.units[0]
+        }
+    else:
+        print_('Download: %0.2f M%s/s' %
+               ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
@@ -732,8 +769,15 @@ def speedtest():
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if not args.simple:
         print_()
-    print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+
+    if json_available and args.json:
+        json_result['upload'] = {
+            'value': ((ulspeed / 1000 / 1000) * args.units[1]),
+            'units': 'M%s/s' % args.units[0]
+        }
+    else:
+        print_('Upload: %0.2f M%s/s' %
+               ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
@@ -783,6 +827,9 @@ def speedtest():
 
         print_('Share results: %s://www.speedtest.net/result/%s.png' %
                (scheme, resultid[0]))
+
+    if json_available and args.json:
+        print_(json.dumps(json_result))
 
 
 def main():
