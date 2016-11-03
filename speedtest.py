@@ -1285,7 +1285,9 @@ def shell():
         SCHEME = 'https'
 
     debug = getattr(args, 'debug', False)
-    if debug and debug != 'SUPPRESSHELP':
+    if debug == 'SUPPRESSHELP':
+        debug = False
+    if debug:
         DEBUG = True
 
     # Pre-cache the user agent string
