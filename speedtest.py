@@ -29,6 +29,13 @@ import platform
 import threading
 import xml.parsers.expat
 
+try:
+    import gzip
+    GZIP_BASE = gzip.GzipFile
+except ImportError:
+    gzip = None
+    GZIP_BASE = object
+
 __version__ = '1.0.0'
 
 
@@ -125,11 +132,13 @@ except ImportError:
 
 try:
     from cStringIO import StringIO
+    BytesIO = None
 except ImportError:
     try:
-        from io import StringIO
+        from io import StringIO, BytesIO
     except ImportError:
         from StringIO import StringIO
+        BytesIO = None
 
 try:
     import builtins
@@ -216,15 +225,19 @@ class SpeedtestException(Exception):
     """Base exception for this module"""
 
 
+class SpeedtestHTTPError(SpeedtestException):
+    """Base HTTP exception for this module"""
+
+
 class SpeedtestConfigError(SpeedtestException):
     """Configuration provided is invalid"""
 
 
-class ConfigRetrievalError(SpeedtestException):
+class ConfigRetrievalError(SpeedtestHTTPError):
     """Could not retrieve config.php"""
 
 
-class ServersRetrievalError(SpeedtestException):
+class ServersRetrievalError(SpeedtestHTTPError):
     """Could not retrieve speedtest-servers.php"""
 
 
@@ -264,6 +277,30 @@ class SpeedtestUploadTimeout(SpeedtestException):
 
 class SpeedtestBestServerFailure(SpeedtestException):
     """Unable to determine best server"""
+
+
+class GzipDecodedResponse(GZIP_BASE):
+    """A file-like object to decode a response encoded with the gzip
+    method, as described in RFC 1952.
+
+    Largely copied from ``xmlrpclib``/``xmlrpc.client`` and modified
+    to work for py2.4-py3
+    """
+    def __init__(self, response):
+        # response doesn't support tell() and read(), required by
+        # GzipFile
+        if not gzip:
+            raise SpeedtestHTTPError('HTTP response body is gzip encoded, '
+                                     'but gzip support is not available')
+        IO = BytesIO or StringIO
+        self.io = IO(response.read())
+        gzip.GzipFile.__init__(self, mode='rb', fileobj=self.io)
+
+    def close(self):
+        try:
+            gzip.GzipFile.close(self)
+        finally:
+            self.io.close()
 
 
 def bound_socket(*args, **kwargs):
@@ -363,6 +400,23 @@ def catch_request(request):
     except HTTP_ERRORS:
         e = sys.exc_info()[1]
         return None, e
+
+
+def get_response_stream(response):
+    """Helper function to return either a Gzip reader if
+    ``Content-Encoding`` is ``gzip`` otherwise the response itself
+
+    """
+
+    try:
+        getheader = response.headers.getheader
+    except AttributeError:
+        getheader = response.getheader
+
+    if getheader('content-encoding') == 'gzip':
+        return GzipDecodedResponse(response)
+
+    return response
 
 
 def get_attributes_by_tag_name(dom, tag_name):
@@ -639,20 +693,27 @@ class Speedtest(object):
         we are interested in
         """
 
-        request = build_request('://www.speedtest.net/speedtest-config.php')
+        headers = {}
+        if gzip:
+            headers['Accept-Encoding'] = 'gzip'
+        request = build_request('://www.speedtest.net/speedtest-config.php',
+                                headers=headers)
         uh, e = catch_request(request)
         if e:
             raise ConfigRetrievalError(e)
         configxml = []
 
+        stream = get_response_stream(uh)
+
         while 1:
-            configxml.append(uh.read(10240))
+            configxml.append(stream.read(10240))
             if len(configxml[-1]) == 0:
                 break
+        stream.close()
+        uh.close()
+
         if int(uh.code) != 200:
             return None
-
-        uh.close()
 
         printer(''.encode().join(configxml), debug=True)
 
@@ -734,27 +795,35 @@ class Speedtest(object):
             'http://c.speedtest.net/speedtest-servers.php',
         ]
 
+        headers = {}
+        if gzip:
+            headers['Accept-Encoding'] = 'gzip'
+
         errors = []
         for url in urls:
             try:
                 request = build_request('%s?threads=%s' %
                                         (url,
-                                         self.config['threads']['download']))
+                                         self.config['threads']['download']),
+                                        headers=headers)
                 uh, e = catch_request(request)
                 if e:
                     errors.append('%s' % e)
                     raise ServersRetrievalError
 
+                stream = get_response_stream(uh)
+
                 serversxml = []
                 while 1:
-                    serversxml.append(uh.read(10240))
+                    serversxml.append(stream.read(10240))
                     if len(serversxml[-1]) == 0:
                         break
-                if int(uh.code) != 200:
-                    uh.close()
-                    raise ServersRetrievalError
 
+                stream.close()
                 uh.close()
+
+                if int(uh.code) != 200:
+                    raise ServersRetrievalError
 
                 printer(''.encode().join(serversxml), debug=True)
 
