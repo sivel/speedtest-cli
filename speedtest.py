@@ -491,8 +491,12 @@ class HTTPUploaderData(object):
     def _create_data(self):
         chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         multiplier = int(round(int(self.length) / 36.0))
-        self._data = StringIO('content1=%s' %
-                              (chars * multiplier)[0:int(self.length) - 9])
+        IO = BytesIO or StringIO
+        self._data = IO(
+            ('content1=%s' %
+             (chars * multiplier)[0:int(self.length) - 9]
+             ).encode()
+        )
 
     @property
     def data(self):
@@ -503,7 +507,7 @@ class HTTPUploaderData(object):
     def read(self, n=10240):
         if ((timeit.default_timer() - self.start) <= self.timeout and
                 not SHUTDOWN_EVENT.isSet()):
-            chunk = self.data.read(n).encode()
+            chunk = self.data.read(n)
             self.total.append(len(chunk))
             return chunk
         else:
