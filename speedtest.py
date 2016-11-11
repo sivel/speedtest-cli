@@ -488,7 +488,7 @@ class HTTPUploaderData(object):
 
         self.total = [0]
 
-    def _create_data(self):
+    def create_data(self):
         chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         multiplier = int(round(int(self.length) / 36.0))
         IO = BytesIO or StringIO
@@ -501,7 +501,7 @@ class HTTPUploaderData(object):
     @property
     def data(self):
         if not self._data:
-            self._create_data()
+            self.create_data()
         return self._data
 
     def read(self, n=10240):
@@ -689,6 +689,7 @@ class Speedtest(object):
         self.servers = {}
         self.closest = []
         self.best = {}
+        self.lat_lon = ()
 
         self.results = SpeedtestResults()
 
@@ -1023,23 +1024,23 @@ class Speedtest(object):
         for i, url in enumerate(urls):
             requests.append(build_request(url, bump=i))
 
-        def producer(q, requests, request_count):
-            for i, request in enumerate(requests):
-                thread = HTTPDownloader(i, request, start,
+        def producer(q_, requests_, request_count_):
+            for j, request in enumerate(requests_):
+                thread = HTTPDownloader(j, request, start,
                                         self.config['length']['download'])
                 thread.start()
-                q.put(thread, True)
-                callback(i, request_count, start=True)
+                q_.put(thread, True)
+                callback(j, request_count_, start=True)
 
         finished = []
 
-        def consumer(q, request_count):
-            while len(finished) < request_count:
-                thread = q.get(True)
+        def consumer(q_, request_count_):
+            while len(finished) < request_count_:
+                thread = q_.get(True)
                 while thread.isAlive():
                     thread.join(timeout=0.1)
                 finished.append(sum(thread.result))
-                callback(thread.i, request_count, end=True)
+                callback(thread.i, request_count_, end=True)
 
         q = Queue(self.config['threads']['download'])
         prod_thread = threading.Thread(target=producer,
@@ -1080,7 +1081,7 @@ class Speedtest(object):
             # We set ``0`` for ``start`` and handle setting the actual
             # ``start`` in ``HTTPUploader`` to get better measurements
             data = HTTPUploaderData(size, 0, self.config['length']['upload'])
-            data._create_data()
+            data.create_data()
             requests.append(
                 (
                     build_request(self.best['url'], data),
@@ -1088,23 +1089,23 @@ class Speedtest(object):
                 )
             )
 
-        def producer(q, requests, request_count):
-            for i, request in enumerate(requests[:request_count]):
-                thread = HTTPUploader(i, request[0], start, request[1],
+        def producer(q_, requests_, request_count_):
+            for j, request in enumerate(requests_[:request_count_]):
+                thread = HTTPUploader(j, request[0], start, request[1],
                                       self.config['length']['upload'])
                 thread.start()
-                q.put(thread, True)
-                callback(i, request_count, start=True)
+                q_.put(thread, True)
+                callback(j, request_count_, start=True)
 
         finished = []
 
-        def consumer(q, request_count):
-            while len(finished) < request_count:
-                thread = q.get(True)
+        def consumer(q_, request_count_):
+            while len(finished) < request_count_:
+                thread = q_.get(True)
                 while thread.isAlive():
                     thread.join(timeout=0.1)
                 finished.append(thread.result)
-                callback(thread.i, request_count, end=True)
+                callback(thread.i, request_count_, end=True)
 
         q = Queue(self.config['threads']['upload'])
         prod_thread = threading.Thread(target=producer,
