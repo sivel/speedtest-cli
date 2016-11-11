@@ -15,18 +15,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-import re
 import csv
-import sys
-import math
+import datetime
 import errno
+import math
+import os
+import platform
+import re
 import signal
 import socket
-import timeit
-import datetime
-import platform
+import sys
 import threading
+import timeit
 import xml.parsers.expat
 
 try:
@@ -779,7 +779,7 @@ class Speedtest(object):
 
         return self.config
 
-    def get_servers(self, servers=[]):
+    def get_servers(self, servers=()):
         """Retrieve a the list of speedtest.net servers, optionally filtered
         to servers matching those specified in the ``servers`` argument
         """
@@ -951,7 +951,7 @@ class Speedtest(object):
         printer(self.closest, debug=True)
         return self.closest
 
-    def get_best_server(self, servers=[]):
+    def get_best_server(self, servers=()):
         """Perform a speedtest.net "ping" to determine which speedtest.net
         server has the lowest latency
         """
