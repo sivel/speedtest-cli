@@ -779,10 +779,13 @@ class Speedtest(object):
 
         return self.config
 
-    def get_servers(self, servers=[]):
+    def get_servers(self, servers=None):
         """Retrieve a the list of speedtest.net servers, optionally filtered
         to servers matching those specified in the ``servers`` argument
         """
+        if servers is None:
+            servers = []
+
         self.servers.clear()
 
         for i, s in enumerate(servers):
@@ -951,7 +954,7 @@ class Speedtest(object):
         printer(self.closest, debug=True)
         return self.closest
 
-    def get_best_server(self, servers=[]):
+    def get_best_server(self, servers=None):
         """Perform a speedtest.net "ping" to determine which speedtest.net
         server has the lowest latency
         """
