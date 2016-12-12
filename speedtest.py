@@ -1082,11 +1082,13 @@ class Speedtest(object):
         for i, size in enumerate(sizes):
             # We set ``0`` for ``start`` and handle setting the actual
             # ``start`` in ``HTTPUploader`` to get better measurements
-            data = HTTPUploaderData(size, 0, self.config['length']['upload'])
-            data._create_data()
             requests.append(
                 (
-                    build_request(self.best['url'], data),
+                    build_request(
+                        self.best['url'],
+                        HTTPUploaderData(size, 0,
+                                         self.config['length']['upload'])
+                    ),
                     size
                 )
             )
