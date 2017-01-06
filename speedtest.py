@@ -225,6 +225,10 @@ class SpeedtestException(Exception):
     """Base exception for this module"""
 
 
+class SpeedtestCLIError(SpeedtestException):
+    """Generic exception for raising errors during CLI operation"""
+
+
 class SpeedtestHTTPError(SpeedtestException):
     """Base HTTP exception for this module"""
 
@@ -301,6 +305,13 @@ class GzipDecodedResponse(GZIP_BASE):
             gzip.GzipFile.close(self)
         finally:
             self.io.close()
+
+
+def get_exception():
+    """Helper function to work with py2.4-py3 for getting the current
+    exception in a try/except block
+    """
+    return sys.exc_info()[1]
 
 
 def bound_socket(*args, **kwargs):
@@ -398,7 +409,7 @@ def catch_request(request):
         uh = urlopen(request)
         return uh, False
     except HTTP_ERRORS:
-        e = sys.exc_info()[1]
+        e = get_exception()
         return None, e
 
 
@@ -982,7 +993,7 @@ class Speedtest(object):
                     r = h.getresponse()
                     total = (timeit.default_timer() - start)
                 except HTTP_ERRORS:
-                    e = sys.exc_info()[1]
+                    e = get_exception()
                     printer('%r' % e, debug=True)
                     cum.append(3600)
                     continue
@@ -1312,14 +1323,14 @@ def shell():
         speedtest = Speedtest()
     except ConfigRetrievalError:
         printer('Cannot retrieve speedtest configuration')
-        sys.exit(1)
+        raise
 
     if args.list:
         try:
             speedtest.get_servers()
         except ServersRetrievalError:
             print_('Cannot retrieve speedtest server list')
-            sys.exit(1)
+            raise
 
         for _, servers in sorted(speedtest.servers.items()):
             for server in servers:
@@ -1328,7 +1339,7 @@ def shell():
                 try:
                     print_(line)
                 except IOError:
-                    e = sys.exc_info()[1]
+                    e = get_exception()
                     if e.errno != errno.EPIPE:
                         raise
         sys.exit(0)
@@ -1346,14 +1357,13 @@ def shell():
         try:
             speedtest.get_servers(servers)
         except NoMatchedServers:
-            print_('No matched servers: %s' % args.server)
-            sys.exit(1)
+            raise SpeedtestCLIError('No matched servers: %s' % args.server)
         except ServersRetrievalError:
             print_('Cannot retrieve speedtest server list')
-            sys.exit(1)
+            raise
         except InvalidServerIDType:
-            print_('%s is an invalid server type, must be int' % args.server)
-            sys.exit(1)
+            raise SpeedtestCLIError('%s is an invalid server type, must '
+                                    'be an int' % args.server)
 
         printer('Selecting best server based on ping...', quiet)
         speedtest.get_best_server()
@@ -1403,7 +1413,7 @@ def main():
     except KeyboardInterrupt:
         print_('\nCancelling...')
     except (SpeedtestException, SystemExit):
-        e = sys.exc_info()[1]
+        e = get_exception()
         if getattr(e, 'code', 1) != 0:
             raise SystemExit('ERROR: %s' % e)
 
