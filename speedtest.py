@@ -297,7 +297,13 @@ class GzipDecodedResponse(GZIP_BASE):
             raise SpeedtestHTTPError('HTTP response body is gzip encoded, '
                                      'but gzip support is not available')
         IO = BytesIO or StringIO
-        self.io = IO(response.read())
+        self.io = IO()
+        while 1:
+            chunk = response.read(1024)
+            if len(chunk) == 0:
+                break
+            self.io.write(chunk)
+        self.io.seek(0)
         gzip.GzipFile.__init__(self, mode='rb', fileobj=self.io)
 
     def close(self):
@@ -721,7 +727,7 @@ class Speedtest(object):
         stream = get_response_stream(uh)
 
         while 1:
-            configxml.append(stream.read(10240))
+            configxml.append(stream.read(1024))
             if len(configxml[-1]) == 0:
                 break
         stream.close()
@@ -833,7 +839,7 @@ class Speedtest(object):
 
                 serversxml = []
                 while 1:
-                    serversxml.append(stream.read(10240))
+                    serversxml.append(stream.read(1024))
                     if len(serversxml[-1]) == 0:
                         break
 
@@ -1321,16 +1327,16 @@ def shell():
     printer('Retrieving speedtest.net configuration...', quiet)
     try:
         speedtest = Speedtest()
-    except ConfigRetrievalError:
+    except (ConfigRetrievalError, HTTP_ERRORS):
         printer('Cannot retrieve speedtest configuration')
-        raise
+        raise SpeedtestCLIError(get_exception())
 
     if args.list:
         try:
             speedtest.get_servers()
-        except ServersRetrievalError:
+        except (ServersRetrievalError, HTTP_ERRORS):
             print_('Cannot retrieve speedtest server list')
-            raise
+            raise SpeedtestCLIError(get_exception())
 
         for _, servers in sorted(speedtest.servers.items()):
             for server in servers:
@@ -1358,9 +1364,9 @@ def shell():
             speedtest.get_servers(servers)
         except NoMatchedServers:
             raise SpeedtestCLIError('No matched servers: %s' % args.server)
-        except ServersRetrievalError:
+        except (ServersRetrievalError, HTTP_ERRORS):
             print_('Cannot retrieve speedtest server list')
-            raise
+            raise SpeedtestCLIError(get_exception())
         except InvalidServerIDType:
             raise SpeedtestCLIError('%s is an invalid server type, must '
                                     'be an int' % args.server)
