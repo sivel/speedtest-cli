@@ -1326,7 +1326,7 @@ def shell():
                 line = ('%(id)5s) %(sponsor)s (%(name)s, %(country)s) '
                         '[%(d)0.2f km]' % server)
                 try:
-                    print_(line)
+                    print_(line.encode('utf-8'))
                 except IOError:
                     e = sys.exc_info()[1]
                     if e.errno != errno.EPIPE:
