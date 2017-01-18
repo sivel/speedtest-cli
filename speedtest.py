@@ -36,7 +36,7 @@ except ImportError:
     gzip = None
     GZIP_BASE = object
 
-__version__ = '1.0.2'
+__version__ = '1.0.3a'
 
 
 class FakeShutdownEvent(object):
@@ -667,7 +667,9 @@ class SpeedtestResults(object):
             'upload': self.upload,
             'ping': self.ping,
             'server': self.server,
-            'timestamp': self.timestamp
+            'timestamp': self.timestamp,
+            'bytes_sent': self.bytes_sent,
+            'bytes_received': self.bytes_received
         }
 
     def csv(self, delimiter=','):
