@@ -74,6 +74,7 @@ Usage
 You can use in another script via the following:
 
 ::
+
     DownloadParsed = re.compile(r"Download: ([\d.]+) .bit")
     UploadParsed = re.compile(r"Upload: ([\d.]+) .bit")
     PingParsed = re.compile(r"([\d.]+) ms")
