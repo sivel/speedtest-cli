@@ -83,6 +83,8 @@ You can use in another script via the following:
     upload = UploadParsed.search(speedtest_result).group(1)
     ping = PingParsed.search(speedtest_result).group(1)
     print("Download Speed: " + download + " mbps\n" + "Upload Speed: " + upload + " mbps\n" + "Ping: " + ping + " ms")
+    
+You can use in terminal via the following:
 
 ::
 
