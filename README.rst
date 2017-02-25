@@ -71,6 +71,18 @@ or
 Usage
 -----
 
+You can use in another script via the following:
+
+::
+    DownloadParsed = re.compile(r"Download: ([\d.]+) .bit")
+    UploadParsed = re.compile(r"Upload: ([\d.]+) .bit")
+    PingParsed = re.compile(r"([\d.]+) ms")
+    speedtest_result = str(subprocess.check_output(['speedtest-cli'], stderr=subprocess.STDOUT))
+    download = DownloadParsed.search(speedtest_result).group(1)
+    upload = UploadParsed.search(speedtest_result).group(1)
+    ping = PingParsed.search(speedtest_result).group(1)
+    print("Download Speed: " + download + " mbps\n" + "Upload Speed: " + upload + " mbps\n" + "Ping: " + ping + " ms")
+
 ::
 
     $ speedtest-cli -h
