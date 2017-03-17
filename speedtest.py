@@ -148,8 +148,7 @@ except ImportError:
 
         Taken from https://pypi.python.org/pypi/six/
 
-        Modified to set encoding to UTF-8 if not set when stdout may not be
-        a tty such as when piping to head
+        Modified to set encoding to UTF-8 always
         """
         fp = kwargs.pop("file", sys.stdout)
         if fp is None:
@@ -159,7 +158,7 @@ except ImportError:
             if not isinstance(data, basestring):
                 data = str(data)
             # If the file has an encoding, encode unicode with it.
-            encoding = fp.encoding or 'UTF-8'  # Diverges for notty
+            encoding = 'UTF-8'  # Always trust UTF-8 for output
             if (isinstance(fp, file) and
                     isinstance(data, unicode) and
                     encoding is not None):
