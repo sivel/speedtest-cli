@@ -669,7 +669,8 @@ class SpeedtestResults(object):
             'server': self.server,
             'timestamp': self.timestamp,
             'bytes_sent': self.bytes_sent,
-            'bytes_received': self.bytes_received
+            'bytes_received': self.bytes_received,
+            'share': self._share,
         }
 
     def csv(self, delimiter=','):
@@ -1199,7 +1200,7 @@ def parse_args():
                              'output from --json or --csv')
     parser.add_argument('--share', action='store_true',
                         help='Generate and provide a URL to the speedtest.net '
-                             'share results image')
+                             'share results image, not displayed with --csv')
     parser.add_argument('--simple', action='store_true', default=False,
                         help='Suppress verbose output, only show basic '
                              'information')
@@ -1320,6 +1321,11 @@ def shell():
     else:
         quiet = False
 
+    if args.csv or args.json:
+        machine_format = True
+    else:
+        machine_format = False
+
     # Don't set a callback if we are running quietly
     if quiet or debug:
         callback = do_nothing
@@ -1409,10 +1415,12 @@ def shell():
     elif args.csv:
         print_(results.csv(delimiter=args.csv_delimiter))
     elif args.json:
+        if args.share:
+            results.share()
         print_(results.json())
 
-    if args.share:
-        printer('Share results: %s' % results.share(), quiet)
+    if args.share and not machine_format:
+        printer('Share results: %s' % results.share())
 
 
 def main():
