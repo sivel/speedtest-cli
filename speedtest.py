@@ -1226,6 +1226,10 @@ def parse_args():
     parser.add_argument('--secure', action='store_true',
                         help='Use HTTPS instead of HTTP when communicating '
                              'with speedtest.net operated servers')
+    parser.add_argument('--no-download', action='store_true', default=False,
+                        help='Skip the download test')
+    parser.add_argument('--no-upload', action='store_true', default=False,
+                        help='Skip the upload test')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
     parser.add_argument('--debug', action='store_true',
@@ -1381,21 +1385,23 @@ def shell():
     printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
             '%(latency)s ms' % results.server, quiet)
 
-    printer('Testing download speed', quiet,
-            end=('', '\n')[bool(debug)])
-    speedtest.download(callback=callback)
-    printer('Download: %0.2f M%s/s' %
-            ((results.download / 1000.0 / 1000.0) / args.units[1],
-             args.units[0]),
-            quiet)
+    if not args.no_download:
+        printer('Testing download speed', quiet,
+                end=('', '\n')[bool(debug)])
+        speedtest.download(callback=callback)
+        printer('Download: %0.2f M%s/s' %
+                ((results.download / 1000.0 / 1000.0) / args.units[1],
+                 args.units[0]),
+                quiet)
 
-    printer('Testing upload speed', quiet,
-            end=('', '\n')[bool(debug)])
-    speedtest.upload(callback=callback)
-    printer('Upload: %0.2f M%s/s' %
-            ((results.upload / 1000.0 / 1000.0) / args.units[1],
-             args.units[0]),
-            quiet)
+    if not args.no_upload:
+        printer('Testing upload speed', quiet,
+                end=('', '\n')[bool(debug)])
+        speedtest.upload(callback=callback)
+        printer('Upload: %0.2f M%s/s' %
+                ((results.upload / 1000.0 / 1000.0) / args.units[1],
+                 args.units[0]),
+                quiet)
 
     if args.simple:
         print_('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
