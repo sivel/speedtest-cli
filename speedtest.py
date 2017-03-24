@@ -1192,6 +1192,12 @@ def parse_args():
         parser.add_argument = parser.add_option
     except AttributeError:
         pass
+    parser.add_argument('--no-download', dest='download', default=True,
+                        action='store_const', const=False,
+                        help='Do not perform download test')
+    parser.add_argument('--no-upload', dest='upload', default=True,
+                        action='store_const', const=False,
+                        help='Do not perform upload test')
     parser.add_argument('--bytes', dest='units', action='store_const',
                         const=('byte', 8), default=('bit', 1),
                         help='Display values in bytes instead of bits. Does '
@@ -1288,11 +1294,15 @@ def shell():
     if args.version:
         version()
 
+    if not args.download and not args.upload:
+        raise SpeedtestCLIError('Cannot supply both --no-download and '
+                                '--no-upload')
+
     if args.csv_header:
         csv_header()
 
     if len(args.csv_delimiter) != 1:
-        raise SystemExit('--csv-delimiter must be a single character')
+        raise SpeedtestCLIError('--csv-delimiter must be a single character')
 
     validate_optional_args(args)
 
@@ -1388,21 +1398,27 @@ def shell():
     printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
             '%(latency)s ms' % results.server, quiet)
 
-    printer('Testing download speed', quiet,
-            end=('', '\n')[bool(debug)])
-    speedtest.download(callback=callback)
-    printer('Download: %0.2f M%s/s' %
-            ((results.download / 1000.0 / 1000.0) / args.units[1],
-             args.units[0]),
-            quiet)
+    if args.download:
+        printer('Testing download speed', quiet,
+                end=('', '\n')[bool(debug)])
+        speedtest.download(callback=callback)
+        printer('Download: %0.2f M%s/s' %
+                ((results.download / 1000.0 / 1000.0) / args.units[1],
+                 args.units[0]),
+                quiet)
+    else:
+        printer('Skipping download test')
 
-    printer('Testing upload speed', quiet,
-            end=('', '\n')[bool(debug)])
-    speedtest.upload(callback=callback)
-    printer('Upload: %0.2f M%s/s' %
-            ((results.upload / 1000.0 / 1000.0) / args.units[1],
-             args.units[0]),
-            quiet)
+    if args.upload:
+        printer('Testing upload speed', quiet,
+                end=('', '\n')[bool(debug)])
+        speedtest.upload(callback=callback)
+        printer('Upload: %0.2f M%s/s' %
+                ((results.upload / 1000.0 / 1000.0) / args.units[1],
+                 args.units[0]),
+                quiet)
+    else:
+        printer('Skipping upload test')
 
     if args.simple:
         print_('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
