@@ -114,6 +114,13 @@ Usage
                             speedtest.net operated servers
       --version             Show the version number and exit
 
+
+Python API
+----------
+
+See the `wiki <https://github.com/sivel/speedtest-cli/wiki>`_.
+
+
 Inconsistency
 -------------
 
