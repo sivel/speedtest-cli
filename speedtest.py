@@ -135,7 +135,7 @@ try:
     BytesIO = None
 except ImportError:
     try:
-        from io import StringIO, BytesIO
+        from io import StringIO, BytesIO, TextIOWrapper, FileIO
     except ImportError:
         from StringIO import StringIO
         BytesIO = None
@@ -158,7 +158,7 @@ except ImportError:
             if not isinstance(data, basestring):
                 data = str(data)
             # If the file has an encoding, encode unicode with it.
-            encoding = 'UTF-8'  # Always trust UTF-8 for output
+            encoding = 'utf8'  # Always trust UTF-8 for output
             if (isinstance(fp, file) and
                     isinstance(data, unicode) and
                     encoding is not None):
@@ -203,8 +203,26 @@ except ImportError:
             write(arg)
         write(end)
 else:
-    print_ = getattr(builtins, 'print')
-    del builtins
+    class _Py3Utf8Stdout(TextIOWrapper):
+        def __init__(self, **kwargs):
+            buf = FileIO(sys.stdout.fileno(), 'w')
+            super(_Py3Utf8Stdout, self).__init__(
+                buf,
+                encoding='utf8',
+                errors='strict'
+            )
+
+        def write(self, s):
+            super(_Py3Utf8Stdout, self).write(s)
+            self.flush()
+
+    _py3_print = getattr(builtins, 'print')
+    _py3_utf8_stdout = _Py3Utf8Stdout()
+
+    def print_(*args, **kwargs):
+        kwargs['file'] = _py3_utf8_stdout
+        _py3_print(*args, **kwargs)
+
 
 # Exception "constants" to support Python 2 through Python 3
 try:
