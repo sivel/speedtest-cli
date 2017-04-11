@@ -141,8 +141,30 @@ except ImportError:
         BytesIO = None
 
 try:
-    import builtins
+    import __builtin__
 except ImportError:
+    import builtins
+
+    class _Py3Utf8Stdout(TextIOWrapper):
+        def __init__(self, **kwargs):
+            buf = FileIO(sys.stdout.fileno(), 'w')
+            super(_Py3Utf8Stdout, self).__init__(
+                buf,
+                encoding='utf8',
+                errors='strict'
+            )
+
+        def write(self, s):
+            super(_Py3Utf8Stdout, self).write(s)
+            self.flush()
+
+    _py3_print = getattr(builtins, 'print')
+    _py3_utf8_stdout = _Py3Utf8Stdout()
+
+    def print_(*args, **kwargs):
+        kwargs['file'] = _py3_utf8_stdout
+        _py3_print(*args, **kwargs)
+else:
     def print_(*args, **kwargs):
         """The new-style print function for Python 2.4 and 2.5.
 
@@ -202,26 +224,6 @@ except ImportError:
                 write(sep)
             write(arg)
         write(end)
-else:
-    class _Py3Utf8Stdout(TextIOWrapper):
-        def __init__(self, **kwargs):
-            buf = FileIO(sys.stdout.fileno(), 'w')
-            super(_Py3Utf8Stdout, self).__init__(
-                buf,
-                encoding='utf8',
-                errors='strict'
-            )
-
-        def write(self, s):
-            super(_Py3Utf8Stdout, self).write(s)
-            self.flush()
-
-    _py3_print = getattr(builtins, 'print')
-    _py3_utf8_stdout = _Py3Utf8Stdout()
-
-    def print_(*args, **kwargs):
-        kwargs['file'] = _py3_utf8_stdout
-        _py3_print(*args, **kwargs)
 
 
 # Exception "constants" to support Python 2 through Python 3
