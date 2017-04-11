@@ -165,6 +165,8 @@ except ImportError:
         kwargs['file'] = _py3_utf8_stdout
         _py3_print(*args, **kwargs)
 else:
+    del __builtin__
+
     def print_(*args, **kwargs):
         """The new-style print function for Python 2.4 and 2.5.
 
