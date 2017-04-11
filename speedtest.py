@@ -131,11 +131,11 @@ except ImportError:
     PARSER_TYPE_STR = 'string'
 
 try:
-    from cStringIO import StringIO
-    BytesIO = None
+    from io import StringIO, BytesIO, TextIOWrapper, FileIO
 except ImportError:
     try:
-        from io import StringIO, BytesIO, TextIOWrapper, FileIO
+        from cStringIO import StringIO
+        BytesIO = None
     except ImportError:
         from StringIO import StringIO
         BytesIO = None
