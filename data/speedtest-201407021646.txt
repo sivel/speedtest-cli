@@ -1,0 +1,20 @@
+Location: Vodafone, Utrecht
+Ping: 19.709 ms
+Download: 7.95 Mbits/s
+Upload: 6.09 Mbits/s
+
+Location: Luna.nl, Rotterdam
+Ping: 21.617 ms
+Download: 18.73 Mbits/s
+Upload: 4.52 Mbits/s
+
+Location: LeaseWeb, Haarlem
+Ping: 21.14 ms
+Download: 13.48 Mbits/s
+Upload: 6.66 Mbits/s
+
+Location: KPN, Amsterdam
+Ping: 30.041 ms
+Download: 15.59 Mbits/s
+Upload: 6.53 Mbits/s
+
