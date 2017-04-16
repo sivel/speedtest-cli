@@ -53,6 +53,15 @@ or
     git clone https://github.com/sivel/speedtest-cli.git
     python speedtest-cli/setup.py install
 
+
+Debian testing / Ubuntu 14.10
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    apt-get install speedtest-cli
+
+
 Just download (Like the way it used to be)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
