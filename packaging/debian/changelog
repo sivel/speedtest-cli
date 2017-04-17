@@ -1,0 +1,5 @@
+speedtest-cli (0.2-1~getdeb1) precise; urgency=low
+
+  * Initial release
+
+ -- Christoph Korn <christoph.korn@getdeb.net>  Tue, 17 Sep 2013 20:56:23 +0200
