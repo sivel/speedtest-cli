@@ -52,6 +52,9 @@ or
 
     git clone https://github.com/sivel/speedtest-cli.git
     python speedtest-cli/setup.py install
+    
+    # if you get error try this:
+    sudo apt-get install python-pip
 
 Just download (Like the way it used to be)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
