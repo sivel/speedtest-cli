@@ -36,7 +36,7 @@ except ImportError:
     gzip = None
     GZIP_BASE = object
 
-__version__ = '1.0.4'
+__version__ = '1.0.5a'
 
 
 class FakeShutdownEvent(object):
@@ -131,21 +131,25 @@ except ImportError:
     PARSER_TYPE_STR = 'string'
 
 try:
-    from io import StringIO, BytesIO, TextIOWrapper, FileIO
+    from cStringIO import StringIO
+    BytesIO = None
 except ImportError:
     try:
-        from cStringIO import StringIO
-        BytesIO = None
-    except ImportError:
         from StringIO import StringIO
         BytesIO = None
+    except ImportError:
+        from io import StringIO, BytesIO
 
 try:
     import __builtin__
 except ImportError:
     import builtins
+    from io import TextIOWrapper, FileIO
 
     class _Py3Utf8Stdout(TextIOWrapper):
+        """UTF-8 encoded wrapper around stdout for py3, to override
+        ASCII stdout
+        """
         def __init__(self, **kwargs):
             buf = FileIO(sys.stdout.fileno(), 'w')
             super(_Py3Utf8Stdout, self).__init__(
@@ -161,11 +165,23 @@ except ImportError:
     _py3_print = getattr(builtins, 'print')
     _py3_utf8_stdout = _Py3Utf8Stdout()
 
+    def to_utf8(v):
+        """No-op encode to utf-8 for py3"""
+        return v
+
     def print_(*args, **kwargs):
+        """Wrapper function for py3 to print, with a utf-8 encoded stdout"""
         kwargs['file'] = _py3_utf8_stdout
         _py3_print(*args, **kwargs)
 else:
     del __builtin__
+
+    def to_utf8(v):
+        """Encode value to utf-8 if possible for py2"""
+        try:
+            return v.encode('utf8', 'strict')
+        except AttributeError:
+            return v
 
     def print_(*args, **kwargs):
         """The new-style print function for Python 2.4 and 2.5.
@@ -700,10 +716,11 @@ class SpeedtestResults(object):
         data = self.dict()
         out = StringIO()
         writer = csv.writer(out, delimiter=delimiter, lineterminator='')
-        writer.writerow([data['server']['id'], data['server']['sponsor'],
-                         data['server']['name'], data['timestamp'],
-                         data['server']['d'], data['ping'], data['download'],
-                         data['upload']])
+        row = [data['server']['id'], data['server']['sponsor'],
+               data['server']['name'], data['timestamp'],
+               data['server']['d'], data['ping'], data['download'],
+               data['upload']]
+        writer.writerow([to_utf8(v) for v in row])
         return out.getvalue()
 
     def json(self, pretty=False):
@@ -1473,5 +1490,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# vim:ts=4:sw=4:expandtab
