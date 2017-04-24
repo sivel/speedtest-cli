@@ -36,7 +36,7 @@ except ImportError:
     gzip = None
     GZIP_BASE = object
 
-__version__ = '1.0.5'
+__version__ = '1.0.6a'
 
 
 class FakeShutdownEvent(object):
@@ -628,7 +628,7 @@ class SpeedtestResults(object):
         else:
             self.server = server
         self._share = None
-        self.timestamp = datetime.datetime.utcnow().isoformat()
+        self.timestamp = '%sZ' % datetime.datetime.utcnow().isoformat()
         self.bytes_received = 0
         self.bytes_sent = 0
 
