@@ -565,7 +565,7 @@ class HTTPUploaderData(object):
             self.total.append(len(chunk))
             return chunk
         else:
-            raise SpeedtestUploadTimeout
+            raise SpeedtestUploadTimeout()
 
     def __len__(self):
         return self.length
@@ -874,7 +874,7 @@ class Speedtest(object):
                 uh, e = catch_request(request)
                 if e:
                     errors.append('%s' % e)
-                    raise ServersRetrievalError
+                    raise ServersRetrievalError()
 
                 stream = get_response_stream(uh)
 
@@ -888,7 +888,7 @@ class Speedtest(object):
                 uh.close()
 
                 if int(uh.code) != 200:
-                    raise ServersRetrievalError
+                    raise ServersRetrievalError()
 
                 printer(''.encode().join(serversxml), debug=True)
 
@@ -900,7 +900,7 @@ class Speedtest(object):
                         root = DOM.parseString(''.join(serversxml))
                         elements = root.getElementsByTagName('server')
                 except (SyntaxError, xml.parsers.expat.ExpatError):
-                    raise ServersRetrievalError
+                    raise ServersRetrievalError()
 
                 for server in elements:
                     try:
@@ -936,7 +936,7 @@ class Speedtest(object):
                 continue
 
         if servers and not self.servers:
-            raise NoMatchedServers
+            raise NoMatchedServers()
 
         return self.servers
 
