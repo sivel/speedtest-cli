@@ -594,16 +594,16 @@ class HTTPUploader(threading.Thread):
                     # PY24 expects a string or buffer
                     # This also causes issues with Ctrl-C, but we will concede
                     # for the moment that Ctrl-C on PY24 isn't immediate
-                    request = build_request(request.get_full_url(),
+                    request = build_request(self.request.get_full_url(),
                                             data=request.data.read(self.size))
                     f = urlopen(request)
                 f.read(11)
                 f.close()
-                self.result = sum(request.data.total)
+                self.result = sum(self.request.data.total)
             else:
                 self.result = 0
         except (IOError, SpeedtestUploadTimeout):
-            self.result = sum(request.data.total)
+            self.result = sum(self.request.data.total)
 
 
 class SpeedtestResults(object):
