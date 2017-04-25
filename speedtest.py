@@ -542,7 +542,7 @@ class HTTPUploaderData(object):
 
         self.total = [0]
 
-    def _create_data(self):
+    def pre_allocate(self):
         chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         multiplier = int(round(int(self.length) / 36.0))
         IO = BytesIO or StringIO
@@ -555,7 +555,7 @@ class HTTPUploaderData(object):
     @property
     def data(self):
         if not self._data:
-            self._create_data()
+            self.pre_allocate()
         return self._data
 
     def read(self, n=10240):
@@ -1130,7 +1130,7 @@ class Speedtest(object):
             self.config['threads']['upload'] = 8
         return self.results.download
 
-    def upload(self, callback=do_nothing):
+    def upload(self, callback=do_nothing, pre_allocate=True):
         """Test upload speed against speedtest.net"""
 
         sizes = []
@@ -1146,13 +1146,12 @@ class Speedtest(object):
         for i, size in enumerate(sizes):
             # We set ``0`` for ``start`` and handle setting the actual
             # ``start`` in ``HTTPUploader`` to get better measurements
+            data = HTTPUploaderData(size, 0, self.config['length']['upload'])
+            if pre_allocate:
+                data.pre_allocate()
             requests.append(
                 (
-                    build_request(
-                        self.best['url'],
-                        HTTPUploaderData(size, 0,
-                                         self.config['length']['upload'])
-                    ),
+                    build_request(self.best['url'], data),
                     size
                 )
             )
@@ -1279,6 +1278,13 @@ def parse_args():
     parser.add_argument('--secure', action='store_true',
                         help='Use HTTPS instead of HTTP when communicating '
                              'with speedtest.net operated servers')
+    parser.add_argument('--no-pre-allocate', dest='pre_allocate',
+                        action='store_const', default=True, const=False,
+                        help='Do not pre allocate upload data. Pre allocation '
+                             'is enabled by default to improve upload '
+                             'performance. To support systems with '
+                             'insufficient memory, use this option to avoid a '
+                             'MemoryError')
     parser.add_argument('--version', action='store_true',
                         help='Show the version number and exit')
     parser.add_argument('--debug', action='store_true',
@@ -1457,7 +1463,7 @@ def shell():
     if args.upload:
         printer('Testing upload speed', quiet,
                 end=('', '\n')[bool(debug)])
-        speedtest.upload(callback=callback)
+        speedtest.upload(callback=callback, pre_allocate=args.pre_allocate)
         printer('Upload: %0.2f M%s/s' %
                 ((results.upload / 1000.0 / 1000.0) / args.units[1],
                  args.units[0]),

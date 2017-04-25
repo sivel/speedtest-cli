@@ -78,7 +78,7 @@ Usage
                          [--simple] [--csv] [--csv-delimiter CSV_DELIMITER]
                          [--csv-header] [--json] [--list] [--server SERVER]
                          [--mini MINI] [--source SOURCE] [--timeout TIMEOUT]
-                         [--secure] [--version]
+                         [--secure] [--no-pre-allocate] [--version]
 
     Command line interface for testing internet bandwidth using speedtest.net.
     --------------------------------------------------------------------------
@@ -112,6 +112,10 @@ Usage
       --timeout TIMEOUT     HTTP timeout in seconds. Default 10
       --secure              Use HTTPS instead of HTTP when communicating with
                             speedtest.net operated servers
+      --no-pre-allocate     Do not pre allocate upload data. Pre allocation is
+                            enabled by default to improve upload performance. To
+                            support systems with insufficient memory, use this
+                            option to avoid a MemoryError
       --version             Show the version number and exit
 
 
