@@ -808,8 +808,12 @@ class Speedtest(object):
                          3000, 3500, 4000]
         }
 
+        size_count = len(sizes['upload'])
+
+        upload_count = int(math.ceil(upload_max / size_count))
+
         counts = {
-            'upload': int(upload_max * 2 / len(sizes['upload'])),
+            'upload': upload_count,
             'download': int(download['threadsperurl'])
         }
 
@@ -830,10 +834,12 @@ class Speedtest(object):
             'counts': counts,
             'threads': threads,
             'length': length,
-            'upload_max': upload_max
+            'upload_max': upload_count * size_count
         })
 
         self.lat_lon = (float(client['lat']), float(client['lon']))
+
+        printer(self.config, debug=True)
 
         return self.config
 
