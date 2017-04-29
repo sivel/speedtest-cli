@@ -45,7 +45,7 @@ class FakeShutdownEvent(object):
     """
 
     @staticmethod
-    def isSet():
+    def is_set():
         "Dummy method to always return false"""
         return False
 
@@ -489,7 +489,7 @@ def print_dots(current, total, start=False, end=False):
     status
     """
 
-    if SHUTDOWN_EVENT.isSet():
+    if SHUTDOWN_EVENT.is_set():
         return
 
     sys.stdout.write('.')
@@ -517,7 +517,7 @@ class HTTPDownloader(threading.Thread):
         try:
             if (timeit.default_timer() - self.starttime) <= self.timeout:
                 f = urlopen(self.request)
-                while (not SHUTDOWN_EVENT.isSet() and
+                while (not SHUTDOWN_EVENT.is_set() and
                         (timeit.default_timer() - self.starttime) <=
                         self.timeout):
                     self.result.append(len(f.read(10240)))
@@ -560,7 +560,7 @@ class HTTPUploaderData(object):
 
     def read(self, n=10240):
         if ((timeit.default_timer() - self.start) <= self.timeout and
-                not SHUTDOWN_EVENT.isSet()):
+                not SHUTDOWN_EVENT.is_set()):
             chunk = self.data.read(n)
             self.total.append(len(chunk))
             return chunk
@@ -587,7 +587,7 @@ class HTTPUploader(threading.Thread):
         request = self.request
         try:
             if ((timeit.default_timer() - self.starttime) <= self.timeout and
-                    not SHUTDOWN_EVENT.isSet()):
+                    not SHUTDOWN_EVENT.is_set()):
                 try:
                     f = urlopen(request)
                 except TypeError:
