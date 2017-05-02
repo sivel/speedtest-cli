@@ -591,7 +591,6 @@ def build_request(url, data=None, headers=None, bump='', secure=False):
 
     if url[0] == ':':
         scheme = ('http', 'https')[bool(secure)]
-        print scheme
         schemed_url = '%s%s' % (scheme, url)
     else:
         schemed_url = url
