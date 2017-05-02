@@ -36,7 +36,7 @@ except ImportError:
     gzip = None
     GZIP_BASE = object
 
-__version__ = '1.0.7'
+__version__ = '2.0.0a'
 
 
 class FakeShutdownEvent(object):
@@ -333,6 +333,8 @@ def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
     is used.  If *source_address* is set it must be a tuple of (host, port)
     for the socket to bind as a source address before making the connection.
     An host of '' or port 0 tells the OS to use the default.
+
+    Largely vendored from Python 2.7, modified to work with Python 2.4
     """
 
     host, port = address
@@ -361,6 +363,9 @@ def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
 
 
 class SpeedtestHTTPConnection(HTTPConnection):
+    """Custom HTTPConnection to support source_address across
+    Python 2.4 - Python 3
+    """
     def __init__(self, *args, **kwargs):
         source_address = kwargs.pop('source_address', None)
         context = kwargs.pop('context', None)
@@ -391,6 +396,9 @@ class SpeedtestHTTPConnection(HTTPConnection):
 if HTTPSConnection:
     class SpeedtestHTTPSConnection(HTTPSConnection,
                                    SpeedtestHTTPConnection):
+        """Custom HTTPSConnection to support source_address across
+        Python 2.4 - Python 3
+        """
         def connect(self):
             "Connect to a host on a given (SSL) port."
 
@@ -404,6 +412,12 @@ if HTTPSConnection:
 
 
 def _build_connection(connection, source_address, timeout, context=None):
+    """Cross Python 2.4 - Python 3 callable to build an ``HTTPConnection`` or
+    ``HTTPSConnection`` with the args we need
+
+    Called from ``http(s)_open`` methods of ``SpeedtestHTTPHandler`` or
+    ``SpeedtestHTTPSHandler``
+    """
     def inner(host, **kwargs):
         kwargs.update({
             'source_address': source_address,
@@ -416,6 +430,9 @@ def _build_connection(connection, source_address, timeout, context=None):
 
 
 class SpeedtestHTTPHandler(AbstractHTTPHandler):
+    """Custom ``HTTPHandler`` that can build a ``HTTPConnection`` with the
+    args we need for ``source_address`` and ``timeout``
+    """
     def __init__(self, debuglevel=0, source_address=None, timeout=10):
         AbstractHTTPHandler.__init__(self, debuglevel)
         self.source_address = source_address
@@ -435,6 +452,9 @@ class SpeedtestHTTPHandler(AbstractHTTPHandler):
 
 
 class SpeedtestHTTPSHandler(AbstractHTTPHandler):
+    """Custom ``HTTPSHandler`` that can build a ``HTTPSConnection`` with the
+    args we need for ``source_address`` and ``timeout``
+    """
     def __init__(self, debuglevel=0, context=None, source_address=None,
                  timeout=10):
         AbstractHTTPHandler.__init__(self, debuglevel)
@@ -457,6 +477,12 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
 
 
 def build_opener(source_address=None, timeout=10):
+    """Function similar to ``urllib2.build_opener`` that will build
+    an ``OpenerDirector`` with the explicit handlers we want,
+    ``source_address`` for binding, ``timeout`` and our custom
+    `User-Agent`
+    """
+
     if source_address:
         source_address_tuple = (source_address, 0)
     else:
