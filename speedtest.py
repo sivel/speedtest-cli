@@ -448,7 +448,7 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
             _build_connection(
                 SpeedtestHTTPSConnection,
                 self.source_address,
-                timeout,
+                self.timeout,
                 context=self._context,
             ),
             req
@@ -840,7 +840,7 @@ class SpeedtestResults(object):
         request = build_request('://www.speedtest.net/api/api.php',
                                 data='&'.join(api_data).encode(),
                                 headers=headers)
-        f, e = catch_request(request, opener=_self.opener)
+        f, e = catch_request(request, opener=self._opener)
         if e:
             raise ShareResultsConnectFailure(e)
 
