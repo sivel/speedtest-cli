@@ -373,18 +373,20 @@ class SpeedtestHTTPConnection(HTTPConnection):
         self._context = context
         self.timeout = timeout
 
-        try:
-            self._create_connection = socket.create_connection
-        except AttributeError:
-            self._create_connection = create_connection
-
     def connect(self):
         """Connect to the host and port specified in __init__."""
-        self.sock = self._create_connection(
-            (self.host, self.port),
-            self.timeout,
-            self.source_address
-        )
+        try:
+            self.sock = socket.create_connection(
+                (self.host, self.port),
+                self.timeout,
+                self.source_address
+            )
+        except (AttributeError, TypeError):
+            self.sock = create_connection(
+                (self.host, self.port),
+                self.timeout,
+                self.source_address
+            )
 
 
 if HTTPSConnection:
