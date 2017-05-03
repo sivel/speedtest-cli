@@ -483,8 +483,12 @@ def build_opener(source_address=None, timeout=10):
     `User-Agent`
     """
 
+    printer('Timeout set to %d' % timeout, debug=True)
+
     if source_address:
         source_address_tuple = (source_address, 0)
+        printer('Binding to source address: %r' % (source_address_tuple,),
+                debug=True)
     else:
         source_address_tuple = None
 
@@ -575,11 +579,11 @@ def build_user_agent():
         'speedtest-cli/%s' % __version__
     )
     user_agent = ' '.join(ua_tuple)
-    printer(user_agent, debug=True)
+    printer('User-Agent: %s' % user_agent, debug=True)
     return user_agent
 
 
-def build_request(url, data=None, headers=None, bump='', secure=False):
+def build_request(url, data=None, headers=None, bump='0', secure=False):
     """Build a urllib2 request object
 
     This function automatically adds a User-Agent header to all requests
@@ -980,7 +984,7 @@ class Speedtest(object):
         if int(uh.code) != 200:
             return None
 
-        printer(''.encode().join(configxml), debug=True)
+        printer('Config XML:\n%s' % ''.encode().join(configxml), debug=True)
 
         try:
             root = ET.fromstring(''.encode().join(configxml))
@@ -1042,7 +1046,7 @@ class Speedtest(object):
 
         self.lat_lon = (float(client['lat']), float(client['lon']))
 
-        printer(self.config, debug=True)
+        printer('Config:\n%r' % self.config, debug=True)
 
         return self.config
 
@@ -1101,7 +1105,8 @@ class Speedtest(object):
                 if int(uh.code) != 200:
                     raise ServersRetrievalError()
 
-                printer(''.encode().join(serversxml), debug=True)
+                printer('Servers XML:\n%s' % ''.encode().join(serversxml),
+                        debug=True)
 
                 try:
                     try:
@@ -1138,8 +1143,6 @@ class Speedtest(object):
                         self.servers[d].append(attrib)
                     except KeyError:
                         self.servers[d] = [attrib]
-
-                printer(''.encode().join(serversxml), debug=True)
 
                 break
 
@@ -1222,7 +1225,7 @@ class Speedtest(object):
                 continue
             break
 
-        printer(self.closest, debug=True)
+        printer('Closest Servers:\n%r' % self.closest, debug=True)
         return self.closest
 
     def get_best_server(self, servers=None):
@@ -1246,9 +1249,13 @@ class Speedtest(object):
         for server in servers:
             cum = []
             url = os.path.dirname(server['url'])
-            urlparts = urlparse('%s/latency.txt' % url)
-            printer('%s %s/latency.txt' % ('GET', url), debug=True)
-            for _ in range(0, 3):
+            stamp = int(timeit.time.time() * 1000)
+            latency_url = '%s/latency.txt?x=%s' % (url, stamp)
+            for i in range(0, 3):
+                this_latency_url = '%s.%s' % (latency_url, i)
+                printer('%s %s' % ('GET', this_latency_url),
+                        debug=True)
+                urlparts = urlparse(latency_url)
                 try:
                     if urlparts[0] == 'https':
                         h = SpeedtestHTTPSConnection(
@@ -1261,13 +1268,14 @@ class Speedtest(object):
                             source_address=source_address_tuple
                         )
                     headers = {'User-Agent': user_agent}
+                    path = '%s?%s' % (urlparts[2], urlparts[4])
                     start = timeit.default_timer()
-                    h.request("GET", urlparts[2], headers=headers)
+                    h.request("GET", path, headers=headers)
                     r = h.getresponse()
                     total = (timeit.default_timer() - start)
                 except HTTP_ERRORS:
                     e = get_exception()
-                    printer('%r' % e, debug=True)
+                    printer('ERROR: %r' % e, debug=True)
                     cum.append(3600)
                     continue
 
@@ -1293,7 +1301,7 @@ class Speedtest(object):
         self.results.server = best
 
         self.best.update(best)
-        printer(best, debug=True)
+        printer('Best Server:\n%r' % best, debug=True)
         return best
 
     def download(self, callback=do_nothing):
@@ -1689,6 +1697,8 @@ def shell():
                 quiet)
     else:
         printer('Skipping upload test')
+
+    printer('Results:\n%r' % results.dict(), debug=True)
 
     if args.simple:
         print_('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
