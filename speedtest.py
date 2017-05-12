@@ -321,6 +321,10 @@ class SpeedtestBestServerFailure(SpeedtestException):
     """Unable to determine best server"""
 
 
+class SpeedtestMissingBestServer(SpeedtestException):
+    """get_best_server not called or not able to determine best server"""
+
+
 def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
                       source_address=None):
     """Connect to *address* and return the socket object.
@@ -953,9 +957,18 @@ class Speedtest(object):
 
         self.servers = {}
         self.closest = []
-        self.best = {}
+        self._best = {}
 
         self.results = SpeedtestResults(opener=self._opener, secure=secure)
+
+    @property
+    def best(self):
+        if not self._best:
+            raise SpeedtestMissingBestServer(
+                'get_best_server not called or not able to determine best '
+                'server'
+            )
+        return self._best
 
     def get_config(self):
         """Download the speedtest.net configuration and return only the data
@@ -1300,7 +1313,7 @@ class Speedtest(object):
         self.results.ping = fastest
         self.results.server = best
 
-        self.best.update(best)
+        self._best.update(best)
         printer('Best Server:\n%r' % best, debug=True)
         return best
 
