@@ -125,11 +125,13 @@ try:
     from argparse import SUPPRESS as ARG_SUPPRESS
     PARSER_TYPE_INT = int
     PARSER_TYPE_STR = str
+    PARSER_TYPE_FLOAT = float
 except ImportError:
     from optparse import OptionParser as ArgParser
     from optparse import SUPPRESS_HELP as ARG_SUPPRESS
     PARSER_TYPE_INT = 'int'
     PARSER_TYPE_STR = 'string'
+    PARSER_TYPE_FLOAT = 'float'
 
 try:
     from cStringIO import StringIO
@@ -1531,7 +1533,7 @@ def parse_args():
                              'supplied multiple times')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
-    parser.add_argument('--timeout', default=10, type=PARSER_TYPE_INT,
+    parser.add_argument('--timeout', default=10, type=PARSER_TYPE_FLOAT,
                         help='HTTP timeout in seconds. Default 10')
     parser.add_argument('--secure', action='store_true',
                         help='Use HTTPS instead of HTTP when communicating '
