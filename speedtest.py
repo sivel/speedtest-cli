@@ -1432,14 +1432,10 @@ def shell():
                 print_('Cannot retrieve speedtest server list')
                 raise SpeedtestCLIError(get_exception())
 
-            for _, items in sorted(speedtest.servers.items()):
+            for _, items in speedtest.servers.items():
                 for server in items:
                     if (server['name'].lower() == args.server.lower()):
                         servers.append(int(server['id']))
-                        break
-                else:
-                    continue
-                break
 
             if not servers:
                 raise SpeedtestCLIError('Server was not found: '
