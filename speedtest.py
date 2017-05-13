@@ -1269,7 +1269,8 @@ def parse_args():
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
-    parser.add_argument('--server', help='Specify a server ID (or city name) to test against',
+    parser.add_argument('--server', help='Specify a server ID (or city name) '
+                                         'to test against',
                         type=PARSER_TYPE_STR)
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
@@ -1423,7 +1424,7 @@ def shell():
     if args.server:
         if (args.server.isnumeric()):
             servers.append(int(args.server))
-        else: # Find the server ID by name
+        else:  # Find the server ID by name
             printer('Search for a server with the specified name...', quiet)
             try:
                 speedtest.get_servers()
@@ -1441,7 +1442,8 @@ def shell():
                 break
 
             if not servers:
-                raise SpeedtestCLIError('Server was not found: %s' % args.server)
+                raise SpeedtestCLIError('Server was not found: '
+                                        '%s' % args.server)
 
     printer('Testing from %(isp)s (%(ip)s)...' % speedtest.config['client'],
             quiet)
