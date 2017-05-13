@@ -1269,8 +1269,8 @@ def parse_args():
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
-    parser.add_argument('--server', help='Specify a server ID to test against',
-                        type=PARSER_TYPE_INT)
+    parser.add_argument('--server', help='Specify a server ID (or city name) to test against',
+                        type=PARSER_TYPE_STR)
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=PARSER_TYPE_INT,
@@ -1421,7 +1421,27 @@ def shell():
     # Set a filter of servers to retrieve
     servers = []
     if args.server:
-        servers.append(args.server)
+        if (args.server.isnumeric()):
+            servers.append(int(args.server))
+        else: # Find the server ID by name
+            printer('Search for a server with the specified name...', quiet)
+            try:
+                speedtest.get_servers()
+            except (ServersRetrievalError, HTTP_ERRORS):
+                print_('Cannot retrieve speedtest server list')
+                raise SpeedtestCLIError(get_exception())
+
+            for _, items in sorted(speedtest.servers.items()):
+                for server in items:
+                    if (server['name'].lower() == args.server.lower()):
+                        servers.append(int(server['id']))
+                        break
+                else:
+                    continue
+                break
+
+            if not servers:
+                raise SpeedtestCLIError('Server was not found: %s' % args.server)
 
     printer('Testing from %(isp)s (%(ip)s)...' % speedtest.config['client'],
             quiet)

@@ -106,7 +106,7 @@ Usage
                             affected by --bytes
       --list                Display a list of speedtest.net servers sorted by
                             distance
-      --server SERVER       Specify a server ID to test against
+      --server SERVER       Specify a server ID (or city name) to test against
       --mini MINI           URL of the Speedtest Mini server
       --source SOURCE       Source IP address to bind to
       --timeout TIMEOUT     HTTP timeout in seconds. Default 10
