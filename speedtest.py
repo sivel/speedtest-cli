@@ -191,7 +191,7 @@ else:
 
         Taken from https://pypi.python.org/pypi/six/
 
-        Modified to set encoding to UTF-8 always
+        Modified to set encoding to UTF-8 always, and to flush after write
         """
         fp = kwargs.pop("file", sys.stdout)
         if fp is None:
@@ -210,6 +210,7 @@ else:
                     errors = "strict"
                 data = data.encode(encoding, errors)
             fp.write(data)
+            fp.flush()
         want_unicode = False
         sep = kwargs.pop("sep", None)
         if sep is not None:
