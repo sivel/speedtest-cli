@@ -393,10 +393,10 @@ def build_user_agent():
 
     ua_tuple = (
         'Mozilla/5.0',
-        '(%s; U; %s; en-us)' % (platform.system(), platform.architecture()[0]),
-        'Python/%s' % platform.python_version(),
+        '(%s; U; %s; rv:%s)' % (platform.system(), platform.architecture()[0], __version__),
+        'Gecko/20100101',
         '(KHTML, like Gecko)',
-        'speedtest-cli/%s' % __version__
+        'speedtest-cli'
     )
     USER_AGENT = ' '.join(ua_tuple)
     printer(USER_AGENT, debug=True)
