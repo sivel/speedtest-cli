@@ -39,6 +39,13 @@ or
 
     easy_install speedtest-cli
 
+brew
+~~~~~~~~~~~~~~~~~~~
+
+::
+
+    brew install speedtest-cli
+
 Github
 ~~~~~~
 
