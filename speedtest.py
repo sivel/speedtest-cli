@@ -1486,8 +1486,10 @@ def shell():
         print_(results.json())
 
     if args.share and not machine_format:
-        printer('Share results: %s' % results.share())
-
+        if args.secure:
+            printer('Share results: %s' % results.share().replace("http","https"))
+        else:
+            printer('Share results: %s' % results.share())
 
 def main():
     try:
