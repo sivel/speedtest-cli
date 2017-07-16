@@ -619,7 +619,7 @@ class SpeedtestResults(object):
     to get a share results image link.
     """
 
-    def __init__(self, download=0, upload=0, ping=0, server=None):
+    def __init__(self, download=0, upload=0, ping=0, server=None, client=None):
         self.download = download
         self.upload = upload
         self.ping = ping
@@ -627,6 +627,7 @@ class SpeedtestResults(object):
             self.server = {}
         else:
             self.server = server
+        self.client = client
         self._share = None
         self.timestamp = '%sZ' % datetime.datetime.utcnow().isoformat()
         self.bytes_received = 0
@@ -748,7 +749,7 @@ class Speedtest(object):
         self.closest = []
         self.best = {}
 
-        self.results = SpeedtestResults()
+        self.results = SpeedtestResults(client=self.config['client'])
 
     def get_config(self):
         """Download the speedtest.net configuration and return only the data
@@ -1438,8 +1439,9 @@ def shell():
         except InvalidServerIDType:
             raise SpeedtestCLIError('%s is an invalid server type, must '
                                     'be an int' % args.server)
+        if not args.server:
+            printer('Selecting best server based on ping...', quiet)
 
-        printer('Selecting best server based on ping...', quiet)
         speedtest.get_best_server()
     elif args.mini:
         speedtest.get_best_server(speedtest.set_mini_server(args.mini))
