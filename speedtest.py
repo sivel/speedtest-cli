@@ -79,6 +79,11 @@ except ImportError:
         ET = None
 
 try:
+    import plotly
+except ImportError:
+    plotly = None
+
+try:
     from urllib2 import urlopen, Request, HTTPError, URLError
 except ImportError:
     from urllib.request import urlopen, Request, HTTPError, URLError
@@ -734,6 +739,40 @@ class SpeedtestResults(object):
             })
         return json.dumps(self.dict(), **kwargs)
 
+    def plotly(self, pretty=False):
+        """Uploads results to plotly for graphing against current date. Returns the URL to the plotly graph."""
+
+        # Results data from MAIN
+        data = self.dict()
+
+        import plotly as plotly
+        ##plotly.tools.set_credentials_file(username='matjohn2', api_key='SNgbbnB3KmpjLRfybBAD')
+
+        uploadtrace = plotly.graph_objs.Scatter(
+          x = data['timestamp'],
+          y = data['upload'],
+          mode = 'lines+markers',
+          name = 'Upload'
+        )
+
+        downloadtrace = plotly.graph_objs.Scatter(
+          x = data['timestamp'],
+          y = data['download'],
+          mode = 'lines+markers',
+          name = 'Download'
+        )
+
+        latencytrace = plotly.graph_objs.Scatter(
+          x = data['timestamp'],
+          y = data['ping'],
+          mode = 'markers',
+          name = 'Latency'
+        )
+
+        plotdata = [uploadtrace, downloadtrace, latencytrace]
+        plot_url = plotly.plotly.plot(plotdata, filename='SpeedtestCLI', fileopt='extend', auto_open=False)
+
+        return plot_url
 
 class Speedtest(object):
     """Class for performing standard speedtest.net testing operations"""
@@ -1270,6 +1309,11 @@ def parse_args():
                         help='Suppress verbose output, only show basic '
                              'information in JSON format. Speeds listed in '
                              'bit/s and not affected by --bytes')
+    parser.add_argument('--plotly', action='store_true', default=False,
+                        help='Suppress output, send download, upload, '
+                             'and latency measurements, plotted over '
+                             'current time and date to plotly. Speeds '
+                             'listed in bits/s and not affected by --bytes')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
@@ -1312,6 +1356,7 @@ def validate_optional_args(args):
     optional_args = {
         'json': ('json/simplejson python module', json),
         'secure': ('SSL support', HTTPSConnection),
+        'plotly': ('The Plotly python module', plotly),
     }
 
     for arg, info in optional_args.items():
@@ -1380,12 +1425,12 @@ def shell():
     # Pre-cache the user agent string
     build_user_agent()
 
-    if args.simple or args.csv or args.json:
+    if args.simple or args.csv or args.json or args.plotly:
         quiet = True
     else:
         quiet = False
 
-    if args.csv or args.json:
+    if args.csv or args.json or args.plotly:
         machine_format = True
     else:
         machine_format = False
@@ -1488,6 +1533,10 @@ def shell():
         if args.share:
             results.share()
         print_(results.json())
+
+    elif args.plotly:
+        print("Plotly graph at: " + results.plotly())
+
 
     if args.share and not machine_format:
         printer('Share results: %s' % results.share())

@@ -76,7 +76,7 @@ Usage
     $ speedtest-cli -h
     usage: speedtest-cli [-h] [--no-download] [--no-upload] [--bytes] [--share]
                          [--simple] [--csv] [--csv-delimiter CSV_DELIMITER]
-                         [--csv-header] [--json] [--list] [--server SERVER]
+                         [--csv-header] [--json] [--plotly] [--list] [--server SERVER]
                          [--mini MINI] [--source SOURCE] [--timeout TIMEOUT]
                          [--secure] [--no-pre-allocate] [--version]
 
@@ -104,6 +104,9 @@ Usage
       --json                Suppress verbose output, only show basic information
                             in JSON format. Speeds listed in bit/s and not
                             affected by --bytes
+      --plotly              Suppress output, send download, upload, and latency measurements,
+                            plotted over current time and date to plotly. Speeds listed
+                            in bits/s and not affected by --bytes. (See plotly section below)
       --list                Display a list of speedtest.net servers sorted by
                             distance
       --server SERVER       Specify a server ID to test against
@@ -145,3 +148,26 @@ There are several concepts to be aware of that factor into the potential inconsi
 
 Issues relating to inconsistencies will be closed as wontfix and without
 additional reason or context.
+
+Plotly
+------
+Plotly integration was designed to answer the question "is my connection reasonably consistent"
+without having to have infrastructure to record, graph, etc.
+
+ `Plot.ly <http://plot.ly>`_. 
+is a free service for hosting graphs, the `--plotly` option depends/expects your plotly
+API credentials in `~/.plotly/.credentials`.
+See here for more information: `Plotly getting started <https://plot.ly/python/getting-started/>`_.
+
+The output will be the URL to the graph. Subsequent runs of the `speedtest-cli --plotly` will append
+to the same graph, giving you a nice trend over time.
+
+To run this, there is also a Dockerfile which can be used to package up and run at intervals.
+for example, I have the following set in my crontab to run every hour;
+
+```
+docker run -v /root/.plotly:/root/.plotly trxuk/speedtest-plotly:1
+```
+
+You could use this command directly as the image is on docker hub, just ensure your `-v`
+volume mount to your `.plotly` directory (for the credentials) is correct.
