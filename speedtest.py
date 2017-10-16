@@ -149,24 +149,25 @@ except ImportError:
     import builtins
     from io import TextIOWrapper, FileIO
 
-    class _Py3Utf8Stdout(TextIOWrapper):
+    class _Py3Utf8Output(TextIOWrapper):
         """UTF-8 encoded wrapper around stdout for py3, to override
         ASCII stdout
         """
-        def __init__(self, **kwargs):
-            buf = FileIO(sys.stdout.fileno(), 'w')
-            super(_Py3Utf8Stdout, self).__init__(
+        def __init__(self, f, **kwargs):
+            buf = FileIO(f.fileno(), 'w')
+            super(_Py3Utf8Output, self).__init__(
                 buf,
                 encoding='utf8',
                 errors='strict'
             )
 
         def write(self, s):
-            super(_Py3Utf8Stdout, self).write(s)
+            super(_Py3Utf8Output, self).write(s)
             self.flush()
 
     _py3_print = getattr(builtins, 'print')
-    _py3_utf8_stdout = _Py3Utf8Stdout()
+    _py3_utf8_stdout = _Py3Utf8Output(sys.stdout)
+    _py3_utf8_stderr = _Py3Utf8Output(sys.stderr)
 
     def to_utf8(v):
         """No-op encode to utf-8 for py3"""
@@ -174,7 +175,10 @@ except ImportError:
 
     def print_(*args, **kwargs):
         """Wrapper function for py3 to print, with a utf-8 encoded stdout"""
-        kwargs['file'] = _py3_utf8_stdout
+        if kwargs.get('file') == sys.stderr:
+            kwargs['file'] = _py3_utf8_stderr
+        else:
+            kwargs['file'] = kwargs.get('file', _py3_utf8_stdout)
         _py3_print(*args, **kwargs)
 else:
     del __builtin__
@@ -1577,7 +1581,7 @@ def validate_optional_args(args):
                              'unavailable' % (info[0], arg))
 
 
-def printer(string, quiet=False, debug=False, **kwargs):
+def printer(string, quiet=False, debug=False, error=False, **kwargs):
     """Helper function to print a string only when not quiet"""
 
     if debug and not DEBUG:
@@ -1587,6 +1591,9 @@ def printer(string, quiet=False, debug=False, **kwargs):
         out = '\033[1;30mDEBUG: %s\033[0m' % string
     else:
         out = string
+
+    if error:
+        kwargs['file'] = sys.stderr
 
     if not quiet:
         print_(out, **kwargs)
@@ -1648,14 +1655,14 @@ def shell():
             secure=args.secure
         )
     except (ConfigRetrievalError,) + HTTP_ERRORS:
-        printer('Cannot retrieve speedtest configuration')
+        printer('Cannot retrieve speedtest configuration', error=True)
         raise SpeedtestCLIError(get_exception())
 
     if args.list:
         try:
             speedtest.get_servers()
         except (ServersRetrievalError,) + HTTP_ERRORS:
-            print_('Cannot retrieve speedtest server list')
+            printer('Cannot retrieve speedtest server list', error=True)
             raise SpeedtestCLIError(get_exception())
 
         for _, servers in sorted(speedtest.servers.items()):
@@ -1683,7 +1690,7 @@ def shell():
                 ', '.join('%s' % s for s in args.server)
             )
         except (ServersRetrievalError,) + HTTP_ERRORS:
-            print_('Cannot retrieve speedtest server list')
+            printer('Cannot retrieve speedtest server list', error=True)
             raise SpeedtestCLIError(get_exception())
         except InvalidServerIDType:
             raise SpeedtestCLIError(
