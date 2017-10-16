@@ -36,7 +36,7 @@ except ImportError:
     gzip = None
     GZIP_BASE = object
 
-__version__ = '1.0.6'
+__version__ = '1.0.7'
 
 
 class FakeShutdownEvent(object):
@@ -1212,11 +1212,15 @@ def version():
     sys.exit(0)
 
 
-def csv_header():
+def csv_header(delimiter=','):
     """Print the CSV Headers"""
 
-    print_('Server ID,Sponsor,Server Name,Timestamp,Distance,Ping,Download,'
-           'Upload')
+    row = ['Server ID', 'Sponsor', 'Server Name', 'Timestamp', 'Distance',
+           'Ping', 'Download', 'Upload']
+    out = StringIO()
+    writer = csv.writer(out, delimiter=delimiter, lineterminator='')
+    writer.writerow([to_utf8(v) for v in row])
+    print_(out.getvalue())
     sys.exit(0)
 
 
@@ -1349,11 +1353,11 @@ def shell():
         raise SpeedtestCLIError('Cannot supply both --no-download and '
                                 '--no-upload')
 
-    if args.csv_header:
-        csv_header()
-
     if len(args.csv_delimiter) != 1:
         raise SpeedtestCLIError('--csv-delimiter must be a single character')
+
+    if args.csv_header:
+        csv_header(args.csv_delimiter)
 
     validate_optional_args(args)
 
