@@ -712,7 +712,7 @@ class SpeedtestResults(object):
 
     def csv(self, delimiter=','):
         """Return data in CSV format"""
-
+		
         data = self.dict()
         out = StringIO()
         writer = csv.writer(out, delimiter=delimiter, lineterminator='')
@@ -720,6 +720,21 @@ class SpeedtestResults(object):
                data['server']['name'], data['timestamp'],
                data['server']['d'], data['ping'], data['download'],
                data['upload']]
+        writer.writerow([to_utf8(v) for v in row])
+        return out.getvalue()
+
+    def csvShare(self, delimiter=','):
+        """Return data in CSV format"""
+		
+        shareInfo = self.share()
+		
+        data = self.dict()
+        out = StringIO()
+        writer = csv.writer(out, delimiter=delimiter, lineterminator='')
+        row = [data['server']['id'], data['server']['sponsor'],
+               data['server']['name'], data['timestamp'],
+               data['server']['d'], data['ping'], data['download'],
+               data['upload'],shareInfo]
         writer.writerow([to_utf8(v) for v in row])
         return out.getvalue()
 
@@ -1224,6 +1239,18 @@ def csv_header(delimiter=','):
     sys.exit(0)
 
 
+def csv_headerShare(delimiter=','):
+    """Print the CSV Headers"""
+
+    row = ['Server ID', 'Sponsor', 'Server Name', 'Timestamp', 'Distance',
+           'Ping', 'Download', 'Upload', 'ShareURL']
+    out = StringIO()
+    writer = csv.writer(out, delimiter=delimiter, lineterminator='')
+    writer.writerow([to_utf8(v) for v in row])
+    print_(out.getvalue())
+    sys.exit(0)
+
+
 def parse_args():
     """Function to handle building and parsing of command line arguments"""
     description = (
@@ -1253,7 +1280,7 @@ def parse_args():
                              'output from --json or --csv')
     parser.add_argument('--share', action='store_true',
                         help='Generate and provide a URL to the speedtest.net '
-                             'share results image, not displayed with --csv')
+                             'share results image')
     parser.add_argument('--simple', action='store_true', default=False,
                         help='Suppress verbose output, only show basic '
                              'information')
@@ -1265,7 +1292,8 @@ def parse_args():
                         help='Single character delimiter to use in CSV '
                              'output. Default ","')
     parser.add_argument('--csv-header', action='store_true', default=False,
-                        help='Print CSV headers')
+                        help='Print CSV headers, add --share if you intend on that'
+						      'output format')
     parser.add_argument('--json', action='store_true', default=False,
                         help='Suppress verbose output, only show basic '
                              'information in JSON format. Speeds listed in '
@@ -1356,7 +1384,9 @@ def shell():
     if len(args.csv_delimiter) != 1:
         raise SpeedtestCLIError('--csv-delimiter must be a single character')
 
-    if args.csv_header:
+    if args.csv_header and args.share:
+        csv_headerShare(args.csv_delimiter)
+    elif args.csv_header:
         csv_header(args.csv_delimiter)
 
     validate_optional_args(args)
@@ -1482,6 +1512,8 @@ def shell():
                 args.units[0],
                 (results.upload / 1000.0 / 1000.0) / args.units[1],
                 args.units[0]))
+    elif args.csv and args.share:
+        print_(results.csvShare(delimiter=args.csv_delimiter))
     elif args.csv:
         print_(results.csv(delimiter=args.csv_delimiter))
     elif args.json:
