@@ -712,7 +712,7 @@ class SpeedtestResults(object):
 
     def csv(self, delimiter=','):
         """Return data in CSV format"""
-		
+
         data = self.dict()
         out = StringIO()
         writer = csv.writer(out, delimiter=delimiter, lineterminator='')
@@ -725,16 +725,16 @@ class SpeedtestResults(object):
 
     def csvShare(self, delimiter=','):
         """Return data in CSV format"""
-		
+	
         shareInfo = self.share()
-		
+
         data = self.dict()
         out = StringIO()
         writer = csv.writer(out, delimiter=delimiter, lineterminator='')
         row = [data['server']['id'], data['server']['sponsor'],
                data['server']['name'], data['timestamp'],
                data['server']['d'], data['ping'], data['download'],
-               data['upload'],shareInfo]
+               data['upload'], shareInfo]
         writer.writerow([to_utf8(v) for v in row])
         return out.getvalue()
 
@@ -939,7 +939,7 @@ class Speedtest(object):
                         d = distance(self.lat_lon,
                                      (float(attrib.get('lat')),
                                       float(attrib.get('lon'))))
-                    except:
+                    except BaseException:
                         continue
 
                     attrib['d'] = d
@@ -989,7 +989,7 @@ class Speedtest(object):
             for ext in ['php', 'asp', 'aspx', 'jsp']:
                 try:
                     f = urlopen('%s/speedtest/upload.%s' % (url, ext))
-                except:
+                except BaseException:
                     pass
                 else:
                     data = f.read().strip().decode()
@@ -1292,8 +1292,8 @@ def parse_args():
                         help='Single character delimiter to use in CSV '
                              'output. Default ","')
     parser.add_argument('--csv-header', action='store_true', default=False,
-                        help='Print CSV headers, add --share if you intend on that'
-						      'output format')
+                        help='Print CSV headers, add --share if you intend '
+                             'on that output format')
     parser.add_argument('--json', action='store_true', default=False,
                         help='Suppress verbose output, only show basic '
                              'information in JSON format. Speeds listed in '
