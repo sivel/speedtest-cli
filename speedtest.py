@@ -725,9 +725,7 @@ class SpeedtestResults(object):
 
     def csvShare(self, delimiter=','):
         """Return data in CSV format"""
-	
         shareInfo = self.share()
-
         data = self.dict()
         out = StringIO()
         writer = csv.writer(out, delimiter=delimiter, lineterminator='')
