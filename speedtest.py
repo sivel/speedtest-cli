@@ -1184,7 +1184,7 @@ class Speedtest(object):
                         d = distance(self.lat_lon,
                                      (float(attrib.get('lat')),
                                       float(attrib.get('lon'))))
-                    except:
+                    except Exception:
                         continue
 
                     attrib['d'] = d
@@ -1234,7 +1234,7 @@ class Speedtest(object):
                     f = self._opener.open(
                         '%s/speedtest/upload.%s' % (url, ext)
                     )
-                except:
+                except Exception:
                     pass
                 else:
                     data = f.read().strip().decode()
