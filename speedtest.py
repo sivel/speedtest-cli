@@ -827,8 +827,8 @@ class SpeedtestResults(object):
     to get a share results image link.
     """
 
-    def __init__(self, download=0, upload=0, ping=0, server=None, opener=None,
-                 secure=False):
+    def __init__(self, download=0, upload=0, ping=0, server=None, client=None,
+                 opener=None, secure=False):
         self.download = download
         self.upload = upload
         self.ping = ping
@@ -836,6 +836,8 @@ class SpeedtestResults(object):
             self.server = {}
         else:
             self.server = server
+        self.client = client or {}
+
         self._share = None
         self.timestamp = '%sZ' % datetime.datetime.utcnow().isoformat()
         self.bytes_received = 0
@@ -924,6 +926,7 @@ class SpeedtestResults(object):
             'bytes_sent': self.bytes_sent,
             'bytes_received': self.bytes_received,
             'share': self._share,
+            'client': self.client,
         }
 
     def csv(self, delimiter=','):
@@ -935,7 +938,7 @@ class SpeedtestResults(object):
         row = [data['server']['id'], data['server']['sponsor'],
                data['server']['name'], data['timestamp'],
                data['server']['d'], data['ping'], data['download'],
-               data['upload']]
+               data['upload'], self._share or '', self.client['ip']]
         writer.writerow([to_utf8(v) for v in row])
         return out.getvalue()
 
@@ -972,7 +975,11 @@ class Speedtest(object):
         self.closest = []
         self._best = {}
 
-        self.results = SpeedtestResults(opener=self._opener, secure=secure)
+        self.results = SpeedtestResults(
+            client=self.config['client'],
+            opener=self._opener,
+            secure=secure,
+        )
 
     @property
     def best(self):
@@ -1480,7 +1487,7 @@ def csv_header(delimiter=','):
     """Print the CSV Headers"""
 
     row = ['Server ID', 'Sponsor', 'Server Name', 'Timestamp', 'Distance',
-           'Ping', 'Download', 'Upload']
+           'Ping', 'Download', 'Upload', 'Share', 'IP Address']
     out = StringIO()
     writer = csv.writer(out, delimiter=delimiter, lineterminator='')
     writer.writerow([to_utf8(v) for v in row])
