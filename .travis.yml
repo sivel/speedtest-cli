@@ -8,6 +8,8 @@ addons:
       - python2.4
       - python2.5
       - python2.6
+      - python3.2
+      - python3.3
 
 matrix:
   include:
@@ -21,9 +23,9 @@ matrix:
       env: TOXENV=py26
     - python: 2.7
       env: TOXENV=py27
-    - python: 3.2
+    - python: 2.7
       env: TOXENV=py32
-    - python: 3.3
+    - python: 2.7
       env: TOXENV=py33
     - python: 3.4
       env: TOXENV=py34
@@ -34,8 +36,11 @@ matrix:
     - python: pypy
       env: TOXENV=pypy
 
+before_install:
+  - if [[ $(echo "$TOXENV" | egrep -c "py35") != 0 ]]; then pyenv global system 3.5; fi;
+
 install:
-  - if [[ $(echo "$TOXENV" | egrep -c "py32") != 0 ]]; then pip install setuptools==17.1.1; fi
+  - if [[ $(echo "$TOXENV" | egrep -c "py32") != 0 ]]; then pip install setuptools==17.1.1; fi;
   - if [[ $(echo "$TOXENV" | egrep -c "(py2[45]|py3[12])") != 0 ]]; then pip install virtualenv==1.7.2 tox==1.3; fi;
   - if [[ $(echo "$TOXENV" | egrep -c "(py2[45]|py3[12])") == 0 ]]; then pip install tox; fi;
 
