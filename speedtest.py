@@ -1545,7 +1545,8 @@ def parse_args():
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
     parser.add_argument('--server', type=PARSER_TYPE_INT, action='append',
-                        help='Specify a server ID to test against')
+                        help='Specify a server ID to test against. Can be '
+                             'supplied multiple times')
     parser.add_argument('--exclude', type=PARSER_TYPE_INT, action='append',
                         help='Exclude a server from selection. Can be '
                              'supplied multiple times')
@@ -1711,7 +1712,10 @@ def shell():
                 'be an int' % ', '.join('%s' % s for s in args.server)
             )
 
-        printer('Selecting best server based on ping...', quiet)
+        if args.server and len(args.server) == 1:
+            printer('Retrieving information for the selected server...', quiet)
+        else:
+            printer('Selecting best server based on ping...', quiet)
         speedtest.get_best_server()
     elif args.mini:
         speedtest.get_best_server(speedtest.set_mini_server(args.mini))
