@@ -929,6 +929,17 @@ class SpeedtestResults(object):
             'client': self.client,
         }
 
+    @staticmethod
+    def csv_header(delimiter=','):
+        """Return CSV Headers"""
+
+        row = ['Server ID', 'Sponsor', 'Server Name', 'Timestamp', 'Distance',
+               'Ping', 'Download', 'Upload', 'Share', 'IP Address']
+        out = StringIO()
+        writer = csv.writer(out, delimiter=delimiter, lineterminator='')
+        writer.writerow([to_utf8(v) for v in row])
+        return out.getvalue()
+
     def csv(self, delimiter=','):
         """Return data in CSV format"""
 
@@ -1486,12 +1497,7 @@ def version():
 def csv_header(delimiter=','):
     """Print the CSV Headers"""
 
-    row = ['Server ID', 'Sponsor', 'Server Name', 'Timestamp', 'Distance',
-           'Ping', 'Download', 'Upload', 'Share', 'IP Address']
-    out = StringIO()
-    writer = csv.writer(out, delimiter=delimiter, lineterminator='')
-    writer.writerow([to_utf8(v) for v in row])
-    print_(out.getvalue())
+    print_(SpeedtestResults.csv_header(delimiter=delimiter))
     sys.exit(0)
 
 
