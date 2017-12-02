@@ -924,7 +924,7 @@ class Speedtest(object):
                         d = distance(self.lat_lon,
                                      (float(attrib.get('lat')),
                                       float(attrib.get('lon'))))
-                    except:
+                    except Exception:
                         continue
 
                     attrib['d'] = d
@@ -974,7 +974,7 @@ class Speedtest(object):
             for ext in ['php', 'asp', 'aspx', 'jsp']:
                 try:
                     f = urlopen('%s/speedtest/upload.%s' % (url, ext))
-                except:
+                except Exception:
                     pass
                 else:
                     data = f.read().strip().decode()
@@ -1320,6 +1320,17 @@ def validate_optional_args(args):
                              'unavailable' % (info[0], arg))
 
 
+def format_speed(speed_bytes_per_second, unit):
+    base = 1024 if unit[0] == 'byte' else 1000
+    seq = ['', 'K', 'M', 'G']
+    i = 0
+    speed = speed_bytes_per_second / unit[1]
+    while not (1 < speed < base):
+        i += 1
+        speed /= base
+    return '%0.2f %s%s/s' % (speed, seq[i], unit[0])
+
+
 def printer(string, quiet=False, debug=False, **kwargs):
     """Helper function to print a string only when not quiet"""
 
@@ -1457,10 +1468,10 @@ def shell():
         printer('Testing download speed', quiet,
                 end=('', '\n')[bool(debug)])
         speedtest.download(callback=callback)
-        printer('Download: %0.2f M%s/s' %
-                ((results.download / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]),
+        printer('Download: %s' %
+                format_speed(results.download, args.units),
                 quiet)
+
     else:
         printer('Skipping download test')
 
@@ -1468,20 +1479,16 @@ def shell():
         printer('Testing upload speed', quiet,
                 end=('', '\n')[bool(debug)])
         speedtest.upload(callback=callback, pre_allocate=args.pre_allocate)
-        printer('Upload: %0.2f M%s/s' %
-                ((results.upload / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]),
+        printer('Upload: %s' %
+                format_speed(results.upload, args.units),
                 quiet)
     else:
         printer('Skipping upload test')
 
     if args.simple:
-        print_('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
-               (results.ping,
-                (results.download / 1000.0 / 1000.0) / args.units[1],
-                args.units[0],
-                (results.upload / 1000.0 / 1000.0) / args.units[1],
-                args.units[0]))
+        print_('Ping: %s ms\nDownload: %s\nUpload: %s' %
+               (results.ping, format_speed(results.download, args.units),
+                format_speed(results.upload, args.units)))
     elif args.csv:
         print_(results.csv(delimiter=args.csv_delimiter))
     elif args.json:
