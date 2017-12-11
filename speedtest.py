@@ -1740,7 +1740,7 @@ def shell():
                  args.units[0]),
                 quiet)
     else:
-        printer('Skipping download test')
+        printer('Skipping download test', quiet)
 
     if args.upload:
         printer('Testing upload speed', quiet,
@@ -1751,7 +1751,7 @@ def shell():
                  args.units[0]),
                 quiet)
     else:
-        printer('Skipping upload test')
+        printer('Skipping upload test', quiet)
 
     printer('Results:\n%r' % results.dict(), debug=True)
 
