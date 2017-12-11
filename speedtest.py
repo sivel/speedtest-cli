@@ -363,6 +363,16 @@ def bound_socket(*args, **kwargs):
     sock = SOCKET_SOCKET(*args, **kwargs)
     sock.bind((SOURCE, 0))
     return sock
+    
+    
+def socket_interface(*args, **kwargs):
+    """Bind socket to a specified interface"""
+
+    sock = SOCKET_SOCKET(*args, **kwargs)
+    sock.setsockopt(socket.SOL_SOCKET, 25, INTERFACE)
+    sock.bind(("", 0))
+    return sock
+    
 
 
 def distance(origin, destination):
@@ -1277,6 +1287,7 @@ def parse_args():
                         type=PARSER_TYPE_INT)
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
+    parser.add_argument('--interface', help='Interface to be used')
     parser.add_argument('--timeout', default=10, type=PARSER_TYPE_INT,
                         help='HTTP timeout in seconds. Default 10')
     parser.add_argument('--secure', action='store_true',
@@ -1338,7 +1349,7 @@ def printer(string, quiet=False, debug=False, **kwargs):
 def shell():
     """Run the full speedtest.net test"""
 
-    global SHUTDOWN_EVENT, SOURCE, SCHEME, DEBUG
+    global SHUTDOWN_EVENT, SOURCE, SCHEME, DEBUG, INTERFACE
     SHUTDOWN_EVENT = threading.Event()
 
     signal.signal(signal.SIGINT, ctrl_c)
@@ -1367,6 +1378,10 @@ def shell():
     if args.source:
         SOURCE = args.source
         socket.socket = bound_socket
+        
+    if args.interface:
+        INTERFACE = args.interface
+        socket.socket = socket_interface
 
     if args.secure:
         SCHEME = 'https'
