@@ -1780,7 +1780,8 @@ def main():
         print_('\nCancelling...')
     except (SpeedtestException, SystemExit):
         e = get_exception()
-        if getattr(e, 'code', 1) != 0:
+        # Ignore a successful exit, or argparse exit
+        if getattr(e, 'code', 1) not in (0, 2):
             raise SystemExit('ERROR: %s' % e)
 
 
