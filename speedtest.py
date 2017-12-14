@@ -1436,7 +1436,7 @@ def shell():
             speedtest.get_servers(servers)
         except NoMatchedServers:
             raise SpeedtestCLIError('No matched servers: %s' % args.server)
-        except (ServersRetrievalError, HTTP_ERRORS):
+        except (ServersRetrievalError,) + HTTP_ERRORS:
             print_('Cannot retrieve speedtest server list')
             raise SpeedtestCLIError(get_exception())
         except InvalidServerIDType:
