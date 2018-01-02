@@ -45,6 +45,7 @@ install:
   - if [[ $(echo "$TOXENV" | egrep -c "(py2[45]|py3[12])") == 0 ]]; then pip install tox; fi;
 
 script:
+  - ifconfig
   - tox
 
 notifications:
