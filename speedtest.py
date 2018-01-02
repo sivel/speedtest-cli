@@ -51,7 +51,6 @@ class FakeShutdownEvent(object):
 
 
 # Some global variables we use
-SHUTDOWN_EVENT = FakeShutdownEvent()
 DEBUG = False
 _GLOBAL_DEFAULT_TIMEOUT = object()
 
@@ -677,18 +676,19 @@ def get_attributes_by_tag_name(dom, tag_name):
     return dict(list(elem.attributes.items()))
 
 
-def print_dots(current, total, start=False, end=False):
+def print_dots(shutdown_event):
     """Built in callback function used by Thread classes for printing
     status
     """
+    def inner(current, total, start=False, end=False):
+        if shutdown_event.isSet():
+            return
 
-    if SHUTDOWN_EVENT.isSet():
-        return
-
-    sys.stdout.write('.')
-    if current + 1 == total and end is True:
-        sys.stdout.write('\n')
-    sys.stdout.flush()
+        sys.stdout.write('.')
+        if current + 1 == total and end is True:
+            sys.stdout.write('\n')
+        sys.stdout.flush()
+    return inner
 
 
 def do_nothing(*args, **kwargs):
@@ -698,7 +698,8 @@ def do_nothing(*args, **kwargs):
 class HTTPDownloader(threading.Thread):
     """Thread class for retrieving a URL"""
 
-    def __init__(self, i, request, start, timeout, opener=None):
+    def __init__(self, i, request, start, timeout, opener=None,
+                 shutdown_event=None):
         threading.Thread.__init__(self)
         self.request = request
         self.result = [0]
@@ -710,11 +711,16 @@ class HTTPDownloader(threading.Thread):
         else:
             self._opener = urlopen
 
+        if shutdown_event:
+            self._shutdown_event = shutdown_event
+        else:
+            self._shutdown_event = FakeShutdownEvent()
+
     def run(self):
         try:
             if (timeit.default_timer() - self.starttime) <= self.timeout:
                 f = self._opener(self.request)
-                while (not SHUTDOWN_EVENT.isSet() and
+                while (not self._shutdown_event.isSet() and
                         (timeit.default_timer() - self.starttime) <=
                         self.timeout):
                     self.result.append(len(f.read(10240)))
@@ -730,10 +736,15 @@ class HTTPUploaderData(object):
     has been reached
     """
 
-    def __init__(self, length, start, timeout):
+    def __init__(self, length, start, timeout, shutdown_event=None):
         self.length = length
         self.start = start
         self.timeout = timeout
+
+        if shutdown_event:
+            self._shutdown_event = shutdown_event
+        else:
+            self._shutdown_event = FakeShutdownEvent()
 
         self._data = None
 
@@ -763,7 +774,7 @@ class HTTPUploaderData(object):
 
     def read(self, n=10240):
         if ((timeit.default_timer() - self.start) <= self.timeout and
-                not SHUTDOWN_EVENT.isSet()):
+                not self._shutdown_event.isSet()):
             chunk = self.data.read(n)
             self.total.append(len(chunk))
             return chunk
@@ -777,7 +788,8 @@ class HTTPUploaderData(object):
 class HTTPUploader(threading.Thread):
     """Thread class for putting a URL"""
 
-    def __init__(self, i, request, start, size, timeout, opener=None):
+    def __init__(self, i, request, start, size, timeout, opener=None,
+                 shutdown_event=None):
         threading.Thread.__init__(self)
         self.request = request
         self.request.data.start = self.starttime = start
@@ -791,11 +803,16 @@ class HTTPUploader(threading.Thread):
         else:
             self._opener = urlopen
 
+        if shutdown_event:
+            self._shutdown_event = shutdown_event
+        else:
+            self._shutdown_event = FakeShutdownEvent()
+
     def run(self):
         request = self.request
         try:
             if ((timeit.default_timer() - self.starttime) <= self.timeout and
-                    not SHUTDOWN_EVENT.isSet()):
+                    not self._shutdown_event.isSet()):
                 try:
                     f = self._opener(request)
                 except TypeError:
@@ -969,7 +986,7 @@ class Speedtest(object):
     """Class for performing standard speedtest.net testing operations"""
 
     def __init__(self, config=None, source_address=None, timeout=10,
-                 secure=False):
+                 secure=False, shutdown_event=None):
         self.config = {}
 
         self._source_address = source_address
@@ -977,6 +994,11 @@ class Speedtest(object):
         self._opener = build_opener(source_address, timeout)
 
         self._secure = secure
+
+        if shutdown_event:
+            self._shutdown_event = shutdown_event
+        else:
+            self._shutdown_event = FakeShutdownEvent()
 
         self.get_config()
         if config is not None:
@@ -1372,9 +1394,14 @@ class Speedtest(object):
 
         def producer(q, requests, request_count):
             for i, request in enumerate(requests):
-                thread = HTTPDownloader(i, request, start,
-                                        self.config['length']['download'],
-                                        opener=self._opener)
+                thread = HTTPDownloader(
+                    i,
+                    request,
+                    start,
+                    self.config['length']['download'],
+                    opener=self._opener,
+                    shutdown_event=self._shutdown_event
+                )
                 thread.start()
                 q.put(thread, True)
                 callback(i, request_count, start=True)
@@ -1427,7 +1454,12 @@ class Speedtest(object):
         for i, size in enumerate(sizes):
             # We set ``0`` for ``start`` and handle setting the actual
             # ``start`` in ``HTTPUploader`` to get better measurements
-            data = HTTPUploaderData(size, 0, self.config['length']['upload'])
+            data = HTTPUploaderData(
+                size,
+                0,
+                self.config['length']['upload'],
+                shutdown_event=self._shutdown_event
+            )
             if pre_allocate:
                 data.pre_allocate()
             requests.append(
@@ -1439,9 +1471,15 @@ class Speedtest(object):
 
         def producer(q, requests, request_count):
             for i, request in enumerate(requests[:request_count]):
-                thread = HTTPUploader(i, request[0], start, request[1],
-                                      self.config['length']['upload'],
-                                      opener=self._opener)
+                thread = HTTPUploader(
+                    i,
+                    request[0],
+                    start,
+                    request[1],
+                    self.config['length']['upload'],
+                    opener=self._opener,
+                    shutdown_event=self._shutdown_event
+                )
                 thread.start()
                 q.put(thread, True)
                 callback(i, request_count, start=True)
@@ -1477,14 +1515,15 @@ class Speedtest(object):
         return self.results.upload
 
 
-def ctrl_c(signum, frame):
+def ctrl_c(shutdown_event):
     """Catch Ctrl-C key sequence and set a SHUTDOWN_EVENT for our threaded
     operations
     """
-
-    SHUTDOWN_EVENT.set()
-    print_('\nCancelling...')
-    sys.exit(0)
+    def inner(signum, frame):
+        shutdown_event.set()
+        print_('\nCancelling...')
+        sys.exit(0)
+    return inner
 
 
 def version():
@@ -1622,10 +1661,10 @@ def printer(string, quiet=False, debug=False, error=False, **kwargs):
 def shell():
     """Run the full speedtest.net test"""
 
-    global SHUTDOWN_EVENT, DEBUG
-    SHUTDOWN_EVENT = threading.Event()
+    global DEBUG
+    shutdown_event = threading.Event()
 
-    signal.signal(signal.SIGINT, ctrl_c)
+    signal.signal(signal.SIGINT, ctrl_c(shutdown_event))
 
     args = parse_args()
 
@@ -1665,7 +1704,7 @@ def shell():
     if quiet or debug:
         callback = do_nothing
     else:
-        callback = print_dots
+        callback = print_dots(shutdown_event)
 
     printer('Retrieving speedtest.net configuration...', quiet)
     try:
