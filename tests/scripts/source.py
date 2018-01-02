@@ -16,7 +16,7 @@ stdout, stderr = p.communicate()
 if p.returncode != 1:
     raise SystemExit('%s did not fail with exit code 1' % ' '.join(cmd))
 
-if b'Invalid argument' not in stderr:
+if 'Invalid argument'.encode() not in stderr:
     raise SystemExit(
         '"Invalid argument" not found in stderr:\n%s' % stderr.decode()
     )
