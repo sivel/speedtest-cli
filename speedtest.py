@@ -1041,7 +1041,10 @@ class Speedtest(object):
         stream = get_response_stream(uh)
 
         while 1:
-            configxml.append(stream.read(1024))
+            try:
+                configxml.append(stream.read(1024))
+            except (OSError, EOFError):
+                raise ConfigRetrievalError(get_exception())
             if len(configxml[-1]) == 0:
                 break
         stream.close()
@@ -1166,7 +1169,10 @@ class Speedtest(object):
 
                 serversxml = []
                 while 1:
-                    serversxml.append(stream.read(1024))
+                    try:
+                        serversxml.append(stream.read(1024))
+                    except (OSError, EOFError):
+                        raise ServersRetrievalError(get_exception())
                     if len(serversxml[-1]) == 0:
                         break
 
