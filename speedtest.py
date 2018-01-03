@@ -1521,7 +1521,7 @@ def ctrl_c(shutdown_event):
     """
     def inner(signum, frame):
         shutdown_event.set()
-        print_('\nCancelling...')
+        printer('\nCancelling...', error=True)
         sys.exit(0)
     return inner
 
@@ -1529,14 +1529,14 @@ def ctrl_c(shutdown_event):
 def version():
     """Print the version"""
 
-    print_(__version__)
+    printer(__version__)
     sys.exit(0)
 
 
 def csv_header(delimiter=','):
     """Print the CSV Headers"""
 
-    print_(SpeedtestResults.csv_header(delimiter=delimiter))
+    printer(SpeedtestResults.csv_header(delimiter=delimiter))
     sys.exit(0)
 
 
@@ -1641,7 +1641,7 @@ def validate_optional_args(args):
 
 
 def printer(string, quiet=False, debug=False, error=False, **kwargs):
-    """Helper function to print a string only when not quiet"""
+    """Helper function print a string with various features"""
 
     if debug and not DEBUG:
         return
@@ -1729,7 +1729,7 @@ def shell():
                 line = ('%(id)5s) %(sponsor)s (%(name)s, %(country)s) '
                         '[%(d)0.2f km]' % server)
                 try:
-                    print_(line)
+                    printer(line)
                 except IOError:
                     e = get_exception()
                     if e.errno != errno.EPIPE:
@@ -1795,18 +1795,18 @@ def shell():
     printer('Results:\n%r' % results.dict(), debug=True)
 
     if args.simple:
-        print_('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
-               (results.ping,
-                (results.download / 1000.0 / 1000.0) / args.units[1],
-                args.units[0],
-                (results.upload / 1000.0 / 1000.0) / args.units[1],
-                args.units[0]))
+        printer('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
+                (results.ping,
+                 (results.download / 1000.0 / 1000.0) / args.units[1],
+                 args.units[0],
+                 (results.upload / 1000.0 / 1000.0) / args.units[1],
+                 args.units[0]))
     elif args.csv:
-        print_(results.csv(delimiter=args.csv_delimiter))
+        printer(results.csv(delimiter=args.csv_delimiter))
     elif args.json:
         if args.share:
             results.share()
-        print_(results.json())
+        printer(results.json())
 
     if args.share and not machine_format:
         printer('Share results: %s' % results.share())
@@ -1816,7 +1816,7 @@ def main():
     try:
         shell()
     except KeyboardInterrupt:
-        print_('\nCancelling...')
+        printer('\nCancelling...', error=True)
     except (SpeedtestException, SystemExit):
         e = get_exception()
         # Ignore a successful exit, or argparse exit
