@@ -1653,7 +1653,10 @@ def printer(string, quiet=False, debug=False, error=False, **kwargs):
         return
 
     if debug:
-        out = '\033[1;30mDEBUG: %s\033[0m' % string
+        if sys.stdout.isatty():
+            out = '\033[1;30mDEBUG: %s\033[0m' % string
+        else:
+            out = 'DEBUG: %s' % string
     else:
         out = string
 
