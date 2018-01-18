@@ -17,7 +17,7 @@ speedtest.net
 Versions
 --------
 
-speedtest-cli works with Python 2.4-3.5
+speedtest-cli works with Python 2.4-3.6
 
 .. image:: https://img.shields.io/pypi/pyversions/speedtest-cli.svg
         :target: https://pypi.python.org/pypi/speedtest-cli/
@@ -77,13 +77,14 @@ Usage
     usage: speedtest-cli [-h] [--no-download] [--no-upload] [--bytes] [--share]
                          [--simple] [--csv] [--csv-delimiter CSV_DELIMITER]
                          [--csv-header] [--json] [--list] [--server SERVER]
-                         [--mini MINI] [--source SOURCE] [--timeout TIMEOUT]
-                         [--secure] [--no-pre-allocate] [--version]
-
+                         [--exclude EXCLUDE] [--mini MINI] [--source SOURCE]
+                         [--timeout TIMEOUT] [--secure] [--no-pre-allocate]
+                         [--version]
+    
     Command line interface for testing internet bandwidth using speedtest.net.
     --------------------------------------------------------------------------
     https://github.com/sivel/speedtest-cli
-
+    
     optional arguments:
       -h, --help            show this help message and exit
       --no-download         Do not perform download test
@@ -106,7 +107,10 @@ Usage
                             affected by --bytes
       --list                Display a list of speedtest.net servers sorted by
                             distance
-      --server SERVER       Specify a server ID to test against
+      --server SERVER       Specify a server ID to test against. Can be supplied
+                            multiple times
+      --exclude EXCLUDE     Exclude a server from selection. Can be supplied
+                            multiple times
       --mini MINI           URL of the Speedtest Mini server
       --source SOURCE       Source IP address to bind to
       --timeout TIMEOUT     HTTP timeout in seconds. Default 10
