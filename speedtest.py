@@ -1321,7 +1321,11 @@ def validate_optional_args(args):
 
 
 def format_speed(speed_bytes_per_second, unit):
-    base = 1024 if unit[0] == 'byte' else 1000
+    if unit[0] == 'byte':
+        base = 1024
+    else:
+        base = 1000
+
     seq = ['', 'K', 'M', 'G']
     i = 0
     speed = speed_bytes_per_second / unit[1]
