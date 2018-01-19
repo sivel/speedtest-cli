@@ -31,7 +31,8 @@ pip / easy\_install
 
 ::
 
-    pip install speedtest-cli
+    sudo apt install python-pip
+    sudo pip install speedtest-cli
 
 or
 
