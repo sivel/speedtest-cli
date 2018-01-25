@@ -973,7 +973,7 @@ class Speedtest(object):
         if not extension:
             for ext in ['php', 'asp', 'aspx', 'jsp']:
                 try:
-                    f = urlopen('%s/speedtest/upload.%s' % (url, ext))
+                    f = urlopen('%s/upload.%s' % (url, ext))
                 except:
                     pass
                 else:
@@ -991,7 +991,7 @@ class Speedtest(object):
             'sponsor': 'Speedtest Mini',
             'name': urlparts[1],
             'd': 0,
-            'url': '%s/speedtest/upload.%s' % (url.rstrip('/'), extension[0]),
+            'url': '%s/upload.%s' % (url.rstrip('/'), extension[0]),
             'latency': 0,
             'id': 0
         }]
