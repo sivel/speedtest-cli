@@ -7,9 +7,9 @@ speedtest.net
 .. image:: https://img.shields.io/pypi/v/speedtest-cli.svg
         :target: https://pypi.python.org/pypi/speedtest-cli/
         :alt: Latest Version
-.. image:: https://img.shields.io/pypi/dm/speedtest-cli.svg
+.. image:: https://img.shields.io/travis/sivel/speedtest-cli.svg
         :target: https://pypi.python.org/pypi/speedtest-cli/
-        :alt: Downloads
+        :alt: Travis
 .. image:: https://img.shields.io/pypi/l/speedtest-cli.svg
         :target: https://pypi.python.org/pypi/speedtest-cli/
         :alt: License
