@@ -25,6 +25,12 @@ speedtest-cli works with Python 2.4-3.7
 
 Installation
 ------------
+Ubuntu 16.04 Xenial or later:
+~~~~~~~~~~~~~~~~~~~
+
+::
+
+    sudo apt install speedtest-cli -y
 
 pip / easy\_install
 ~~~~~~~~~~~~~~~~~~~
