@@ -1119,7 +1119,13 @@ class Speedtest(object):
             'upload_max': upload_count * size_count
         })
 
-        self.lat_lon = (float(client['lat']), float(client['lon']))
+        try:
+            self.lat_lon = (float(client['lat']), float(client['lon']))
+        except ValueError:
+            raise SpeedtestConfigError(
+                'Unknown location: lat=%r lon=%r' %
+                (client.get('lat'), client.get('lon'))
+            )
 
         printer('Config:\n%r' % self.config, debug=True)
 
