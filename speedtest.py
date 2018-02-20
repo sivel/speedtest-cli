@@ -1815,6 +1815,9 @@ def shell():
 
     printer('Results:\n%r' % results.dict(), debug=True)
 
+    if not args.simple and args.share:
+        results.share()
+
     if args.simple:
         printer('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
                 (results.ping,
@@ -1825,8 +1828,6 @@ def shell():
     elif args.csv:
         printer(results.csv(delimiter=args.csv_delimiter))
     elif args.json:
-        if args.share:
-            results.share()
         printer(results.json())
 
     if args.share and not machine_format:
