@@ -1690,6 +1690,21 @@ def validate_optional_args(args):
                              'unavailable' % (info[0], arg))
 
 
+def format_speed(speed_bytes_per_second, unit):
+    if unit[0] == 'byte':
+        base = 1024
+    else:
+        base = 1000
+
+    seq = ['', 'K', 'M', 'G']
+    i = 0
+    speed = speed_bytes_per_second / unit[1]
+    while not (1 < speed < base):
+        i += 1
+        speed /= base
+    return '%0.2f %s%s/s' % (speed, seq[i], unit[0])
+
+
 def printer(string, quiet=False, debug=False, error=False, **kwargs):
     """Helper function print a string with various features"""
 
@@ -1827,10 +1842,10 @@ def shell():
         printer('Testing download speed', quiet,
                 end=('', '\n')[bool(debug)])
         speedtest.download(callback=callback)
-        printer('Download: %0.2f M%s/s' %
-                ((results.download / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]),
+        printer('Download: %s' %
+                format_speed(results.download, args.units),
                 quiet)
+
     else:
         printer('Skipping download test', quiet)
 
@@ -1838,9 +1853,8 @@ def shell():
         printer('Testing upload speed', quiet,
                 end=('', '\n')[bool(debug)])
         speedtest.upload(callback=callback, pre_allocate=args.pre_allocate)
-        printer('Upload: %0.2f M%s/s' %
-                ((results.upload / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]),
+        printer('Upload: %s' %
+                format_speed(results.upload, args.units),
                 quiet)
     else:
         printer('Skipping upload test', quiet)
@@ -1851,12 +1865,9 @@ def shell():
         results.share()
 
     if args.simple:
-        printer('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
-                (results.ping,
-                 (results.download / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0],
-                 (results.upload / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]))
+        print_('Ping: %s ms\nDownload: %s\nUpload: %s' %
+               (results.ping, format_speed(results.download, args.units),
+                format_speed(results.upload, args.units)))
     elif args.csv:
         printer(results.csv(delimiter=args.csv_delimiter))
     elif args.json:
