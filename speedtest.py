@@ -713,7 +713,7 @@ class HTTPDownloader(threading.Thread):
                  shutdown_event=None):
         threading.Thread.__init__(self)
         self.request = request
-        self.result = [0]
+        self.result = 0
         self.starttime = start
         self.timeout = timeout
         self.i = i
@@ -734,10 +734,58 @@ class HTTPDownloader(threading.Thread):
                 while (not self._shutdown_event.isSet() and
                         (timeit.default_timer() - self.starttime) <=
                         self.timeout):
-                    self.result.append(len(f.read(10240)))
-                    if self.result[-1] == 0:
+                    data = len(f.read(10240))
+                    if data == 0:
                         break
+                    self.result += data
                 f.close()
+        except IOError:
+            pass
+
+
+class SocketDownloader(threading.Thread):
+    def __init__(self, i, address, size, start, timeout, shutdown_event=None,
+                 source_address=None):
+        threading.Thread.__init__(self)
+        self.result = 0
+        self.starttime = start
+        self.timeout = timeout
+        self.i = i
+        self.size = size
+        self.remaining = self.size
+
+        if shutdown_event:
+            self._shutdown_event = shutdown_event
+        else:
+            self._shutdown_event = FakeShutdownEvent()
+
+        self.sock = create_connection(address, timeout=timeout,
+                                      source_address=source_address)
+
+    def run(self):
+        try:
+            if (timeit.default_timer() - self.starttime) <= self.timeout:
+                self.sock.sendall('HI\n'.encode())
+                self.sock.recv(1024)
+
+                while (self.remaining and not self._shutdown_event.isSet() and
+                        (timeit.default_timer() - self.starttime) <=
+                        self.timeout):
+
+                    if self.remaining > 1000000:
+                        ask = 1000000
+                    else:
+                        ask = self.remaining
+
+                    down = 0
+                    self.sock.sendall(('DOWNLOAD %d\n' % ask).encode())
+                    while down < ask:
+                        down += len(self.sock.recv(10240))
+
+                    self.result += down
+                    self.remaining -= down
+
+                self.sock.close()
         except IOError:
             pass
 
@@ -759,7 +807,7 @@ class HTTPUploaderData(object):
 
         self._data = None
 
-        self.total = [0]
+        self.total = 0
 
     def pre_allocate(self):
         chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -787,7 +835,7 @@ class HTTPUploaderData(object):
         if ((timeit.default_timer() - self.start) <= self.timeout and
                 not self._shutdown_event.isSet()):
             chunk = self.data.read(n)
-            self.total.append(len(chunk))
+            self.total += len(chunk)
             return chunk
         else:
             raise SpeedtestUploadTimeout()
@@ -835,11 +883,59 @@ class HTTPUploader(threading.Thread):
                     f = self._opener(request)
                 f.read(11)
                 f.close()
-                self.result = sum(self.request.data.total)
+                self.result = self.request.data.total
             else:
                 self.result = 0
         except (IOError, SpeedtestUploadTimeout):
-            self.result = sum(self.request.data.total)
+            self.result = self.request.data.total
+
+
+class SocketUploader(threading.Thread):
+    def __init__(self, i, address, size, start, timeout, shutdown_event=None,
+                 source_address=None):
+        threading.Thread.__init__(self)
+        self.result = 0
+        self.starttime = start
+        self.timeout = timeout
+        self.i = i
+        self.size = size
+        self.remaining = self.size
+
+        if shutdown_event:
+            self._shutdown_event = shutdown_event
+        else:
+            self._shutdown_event = FakeShutdownEvent()
+
+        self.sock = create_connection(address, timeout=timeout,
+                                      source_address=source_address)
+
+    def run(self):
+        try:
+            if (timeit.default_timer() - self.starttime) <= self.timeout:
+                self.sock.sendall('HI\n'.encode())
+                self.sock.recv(1024)
+
+                while (self.remaining and not self._shutdown_event.isSet() and
+                        (timeit.default_timer() - self.starttime) <=
+                        self.timeout):
+
+                    if self.remaining > 100000:
+                        give = 100000
+                    else:
+                        give = self.remaining
+
+                    header = ('UPLOAD %d 0\n' % give).encode()
+                    data = '0'.encode() * (give - len(header))
+
+                    self.sock.sendall(header)
+                    self.sock.sendall(data)
+                    self.sock.recv(24)
+                    self.result += give
+                    self.remaining -= give
+
+                self.sock.close()
+        except IOError:
+            pass
 
 
 class SpeedtestResults(object):
@@ -997,7 +1093,7 @@ class Speedtest(object):
     """Class for performing standard speedtest.net testing operations"""
 
     def __init__(self, config=None, source_address=None, timeout=10,
-                 secure=False, shutdown_event=None):
+                 secure=False, shutdown_event=None, use_socket=False):
         self.config = {}
 
         self._source_address = source_address
@@ -1010,6 +1106,8 @@ class Speedtest(object):
             self._shutdown_event = shutdown_event
         else:
             self._shutdown_event = FakeShutdownEvent()
+
+        self._use_socket = use_socket
 
         self.get_config()
         if config is not None:
@@ -1105,9 +1203,14 @@ class Speedtest(object):
         up_sizes = [32768, 65536, 131072, 262144, 524288, 1048576, 7340032]
         sizes = {
             'upload': up_sizes[ratio - 1:],
-            'download': [350, 500, 750, 1000, 1500, 2000, 2500,
-                         3000, 3500, 4000]
         }
+        if self._use_socket:
+            sizes['download'] = [245388, 505544, 1118012, 1986284, 4468241,
+                                 7907740, 12407926, 17816816, 24262167,
+                                 31625365]
+        else:
+            sizes['download'] = [350, 500, 750, 1000, 1500, 2000, 2500,
+                                 3000, 3500, 4000]
 
         size_count = len(sizes['upload'])
 
@@ -1251,6 +1354,9 @@ class Speedtest(object):
                     if (int(attrib.get('id')) in self.config['ignore_servers']
                             or int(attrib.get('id')) in exclude):
                         continue
+
+                    host, port = attrib['host'].split(':')
+                    attrib['host'] = (host, int(port))
 
                     try:
                         d = distance(self.lat_lon,
@@ -1429,29 +1535,48 @@ class Speedtest(object):
     def download(self, callback=do_nothing):
         """Test download speed against speedtest.net"""
 
-        urls = []
-        for size in self.config['sizes']['download']:
-            for _ in range(0, self.config['counts']['download']):
-                urls.append('%s/random%sx%s.jpg' %
-                            (os.path.dirname(self.best['url']), size, size))
+        if self._use_socket:
+            requests = []
+            for size in self.config['sizes']['download']:
+                for _ in range(0, self.config['counts']['download']):
+                    requests.append(size)
 
-        request_count = len(urls)
-        requests = []
-        for i, url in enumerate(urls):
-            requests.append(
-                build_request(url, bump=i, secure=self._secure)
-            )
+            request_count = len(requests)
+        else:
+            urls = []
+            for size in self.config['sizes']['download']:
+                for _ in range(0, self.config['counts']['download']):
+                    urls.append('%s/random%sx%s.jpg' %
+                                (os.path.dirname(self.best['url']), size, size))
+
+            request_count = len(urls)
+            requests = []
+            for i, url in enumerate(urls):
+                requests.append(
+                    build_request(url, bump=i, secure=self._secure)
+                )
 
         def producer(q, requests, request_count):
             for i, request in enumerate(requests):
-                thread = HTTPDownloader(
-                    i,
-                    request,
-                    start,
-                    self.config['length']['download'],
-                    opener=self._opener,
-                    shutdown_event=self._shutdown_event
-                )
+                if self._use_socket:
+                    thread = SocketDownloader(
+                        i,
+                        self.best['host'],
+                        request,
+                        start,
+                        self.config['length']['download'],
+                        shutdown_event=self._shutdown_event,
+                        source_address=self._source_address
+                    )
+                else:
+                    thread = HTTPDownloader(
+                        i,
+                        request,
+                        start,
+                        self.config['length']['download'],
+                        opener=self._opener,
+                        shutdown_event=self._shutdown_event
+                    )
                 thread.start()
                 q.put(thread, True)
                 callback(i, request_count, start=True)
@@ -1463,7 +1588,7 @@ class Speedtest(object):
                 thread = q.get(True)
                 while thread.isAlive():
                     thread.join(timeout=0.1)
-                finished.append(sum(thread.result))
+                finished.append(thread.result)
                 callback(thread.i, request_count, end=True)
 
         q = Queue(self.config['threads']['download'])
@@ -1502,34 +1627,48 @@ class Speedtest(object):
 
         requests = []
         for i, size in enumerate(sizes):
-            # We set ``0`` for ``start`` and handle setting the actual
-            # ``start`` in ``HTTPUploader`` to get better measurements
-            data = HTTPUploaderData(
-                size,
-                0,
-                self.config['length']['upload'],
-                shutdown_event=self._shutdown_event
-            )
-            if pre_allocate:
-                data.pre_allocate()
-            requests.append(
-                (
-                    build_request(self.best['url'], data, secure=self._secure),
-                    size
+            if self._use_socket:
+                requests.append(size)
+            else:
+                # We set ``0`` for ``start`` and handle setting the actual
+                # ``start`` in ``HTTPUploader`` to get better measurements
+                data = HTTPUploaderData(
+                    size,
+                    0,
+                    self.config['length']['upload'],
+                    shutdown_event=self._shutdown_event
                 )
-            )
+                if pre_allocate:
+                    data.pre_allocate()
+                requests.append(
+                    (
+                        build_request(self.best['url'], data, secure=self._secure),
+                        size
+                    )
+                )
 
         def producer(q, requests, request_count):
             for i, request in enumerate(requests[:request_count]):
-                thread = HTTPUploader(
-                    i,
-                    request[0],
-                    start,
-                    request[1],
-                    self.config['length']['upload'],
-                    opener=self._opener,
-                    shutdown_event=self._shutdown_event
-                )
+                if self._use_socket:
+                    thread = SocketUploader(
+                        i,
+                        self.best['host'],
+                        request,
+                        start,
+                        self.config['length']['upload'],
+                        shutdown_event=self._shutdown_event,
+                        source_address=self._source_address
+                    )
+                else:
+                    thread = HTTPUploader(
+                        i,
+                        request[0],
+                        start,
+                        request[1],
+                        self.config['length']['upload'],
+                        opener=self._opener,
+                        shutdown_event=self._shutdown_event
+                    )
                 thread.start()
                 q.put(thread, True)
                 callback(i, request_count, start=True)
@@ -1652,6 +1791,8 @@ def parse_args():
     parser.add_argument('--secure', action='store_true',
                         help='Use HTTPS instead of HTTP when communicating '
                              'with speedtest.net operated servers')
+    parser.add_argument('--socket', action='store_true',
+                        help='Use socket test instead of HTTP based tests')
     parser.add_argument('--no-pre-allocate', dest='pre_allocate',
                         action='store_const', default=True, const=False,
                         help='Do not pre allocate upload data. Pre allocation '
@@ -1764,7 +1905,8 @@ def shell():
         speedtest = Speedtest(
             source_address=args.source,
             timeout=args.timeout,
-            secure=args.secure
+            secure=args.secure,
+            use_socket=args.socket
         )
     except (ConfigRetrievalError,) + HTTP_ERRORS:
         printer('Cannot retrieve speedtest configuration', error=True)
