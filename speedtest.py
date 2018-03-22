@@ -1605,8 +1605,10 @@ class Speedtest(object):
             urls = []
             for size in self.config['sizes']['download']:
                 for _ in range(0, self.config['counts']['download']):
-                    urls.append('%s/random%sx%s.jpg' %
-                                (os.path.dirname(self.best['url']), size, size))
+                    urls.append(
+                        '%s/random%sx%s.jpg' %
+                        (os.path.dirname(self.best['url']), size, size)
+                    )
 
             request_count = len(urls)
             requests = []
@@ -1701,7 +1703,11 @@ class Speedtest(object):
                     data.pre_allocate()
                 requests.append(
                     (
-                        build_request(self.best['url'], data, secure=self._secure),
+                        build_request(
+                            self.best['url'],
+                            data,
+                            secure=self._secure
+                        ),
                         size
                     )
                 )
