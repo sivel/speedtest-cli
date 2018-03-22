@@ -342,6 +342,14 @@ class SpeedtestMissingBestServer(SpeedtestException):
     """get_best_server not called or not able to determine best server"""
 
 
+def make_source_address_tuple(source_address):
+    if isinstance(source_address, (list, tuple)):
+        return source_address
+    elif source_address:
+        return (source_address, 0)
+    return None
+
+
 def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
                       source_address=None):
     """Connect to *address* and return the socket object.
@@ -383,6 +391,22 @@ def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
         raise socket.error("getaddrinfo returns an empty list")
 
 
+def connection_factory(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
+                       source_address=None):
+    try:
+        return socket.create_connection(
+            address,
+            timeout,
+            source_address
+        )
+    except (AttributeError, TypeError):
+        return create_connection(
+            address,
+            timeout,
+            source_address
+        )
+
+
 class SpeedtestHTTPConnection(HTTPConnection):
     """Custom HTTPConnection to support source_address across
     Python 2.4 - Python 3
@@ -400,18 +424,11 @@ class SpeedtestHTTPConnection(HTTPConnection):
 
     def connect(self):
         """Connect to the host and port specified in __init__."""
-        try:
-            self.sock = socket.create_connection(
-                (self.host, self.port),
-                self.timeout,
-                self.source_address
-            )
-        except (AttributeError, TypeError):
-            self.sock = create_connection(
-                (self.host, self.port),
-                self.timeout,
-                self.source_address
-            )
+        self.sock = connection_factory(
+            (self.host, self.port),
+            self.timeout,
+            self.source_address
+        )
 
 
 if HTTPSConnection:
@@ -506,18 +523,16 @@ def build_opener(source_address=None, timeout=10):
 
     printer('Timeout set to %d' % timeout, debug=True)
 
+    source_address = make_source_address_tuple(source_address)
     if source_address:
-        source_address_tuple = (source_address, 0)
-        printer('Binding to source address: %r' % (source_address_tuple,),
+        printer('Binding to source address: %r' % (source_address,),
                 debug=True)
-    else:
-        source_address_tuple = None
 
     handlers = [
         ProxyHandler(),
-        SpeedtestHTTPHandler(source_address=source_address_tuple,
+        SpeedtestHTTPHandler(source_address=source_address,
                              timeout=timeout),
-        SpeedtestHTTPSHandler(source_address=source_address_tuple,
+        SpeedtestHTTPSHandler(source_address=source_address,
                               timeout=timeout),
         HTTPDefaultErrorHandler(),
         HTTPRedirectHandler(),
@@ -759,8 +774,11 @@ class SocketDownloader(threading.Thread):
         else:
             self._shutdown_event = FakeShutdownEvent()
 
-        self.sock = create_connection(address, timeout=timeout,
-                                      source_address=source_address)
+        self.sock = connection_factory(
+            address,
+            timeout=timeout,
+            source_address=source_address
+        )
 
     def run(self):
         try:
@@ -906,8 +924,11 @@ class SocketUploader(threading.Thread):
         else:
             self._shutdown_event = FakeShutdownEvent()
 
-        self.sock = create_connection(address, timeout=timeout,
-                                      source_address=source_address)
+        self.sock = connection_factory(
+            address,
+            timeout=timeout,
+            source_address=source_address
+        )
 
     def run(self):
         try:
@@ -1456,20 +1477,8 @@ class Speedtest(object):
         printer('Closest Servers:\n%r' % self.closest, debug=True)
         return self.closest
 
-    def get_best_server(self, servers=None):
-        """Perform a speedtest.net "ping" to determine which speedtest.net
-        server has the lowest latency
-        """
-
-        if not servers:
-            if not self.closest:
-                servers = self.get_closest_servers()
-            servers = self.closest
-
-        if self._source_address:
-            source_address_tuple = (self._source_address, 0)
-        else:
-            source_address_tuple = None
+    def _http_latency(self, servers):
+        source_address = make_source_address_tuple(self._source_address)
 
         user_agent = build_user_agent()
 
@@ -1488,12 +1497,14 @@ class Speedtest(object):
                     if urlparts[0] == 'https':
                         h = SpeedtestHTTPSConnection(
                             urlparts[1],
-                            source_address=source_address_tuple
+                            source_address=source_address,
+                            timeout=self._timeout,
                         )
                     else:
                         h = SpeedtestHTTPConnection(
                             urlparts[1],
-                            source_address=source_address_tuple
+                            source_address=source_address,
+                            timeout=self._timeout,
                         )
                     headers = {'User-Agent': user_agent}
                     path = '%s?%s' % (urlparts[2], urlparts[4])
@@ -1516,6 +1527,54 @@ class Speedtest(object):
 
             avg = round((sum(cum) / 6) * 1000.0, 3)
             results[avg] = server
+
+        return results
+
+    def _socket_latency(self, servers):
+        source_address = make_source_address_tuple(self._source_address)
+
+        results = {}
+        for server in servers:
+            cum = []
+            sock = connection_factory(
+                server['host'],
+                timeout=self._timeout,
+                source_address=source_address
+            )
+
+            sock.sendall('HI\n'.encode())
+            sock.recv(1024)
+
+            for _ in range(0, 3):
+                start = timeit.default_timer()
+                sock.sendall(
+                    ('PING %d\n' % (int(timeit.time.time()) * 1000,)).encode()
+                )
+                resp = sock.recv(1024)
+                total = (timeit.default_timer() - start)
+                if resp.startswith('PONG '.encode()):
+                    cum.append(total)
+                else:
+                    cum.append(3600)
+
+            avg = round((sum(cum) / 3) * 1000.0, 3)
+            results[avg] = server
+
+        return results
+
+    def get_best_server(self, servers=None):
+        """Perform a speedtest.net "ping" to determine which speedtest.net
+        server has the lowest latency
+        """
+        if not servers:
+            if not self.closest:
+                servers = self.get_closest_servers()
+            servers = self.closest
+
+        if self._use_socket:
+            results = self._socket_latency(servers)
+        else:
+            results = self._http_latency(servers)
 
         try:
             fastest = sorted(results.keys())[0]
