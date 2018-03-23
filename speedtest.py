@@ -318,6 +318,16 @@ class InvalidSpeedtestMiniServer(SpeedtestException):
     """
 
 
+class SpeedtestCustomConnectFailure(SpeedtestException):
+    """Could not connect to the provided speedtest custom server"""
+
+
+class InvalidSpeedtestCustomServer(SpeedtestException):
+    """Server provided as a speedtest custom server does not actually appear
+    to be a speedtest custom server
+    """
+
+
 class ShareResultsConnectFailure(SpeedtestException):
     """Could not connect to speedtest.net API to POST results"""
 
@@ -769,6 +779,8 @@ class SocketTestBase(threading.Thread):
         self.size = size
         self.remaining = self.size
 
+        self._address = address
+
         if shutdown_event:
             self._shutdown_event = shutdown_event
         else:
@@ -1111,16 +1123,17 @@ class Speedtest(object):
 
         self._use_socket = use_socket
 
-        self.get_config()
         if config is not None:
             self.config.update(config)
+        else:
+            self.get_config()
 
         self.servers = {}
         self.closest = []
         self._best = {}
 
         self.results = SpeedtestResults(
-            client=self.config['client'],
+            client=self.config.get('client'),
             opener=self._opener,
             secure=secure,
         )
@@ -1438,6 +1451,87 @@ class Speedtest(object):
 
         return self.servers
 
+    def set_custom_server(self, url, include=None, exclude=None):
+        request = build_request(url)
+        uh, e = catch_request(request, opener=self._opener)
+        if e:
+            raise SpeedtestCustomConnectFailure(
+                'Failed to connect to %s' % url
+            )
+        else:
+            text = uh.read()
+            uh.close()
+
+        match = re.search('window.ST_PARAMS = (\{.*\});'.encode(), text)
+
+        try:
+            params = json.loads(match.group(1))
+        except (TypeError, ValueError):
+            e = get_exception()
+            printer('ERROR: %r' % e, debug=True)
+            raise InvalidSpeedtestCustomServer(
+                'Invalid Speedtest Custom Server: %s' % url
+            )
+
+        test_globals = params['testGlobals']
+
+        config = {
+            'client': {
+                'ip': test_globals['ipAddress'],
+                'lat': test_globals['location']['latitude'],
+                'lon': test_globals['location']['longitude'],
+                'country': test_globals['location']['countryCode'],
+                'isp': test_globals['ispName'],
+            },
+            'ignore_servers': [],
+            'sizes': {
+                'upload': [524288, 1048576, 7340032],
+            },
+            'counts': {
+                'upload': 17,
+                'download': 4
+            },
+            'threads': {
+                'upload': 2,
+                'download': 8
+            },
+            'length': {
+                'upload': 10,
+                'download': 10
+            },
+            'upload_max': 51,
+        }
+
+        if self._use_socket:
+            config['sizes']['download'] = [245388, 505544, 1118012, 1986284,
+                                           4468241, 7907740, 12407926,
+                                           17816816, 24262167, 31625365]
+        else:
+            config['sizes']['download'] = [350, 500, 750, 1000, 1500, 2000,
+                                           2500, 3000, 3500, 4000]
+        self.config = config
+        self.results.client = config['client']
+
+        servers = {}
+        for server in params['serverList']:
+            if include and int(server.get('id')) not in include:
+                continue
+            if exclude and int(server.get('id')) in exclude:
+                continue
+
+            host, port = server['host'].split(':')
+            server['host'] = (host, int(port))
+            server['country'] = server['cc']
+            d = server.pop('distance')
+            server['d'] = d
+            try:
+                servers[d].append(server)
+            except KeyError:
+                servers[d] = [server]
+
+        self.servers = servers
+        return self.servers
+
     def get_closest_servers(self, limit=5):
         """Limit servers to the closest speedtest.net servers based on
         geographic distance
@@ -1532,6 +1626,8 @@ class Speedtest(object):
                 continue
 
             for _ in range(0, 3):
+                printer('%s %s' % ('PING', server['host']),
+                        debug=True)
                 start = timeit.default_timer()
                 try:
                     sock.sendall(
@@ -1596,6 +1692,10 @@ class Speedtest(object):
             for size in self.config['sizes']['download']:
                 for _ in range(0, self.config['counts']['download']):
                     requests.append(size)
+                    printer(
+                        'DOWNLOAD %s %s' % (self.best['host'], size),
+                        debug=True
+                    )
 
             request_count = len(requests)
         else:
@@ -1687,6 +1787,10 @@ class Speedtest(object):
         for i, size in enumerate(sizes):
             if self._use_socket:
                 requests.append(size)
+                printer(
+                    'UPLOAD %s %s' % (self.best['host'], size),
+                    debug=True
+                )
             else:
                 # We set ``0`` for ``start`` and handle setting the actual
                 # ``start`` in ``HTTPUploader`` to get better measurements
@@ -1847,6 +1951,7 @@ def parse_args():
                         help='Exclude a server from selection. Can be '
                              'supplied multiple times')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
+    parser.add_argument('--custom', help='URL of the Speedtest Custom Server')
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=PARSER_TYPE_FLOAT,
                         help='HTTP timeout in seconds. Default 10')
@@ -1884,6 +1989,7 @@ def validate_optional_args(args):
     """
     optional_args = {
         'json': ('json/simplejson python module', json),
+        'custom': ('json/simplejson python module', json),
         'secure': ('SSL support', HTTPSConnection),
     }
 
@@ -1964,19 +2070,33 @@ def shell():
 
     printer('Retrieving speedtest.net configuration...', quiet)
     try:
+        kwargs = {}
+        if args.custom:
+            kwargs['config'] = {}
         speedtest = Speedtest(
             source_address=args.source,
             timeout=args.timeout,
             secure=args.secure,
-            use_socket=args.socket
+            use_socket=args.socket,
+            **kwargs
         )
     except (ConfigRetrievalError,) + HTTP_ERRORS:
         printer('Cannot retrieve speedtest configuration', error=True)
         raise SpeedtestCLIError(get_exception())
 
+    if args.custom:
+        kwargs = {}
+        if not args.list:
+            kwargs.update({
+                'include': args.server,
+                'exclude': args.exclude,
+            })
+        speedtest.set_custom_server(args.custom, **kwargs)
+
     if args.list:
         try:
-            speedtest.get_servers()
+            if not args.custom:
+                speedtest.get_servers()
         except (ServersRetrievalError,) + HTTP_ERRORS:
             printer('Cannot retrieve speedtest server list', error=True)
             raise SpeedtestCLIError(get_exception())
@@ -1998,21 +2118,22 @@ def shell():
 
     if not args.mini:
         printer('Retrieving speedtest.net server list...', quiet)
-        try:
-            speedtest.get_servers(servers=args.server, exclude=args.exclude)
-        except NoMatchedServers:
-            raise SpeedtestCLIError(
-                'No matched servers: %s' %
-                ', '.join('%s' % s for s in args.server)
-            )
-        except (ServersRetrievalError,) + HTTP_ERRORS:
-            printer('Cannot retrieve speedtest server list', error=True)
-            raise SpeedtestCLIError(get_exception())
-        except InvalidServerIDType:
-            raise SpeedtestCLIError(
-                '%s is an invalid server type, must '
-                'be an int' % ', '.join('%s' % s for s in args.server)
-            )
+        if not args.custom:
+            try:
+                speedtest.get_servers(servers=args.server, exclude=args.exclude)
+            except NoMatchedServers:
+                raise SpeedtestCLIError(
+                    'No matched servers: %s' %
+                    ', '.join('%s' % s for s in args.server)
+                )
+            except (ServersRetrievalError,) + HTTP_ERRORS:
+                printer('Cannot retrieve speedtest server list', error=True)
+                raise SpeedtestCLIError(get_exception())
+            except InvalidServerIDType:
+                raise SpeedtestCLIError(
+                    '%s is an invalid server type, must '
+                    'be an int' % ', '.join('%s' % s for s in args.server)
+                )
 
         if args.server and len(args.server) == 1:
             printer('Retrieving information for the selected server...', quiet)
