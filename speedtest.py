@@ -1517,21 +1517,33 @@ class Speedtest(object):
         results = {}
         for server in servers:
             cum = []
-            sock = connection_factory(
-                server['host'],
-                timeout=self._timeout,
-                source_address=source_address
-            )
-
-            sock.sendall('HI\n'.encode())
-            sock.recv(1024)
+            try:
+                sock = connection_factory(
+                    server['host'],
+                    timeout=self._timeout,
+                    source_address=source_address
+                )
+                sock.sendall('HI\n'.encode())
+                sock.recv(1024)
+            except socket.error:
+                e = get_exception()
+                printer('ERROR: %r' % e, debug=True)
+                cum.append(3600 * 3)
+                continue
 
             for _ in range(0, 3):
                 start = timeit.default_timer()
-                sock.sendall(
-                    ('PING %d\n' % (int(timeit.time.time()) * 1000,)).encode()
-                )
-                resp = sock.recv(1024)
+                try:
+                    sock.sendall(
+                        ('PING %d\n' %
+                         (int(timeit.time.time()) * 1000,)).encode()
+                    )
+                    resp = sock.recv(1024)
+                except socket.errror:
+                    e = get_exception()
+                    printer('ERROR: %r' % e, debug=True)
+                    cum.append(3600)
+                    continue
                 total = (timeit.default_timer() - start)
                 if resp.startswith('PONG '.encode()):
                     cum.append(total)
@@ -1560,8 +1572,12 @@ class Speedtest(object):
         try:
             fastest = sorted(results.keys())[0]
         except IndexError:
+            if self._use_socket:
+                extra = ' Try the HTTP based tests by removing --socket.'
+            else:
+                extra = ''
             raise SpeedtestBestServerFailure('Unable to connect to servers to '
-                                             'test latency.')
+                                             'test latency.%s' % extra)
         best = results[fastest]
         best['latency'] = fastest
 
