@@ -2120,7 +2120,10 @@ def shell():
         printer('Retrieving speedtest.net server list...', quiet)
         if not args.custom:
             try:
-                speedtest.get_servers(servers=args.server, exclude=args.exclude)
+                speedtest.get_servers(
+                    servers=args.server,
+                    exclude=args.exclude
+                )
             except NoMatchedServers:
                 raise SpeedtestCLIError(
                     'No matched servers: %s' %
