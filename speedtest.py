@@ -963,18 +963,26 @@ class SpeedtestResults(object):
         writer.writerow([to_utf8(v) for v in row])
         return out.getvalue()
 
-    def csv(self, delimiter=','):
-        """Return data in CSV format"""
+    def byte_2_mbit(self, value):
+        return value/1000000
 
+    def csv(self, delimiter=',', mbit=False):
+        """Return data in CSV format"""
         data = self.dict()
+        upload = data['upload']
+        download = data['download']
+        if mbit:
+            upload = self.byte_2_mbit(upload)
+            download = self.byte_2_mbit(download)
         out = StringIO()
         writer = csv.writer(out, delimiter=delimiter, lineterminator='')
         row = [data['server']['id'], data['server']['sponsor'],
                data['server']['name'], data['timestamp'],
-               data['server']['d'], data['ping'], data['download'],
-               data['upload'], self._share or '', self.client['ip']]
+               data['server']['d'], data['ping'], download,
+               upload, self._share or '', self.client['ip']]
         writer.writerow([to_utf8(v) for v in row])
         return out.getvalue()
+
 
     def json(self, pretty=False):
         """Return data in JSON format"""
