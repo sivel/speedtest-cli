@@ -389,13 +389,11 @@ class SpeedtestHTTPConnection(HTTPConnection):
     """
     def __init__(self, *args, **kwargs):
         source_address = kwargs.pop('source_address', None)
-        context = kwargs.pop('context', None)
         timeout = kwargs.pop('timeout', 10)
 
         HTTPConnection.__init__(self, *args, **kwargs)
 
         self.source_address = source_address
-        self._context = context
         self.timeout = timeout
 
     def connect(self):
@@ -420,6 +418,17 @@ if HTTPSConnection:
         """Custom HTTPSConnection to support source_address across
         Python 2.4 - Python 3
         """
+        def __init__(self, *args, **kwargs):
+            source_address = kwargs.pop('source_address', None)
+            context = kwargs.pop('context', None)
+            timeout = kwargs.pop('timeout', 10)
+
+            HTTPSConnection.__init__(self, *args, **kwargs)
+
+            self.source_address = source_address
+            self._context = context
+            self.timeout = timeout
+
         def connect(self):
             "Connect to a host on a given (SSL) port."
 
@@ -428,8 +437,7 @@ if HTTPSConnection:
             kwargs = {}
             if hasattr(ssl, 'SSLContext'):
                 kwargs['server_hostname'] = self.host
-
-            self.sock = self._context.wrap_socket(self.sock, **kwargs)
+                self.sock = self._context.wrap_socket(self.sock, **kwargs)
 
 
 def _build_connection(connection, source_address, timeout, context=None):
