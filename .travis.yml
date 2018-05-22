@@ -42,7 +42,10 @@ before_install:
 install:
   - if [[ $(echo "$TOXENV" | egrep -c "py32") != 0 ]]; then pip install setuptools==17.1.1; fi;
   - if [[ $(echo "$TOXENV" | egrep -c "(py2[45]|py3[12])") != 0 ]]; then pip install virtualenv==1.7.2 tox==1.3; fi;
-  - if [[ $(echo "$TOXENV" | egrep -c "(py2[45]|py3[12])") == 0 ]]; then pip install tox; fi;
+  - if [[ $(echo "$TOXENV" | egrep -c "(py26|py33)") != 0 ]]; then pip install virtualenv==15.2.0 tox==2.9.1; fi;
+  - if [[ $(echo "$TOXENV" | egrep -c "(py2[456]|py3[123])") == 0 ]]; then pip install tox; fi;
+
+
 
 script:
   - tox
