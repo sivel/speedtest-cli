@@ -60,7 +60,6 @@ Homebrew
 
     brew install speedtest-cli
 
-
 Just download (Like the way it used to be)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
