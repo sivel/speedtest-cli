@@ -36,7 +36,7 @@ except ImportError:
     gzip = None
     GZIP_BASE = object
 
-__version__ = '2.0.1'
+__version__ = '2.0.2a'
 
 
 class FakeShutdownEvent(object):
@@ -85,9 +85,9 @@ except ImportError:
                                 HTTPErrorProcessor, OpenerDirector)
 
 try:
-    from httplib import HTTPConnection
+    from httplib import HTTPConnection, BadStatusLine
 except ImportError:
-    from http.client import HTTPConnection
+    from http.client import HTTPConnection, BadStatusLine
 
 try:
     from httplib import HTTPSConnection
@@ -266,10 +266,13 @@ try:
     except AttributeError:
         CERT_ERROR = tuple()
 
-    HTTP_ERRORS = ((HTTPError, URLError, socket.error, ssl.SSLError) +
-                   CERT_ERROR)
+    HTTP_ERRORS = (
+        (HTTPError, URLError, socket.error, ssl.SSLError, BadStatusLine) +
+        CERT_ERROR
+    )
 except ImportError:
-    HTTP_ERRORS = (HTTPError, URLError, socket.error)
+    ssl = None
+    HTTP_ERRORS = (HTTPError, URLError, socket.error, BadStatusLine)
 
 
 class SpeedtestException(Exception):
@@ -420,14 +423,12 @@ if HTTPSConnection:
         """
         def __init__(self, *args, **kwargs):
             source_address = kwargs.pop('source_address', None)
-            context = kwargs.pop('context', None)
             timeout = kwargs.pop('timeout', 10)
 
             HTTPSConnection.__init__(self, *args, **kwargs)
 
-            self.source_address = source_address
-            self._context = context
             self.timeout = timeout
+            self.source_address = source_address
 
         def connect(self):
             "Connect to a host on a given (SSL) port."
@@ -435,9 +436,13 @@ if HTTPSConnection:
             SpeedtestHTTPConnection.connect(self)
 
             kwargs = {}
-            if hasattr(ssl, 'SSLContext'):
-                kwargs['server_hostname'] = self.host
-                self.sock = self._context.wrap_socket(self.sock, **kwargs)
+            if ssl:
+                if hasattr(ssl, 'SSLContext'):
+                    kwargs['server_hostname'] = self.host
+                try:
+                    self.sock = self._context.wrap_socket(self.sock, **kwargs)
+                except AttributeError:
+                    self.sock = ssl.wrap_socket(self.sock, **kwargs)
 
 
 def _build_connection(connection, source_address, timeout, context=None):
