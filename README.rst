@@ -53,6 +53,14 @@ or
     git clone https://github.com/sivel/speedtest-cli.git
     python speedtest-cli/setup.py install
 
+Homebrew
+~~~~~~
+
+::
+
+    brew install speedtest-cli
+
+
 Just download (Like the way it used to be)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
