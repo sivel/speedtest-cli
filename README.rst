@@ -38,6 +38,13 @@ or
 ::
 
     easy_install speedtest-cli
+    
+MacOS - Brew
+~~~~~~~~~~~~~
+
+::
+
+    brew install speedtest-cli
 
 Github
 ~~~~~~
