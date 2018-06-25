@@ -341,6 +341,10 @@ class SpeedtestBestServerFailure(SpeedtestException):
     """Unable to determine best server"""
 
 
+class SpeedtestMissingBestServer(SpeedtestException):
+    """get_best_server not called or not able to determine best server"""
+
+
 def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
                       source_address=None):
     """Connect to *address* and return the socket object.
