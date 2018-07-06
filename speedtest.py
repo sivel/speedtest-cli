@@ -1833,6 +1833,8 @@ def shell():
 
     results = speedtest.results
 
+    printer('Server ID: %s' % results.dict()['server']['id'], quiet)
+
     printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
             '%(latency)s ms' % results.server, quiet)
 
