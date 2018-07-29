@@ -51,7 +51,8 @@ or
 ::
 
     git clone https://github.com/sivel/speedtest-cli.git
-    python speedtest-cli/setup.py install
+    cd speedtest-cli
+    python ./setup.py install
 
 Just download (Like the way it used to be)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
