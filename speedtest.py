@@ -1588,10 +1588,10 @@ class Speedtest(object):
         for k in servers:
             if len(servers[k]) > 1:
                 for srv in servers[k]:
-                    if value in srv[key].lower():
+                    if value.lower() in srv[key].lower():
                         filteredServer.append(srv)
             else:
-                if value in servers[k][0][key].lower():
+                if value.lower() in servers[k][0][key].lower():
                     filteredServer.append(servers[k][0])
         if not filteredServer:
             print_('No server available for this criteria')
@@ -1681,16 +1681,16 @@ def parse_args():
     parser.add_argument('--server', type=PARSER_TYPE_INT, action='append',
                         help='Specify a server ID to test against. Can be '
                              'supplied multiple times')
-    parser.add_argument('--country', type=str.lower,
+    parser.add_argument('--country', type=str,
                         help='Select the best server matching country name')
-    parser.add_argument('--cc', type=str.lower,
+    parser.add_argument('--cc', type=str,
                         help='Select the best server matching country code'
                              'valid input 2-letter country codes')
-    parser.add_argument('--city', type=str.lower,
+    parser.add_argument('--city', type=str,
                         help='Select the best server matching city name')
-    parser.add_argument('--sponsor', type=str.lower,
+    parser.add_argument('--sponsor', type=str,
                         help='Select the best server matching sponsor name')
-    parser.add_argument('--host', type=str.lower,
+    parser.add_argument('--host', type=str,
                         help='Select the best server matching host name')
     parser.add_argument('--exclude', type=PARSER_TYPE_INT, action='append',
                         help='Exclude a server from selection. Can be '
@@ -1866,27 +1866,26 @@ def shell():
             printer('Retrieving information for the selected server...', quiet)
         elif args.country:
             print_('Selecting best server in %s based on latency...' %
-                       args.country.capitalize())
+                   args.country.capitalize())
             filteredServers = speedtest.filter_server("country", args.country)
         elif args.cc:
             print_('Selecting best server in %s based on latency...' %
-                       args.cc.upper())
+                   args.cc.upper())
             filteredServers = speedtest.filter_server("cc", args.cc)
         elif args.city:
             print_('Selecting best server in %s based on latency...' %
-                       args.city.capitalize())
+                   args.city.capitalize())
             filteredServers = speedtest.filter_server("name", args.city)
         elif args.sponsor:
             print_('Selecting best server by %s based on latency...' %
-                       args.sponsor.capitalize())
+                   args.sponsor.capitalize())
             filteredServers = speedtest.filter_server("sponsor", args.sponsor)
         elif args.host:
             print_('Selecting best server with host %s based on latency...' %
-                       args.host)
+                   args.host)
             filteredServers = speedtest.filter_server("host", args.host)
         else:
             printer('Selecting best server based on ping...', quiet)
-        
         if args.country or args.cc or args.city or args.sponsor or args.host:
             speedtest.get_best_server(filteredServers)
         else:
