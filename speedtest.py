@@ -1577,6 +1577,32 @@ class Speedtest(object):
         )
         return self.results.upload
 
+    def filter_server(self, key, value):
+        """Filter servers using criteria\n
+        key: country, cc, name (city), host, sponsor, url.\n
+        value: any string
+        """
+        servers = self.get_servers()
+        filteredServer = []
+        closestServer = []
+        for k in servers:
+            if len(servers[k]) > 1:
+                for srv in servers[k]:
+                    if value in srv[key].lower():
+                        filteredServer.append(srv)
+            else:
+                if value in servers[k][0][key].lower():
+                    filteredServer.append(servers[k][0])
+        if not filteredServer:
+            print_('No server available for this criteria')
+            sys.exit(0)
+        # get closest server
+        for s in sorted(filteredServer, key=lambda k: float(k['d'])):
+            closestServer.append(s)
+            if len(closestServer) == 5:
+                break
+        return closestServer
+
 
 def ctrl_c(shutdown_event):
     """Catch Ctrl-C key sequence and set a SHUTDOWN_EVENT for our threaded
@@ -1655,6 +1681,17 @@ def parse_args():
     parser.add_argument('--server', type=PARSER_TYPE_INT, action='append',
                         help='Specify a server ID to test against. Can be '
                              'supplied multiple times')
+    parser.add_argument('--country', type=str.lower,
+                        help='Select the best server matching country name')
+    parser.add_argument('--cc', type=str.lower,
+                        help='Select the best server matching country code'
+                             'valid input 2-letter country codes')
+    parser.add_argument('--city', type=str.lower,
+                        help='Select the best server matching city name')
+    parser.add_argument('--sponsor', type=str.lower,
+                        help='Select the best server matching sponsor name')
+    parser.add_argument('--host', type=str.lower,
+                        help='Select the best server matching host name')
     parser.add_argument('--exclude', type=PARSER_TYPE_INT, action='append',
                         help='Exclude a server from selection. Can be '
                              'supplied multiple times')
@@ -1823,11 +1860,37 @@ def shell():
                 'be an int' % ', '.join('%s' % s for s in args.server)
             )
 
+        filteredServers = []
+
         if args.server and len(args.server) == 1:
             printer('Retrieving information for the selected server...', quiet)
+        elif args.country:
+            print_('Selecting best server in %s based on latency...' %
+                       args.country.capitalize())
+            filteredServers = speedtest.filter_server("country", args.country)
+        elif args.cc:
+            print_('Selecting best server in %s based on latency...' %
+                       args.cc.upper())
+            filteredServers = speedtest.filter_server("cc", args.cc)
+        elif args.city:
+            print_('Selecting best server in %s based on latency...' %
+                       args.city.capitalize())
+            filteredServers = speedtest.filter_server("name", args.city)
+        elif args.sponsor:
+            print_('Selecting best server by %s based on latency...' %
+                       args.sponsor.capitalize())
+            filteredServers = speedtest.filter_server("sponsor", args.sponsor)
+        elif args.host:
+            print_('Selecting best server with host %s based on latency...' %
+                       args.host)
+            filteredServers = speedtest.filter_server("host", args.host)
         else:
             printer('Selecting best server based on ping...', quiet)
-        speedtest.get_best_server()
+        
+        if args.country or args.cc or args.city or args.sponsor or args.host:
+            speedtest.get_best_server(filteredServers)
+        else:
+            speedtest.get_best_server()
     elif args.mini:
         speedtest.get_best_server(speedtest.set_mini_server(args.mini))
 
