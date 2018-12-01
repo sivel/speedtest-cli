@@ -1525,9 +1525,11 @@ class Speedtest(object):
             )
             if pre_allocate:
                 data.pre_allocate()
+            # Fix python3 upload problem: Add Content-length to avoid AbstractHTTPHandler use chunked
+            headers = {'Content-length': size}
             requests.append(
                 (
-                    build_request(self.best['url'], data, secure=self._secure),
+                    build_request(self.best['url'], data, secure=self._secure, headers=headers),
                     size
                 )
             )
