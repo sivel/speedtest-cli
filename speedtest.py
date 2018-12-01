@@ -1522,9 +1522,11 @@ class Speedtest(object):
             )
             if pre_allocate:
                 data.pre_allocate()
+
+            headers = {'Content-length': size}
             requests.append(
                 (
-                    build_request(self.best['url'], data, secure=self._secure),
+                    build_request(self.best['url'], data, secure=self._secure, headers=headers),
                     size
                 )
             )
