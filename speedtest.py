@@ -1041,10 +1041,7 @@ class Speedtest(object):
     @property
     def best(self):
         if not self._best:
-            raise SpeedtestMissingBestServer(
-                'get_best_server not called or not able to determine best '
-                'server'
-            )
+            self.get_best_server()
         return self._best
 
     def get_config(self):
