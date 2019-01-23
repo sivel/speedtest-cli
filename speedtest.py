@@ -1436,8 +1436,12 @@ class Speedtest(object):
         printer('Best Server:\n%r' % best, debug=True)
         return best
 
-    def download(self, callback=do_nothing):
-        """Test download speed against speedtest.net"""
+    def download(self, callback=do_nothing, threads=None):
+        """Test download speed against speedtest.net
+
+        A ``threads`` value of ``None`` will fall back to those dictated
+        by the speedtest.net configuration
+        """
 
         urls = []
         for size in self.config['sizes']['download']:
@@ -1476,7 +1480,7 @@ class Speedtest(object):
                 finished.append(sum(thread.result))
                 callback(thread.i, request_count, end=True)
 
-        q = Queue(self.config['threads']['download'])
+        q = Queue(threads or self.config['threads']['download'])
         prod_thread = threading.Thread(target=producer,
                                        args=(q, requests, request_count))
         cons_thread = threading.Thread(target=consumer,
@@ -1498,8 +1502,12 @@ class Speedtest(object):
             self.config['threads']['upload'] = 8
         return self.results.download
 
-    def upload(self, callback=do_nothing, pre_allocate=True):
-        """Test upload speed against speedtest.net"""
+    def upload(self, callback=do_nothing, pre_allocate=True, threads=None):
+        """Test upload speed against speedtest.net
+
+        A ``threads`` value of ``None`` will fall back to those dictated
+        by the speedtest.net configuration
+        """
 
         sizes = []
 
@@ -1557,7 +1565,7 @@ class Speedtest(object):
                 finished.append(thread.result)
                 callback(thread.i, request_count, end=True)
 
-        q = Queue(self.config['threads']['upload'])
+        q = Queue(threads or self.config['threads']['upload'])
         prod_thread = threading.Thread(target=producer,
                                        args=(q, requests, request_count))
         cons_thread = threading.Thread(target=consumer,
@@ -1625,6 +1633,10 @@ def parse_args():
     parser.add_argument('--no-upload', dest='upload', default=True,
                         action='store_const', const=False,
                         help='Do not perform upload test')
+    parser.add_argument('--single', default=False, action='store_true',
+                        help='Only use a single connection instead of '
+                             'multiple. This simulates a typical file '
+                             'transfer.')
     parser.add_argument('--bytes', dest='units', action='store_const',
                         const=('byte', 8), default=('bit', 1),
                         help='Display values in bytes instead of bits. Does '
@@ -1839,7 +1851,10 @@ def shell():
     if args.download:
         printer('Testing download speed', quiet,
                 end=('', '\n')[bool(debug)])
-        speedtest.download(callback=callback)
+        speedtest.download(
+            callback=callback,
+            threads=(None, 1)[args.single]
+        )
         printer('Download: %0.2f M%s/s' %
                 ((results.download / 1000.0 / 1000.0) / args.units[1],
                  args.units[0]),
@@ -1850,7 +1865,11 @@ def shell():
     if args.upload:
         printer('Testing upload speed', quiet,
                 end=('', '\n')[bool(debug)])
-        speedtest.upload(callback=callback, pre_allocate=args.pre_allocate)
+        speedtest.upload(
+            callback=callback,
+            pre_allocate=args.pre_allocate,
+            threads=(None, 1)[args.single]
+        )
         printer('Upload: %0.2f M%s/s' %
                 ((results.upload / 1000.0 / 1000.0) / args.units[1],
                  args.units[0]),
