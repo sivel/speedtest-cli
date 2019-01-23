@@ -1602,7 +1602,8 @@ def ctrl_c(shutdown_event):
 def version():
     """Print the version"""
 
-    printer(__version__)
+    printer('speedtest-cli %s' % __version__)
+    printer('Python %s' % sys.version.replace('\n', ''))
     sys.exit(0)
 
 
