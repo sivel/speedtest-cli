@@ -666,6 +666,8 @@ def catch_request(request, opener=None):
 
     try:
         uh = _open(request)
+        if request.get_full_url() != uh.geturl():
+            printer('Redirected to %s' % uh.geturl(), debug=True)
         return uh, False
     except HTTP_ERRORS:
         e = get_exception()
