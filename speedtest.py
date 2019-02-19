@@ -435,14 +435,18 @@ if HTTPSConnection:
 
             SpeedtestHTTPConnection.connect(self)
 
-            kwargs = {}
             if ssl:
-                if hasattr(ssl, 'SSLContext'):
-                    kwargs['server_hostname'] = self.host
                 try:
+                    kwargs = {}
+                    if hasattr(ssl, 'SSLContext'):
+                        kwargs['server_hostname'] = self.host
                     self.sock = self._context.wrap_socket(self.sock, **kwargs)
                 except AttributeError:
-                    self.sock = ssl.wrap_socket(self.sock, **kwargs)
+                    self.sock = ssl.wrap_socket(self.sock)
+                    try:
+                        self.sock.server_hostname = self.host
+                    except AttributeError:
+                        pass
 
 
 def _build_connection(connection, source_address, timeout, context=None):
