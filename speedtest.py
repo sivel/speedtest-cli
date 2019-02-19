@@ -1915,7 +1915,10 @@ def main():
         e = get_exception()
         # Ignore a successful exit, or argparse exit
         if getattr(e, 'code', 1) not in (0, 2):
-            raise SystemExit('ERROR: %s' % e)
+            msg = '%s' % e
+            if not msg:
+                msg = '%r' % e
+            raise SystemExit('ERROR: %s' % msg)
 
 
 if __name__ == '__main__':
