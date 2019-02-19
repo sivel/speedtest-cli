@@ -607,7 +607,7 @@ def build_user_agent():
 
     ua_tuple = (
         'Mozilla/5.0',
-        '(%s; U; %s; en-us)' % (platform.system(), platform.architecture()[0]),
+        '(%s; U; %s; en-us)' % (platform.platform(), platform.architecture()[0]),
         'Python/%s' % platform.python_version(),
         '(KHTML, like Gecko)',
         'speedtest-cli/%s' % __version__
