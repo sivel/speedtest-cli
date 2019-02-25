@@ -1893,7 +1893,6 @@ def shell():
 
 
 def main():
-
     try:
         shell()
     except KeyboardInterrupt:
