@@ -1730,8 +1730,8 @@ def printer(string, quiet=False, debug=False, error=False, **kwargs):
 def humanized(big_number):
 # Thanks to "T" on page http://code.activestate.com/recipes/577081-humanized-representation-of-a-number-of-bytes/
 # Convert big numbers to human readble shorter ones using Kilo, Mega, Giga etc.
-    prefix_list=['','Kilo','Mega','Giga','Tera', 'Peta', 'Exa', 'Zeta', 'Yotta'] # Long version
-#    prefix_list=['','K','M','G','T', 'P', 'E', 'Z', 'Y'] # Short version
+#    prefix_list=['','Kilo','Mega','Giga','Tera', 'Peta', 'Exa', 'Zeta', 'Yotta'] # Long versions
+    prefix_list=['','K','M','G','T', 'P', 'E', 'Z', 'Y'] # Short versions
     prefix_index = 0
     while (big_number >= 1000) and (prefix_index <= len(prefix_list)): # we are trying get below 1000
         prefix_index += 1
@@ -1851,15 +1851,18 @@ def shell():
     printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
             '%(latency)s ms' % results.server, quiet)
 
+    if args.simple:
+        printer('Ping: %s ms' % results.ping)
+
     if args.download:
         printer('Testing download speed', quiet,
                 end=('', '\n')[bool(debug)])
         speedtest.download(callback=callback)
         if args.human:
-		    resultstr = humanized(results.download / args.units[1])
+            resultstr_down = humanized(results.download / args.units[1])
         else:
-            resultstr = '%0.2f ' % (results.download / args.units[1]) # ? why not 1024.0
-        printer('Download: %s%s/s' % (resultstr, args.units[0]), quiet)
+            resultstr_down = '%0.2f ' % (results.download / args.units[1])
+        printer('Download: %s%s/s' % (resultstr_down, args.units[0]))
     else:
         printer('Skipping download test', quiet)
 
@@ -1868,10 +1871,10 @@ def shell():
                 end=('', '\n')[bool(debug)])
         speedtest.upload(callback=callback, pre_allocate=args.pre_allocate)
         if args.human:
-		    resultstr = humanized(results.upload / args.units[1])
+            resultstr_up = humanized(results.upload / args.units[1])
         else:
-            resultstr = '%0.2f ' % (results.upload / args.units[1]) # ? why not 1024.0
-        printer('Upload: %s%s/s' % (resultstr, args.units[0]), quiet)
+            resultstr_up = '%0.2f ' % (results.upload / args.units[1])
+        printer('Upload: %s%s/s' % (resultstr_up, args.units[0]))
     else:
         printer('Skipping upload test', quiet)
 
@@ -1880,13 +1883,6 @@ def shell():
     if not args.simple and args.share:
         results.share()
 
-    if args.simple:
-        printer('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
-                (results.ping,
-                 (results.download / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0],
-                 (results.upload / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]))
     elif args.csv:
         printer(results.csv(delimiter=args.csv_delimiter))
     elif args.json:
@@ -1897,7 +1893,7 @@ def shell():
 
 
 def main():
-		
+
     try:
         shell()
     except KeyboardInterrupt:
