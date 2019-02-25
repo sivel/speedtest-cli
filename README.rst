@@ -95,6 +95,7 @@ Usage
       --share               Generate and provide a URL to the speedtest.net share
                             results image, not displayed with --csv
       --simple              Suppress verbose output, only show basic information
+      --no-human            Do not print (values) as human readable
       --csv                 Suppress verbose output, only show basic information
                             in CSV format. Speeds listed in bit/s and not affected
                             by --bytes
