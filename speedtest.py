@@ -1636,6 +1636,9 @@ def parse_args():
     parser.add_argument('--simple', action='store_true', default=False,
                         help='Suppress verbose output, only show basic '
                              'information')
+    parser.add_argument('--no-human', dest='human', default=True,
+                        action='store_const', const=False,
+                        help='Do not print (values) as human readable')
     parser.add_argument('--csv', action='store_true', default=False,
                         help='Suppress verbose output, only show basic '
                              'information in CSV format. Speeds listed in '
@@ -1722,6 +1725,18 @@ def printer(string, quiet=False, debug=False, error=False, **kwargs):
 
     if not quiet:
         print_(out, **kwargs)
+
+
+def humanized(big_number):
+# Thanks to "T" on page http://code.activestate.com/recipes/577081-humanized-representation-of-a-number-of-bytes/
+# Convert big numbers to human readble shorter ones using Kilo, Mega, Giga etc.
+#    prefix_list=['','Kilo','Mega','Giga','Tera', 'Peta', 'Exa', 'Zeta', 'Yotta'] # Long versions
+    prefix_list=['','K','M','G','T', 'P', 'E', 'Z', 'Y'] # Short versions
+    prefix_index = 0
+    while (big_number >= 1000) and (prefix_index <= len(prefix_list)): # we are trying get below 1000
+        prefix_index += 1
+        big_number = big_number / 1024.0
+    return "%.2f %s"%(big_number, prefix_list[prefix_index])
 
 
 def shell():
@@ -1836,14 +1851,18 @@ def shell():
     printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
             '%(latency)s ms' % results.server, quiet)
 
+    if args.simple:
+        printer('Ping: %s ms' % results.ping)
+
     if args.download:
         printer('Testing download speed', quiet,
                 end=('', '\n')[bool(debug)])
         speedtest.download(callback=callback)
-        printer('Download: %0.2f M%s/s' %
-                ((results.download / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]),
-                quiet)
+        if args.human:
+            resultstr_down = humanized(results.download / args.units[1])
+        else:
+            resultstr_down = '%0.2f ' % (results.download / args.units[1])
+        printer('Download: %s%s/s' % (resultstr_down, args.units[0]))
     else:
         printer('Skipping download test', quiet)
 
@@ -1851,10 +1870,11 @@ def shell():
         printer('Testing upload speed', quiet,
                 end=('', '\n')[bool(debug)])
         speedtest.upload(callback=callback, pre_allocate=args.pre_allocate)
-        printer('Upload: %0.2f M%s/s' %
-                ((results.upload / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]),
-                quiet)
+        if args.human:
+            resultstr_up = humanized(results.upload / args.units[1])
+        else:
+            resultstr_up = '%0.2f ' % (results.upload / args.units[1])
+        printer('Upload: %s%s/s' % (resultstr_up, args.units[0]))
     else:
         printer('Skipping upload test', quiet)
 
@@ -1863,13 +1883,6 @@ def shell():
     if not args.simple and args.share:
         results.share()
 
-    if args.simple:
-        printer('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
-                (results.ping,
-                 (results.download / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0],
-                 (results.upload / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]))
     elif args.csv:
         printer(results.csv(delimiter=args.csv_delimiter))
     elif args.json:
