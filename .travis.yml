@@ -5,6 +5,7 @@ addons:
     sources:
       - deadsnakes
     packages:
+      - libssl1.0.0
       - python2.4
       - python2.5
       - python2.6
