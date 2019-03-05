@@ -5,8 +5,8 @@ addons:
     sources:
       - deadsnakes
     packages:
-      - python2.4
-      - python2.5
+      # - python2.4
+      # - python2.5
       - python2.6
       - python3.2
       - python3.3
@@ -15,10 +15,10 @@ matrix:
   include:
     - python: 2.7
       env: TOXENV=flake8
-    - python: 2.7
-      env: TOXENV=py24
-    - python: 2.7
-      env: TOXENV=py25
+    # - python: 2.7
+    #   env: TOXENV=py24
+    # - python: 2.7
+    #   env: TOXENV=py25
     - python: 2.7
       env: TOXENV=py26
     - python: 2.7
