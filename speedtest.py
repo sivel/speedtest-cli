@@ -53,6 +53,7 @@ class FakeShutdownEvent(object):
 # Some global variables we use
 DEBUG = False
 _GLOBAL_DEFAULT_TIMEOUT = object()
+PY25PLUS = sys.version_info[:2] >= (2, 5)
 PY26PLUS = sys.version_info[:2] >= (2, 6)
 PY32PLUS = sys.version_info[:2] >= (3, 2)
 
@@ -267,7 +268,7 @@ else:
 
 if PY32PLUS:
     etree_iter = ET.Element.iter
-elif PY26PLUS:
+elif PY25PLUS:
     etree_iter = ET_Element.getiterator
 
 if PY26PLUS:
