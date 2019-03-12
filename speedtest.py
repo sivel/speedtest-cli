@@ -98,6 +98,11 @@ except ImportError:
         HTTPSConnection = None
 
 try:
+    from httplib import FakeSocket
+except ImportError:
+    FakeSocket = None
+
+try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
@@ -447,6 +452,20 @@ if HTTPSConnection:
                         self.sock.server_hostname = self.host
                     except AttributeError:
                         pass
+            elif FakeSocket:
+                # Python 2.4/2.5 support
+                try:
+                    self.sock = FakeSocket(self.sock, socket.ssl(self.sock))
+                except AttributeError:
+                    raise SpeedtestException(
+                        'This version of Python does not support HTTPS/SSL '
+                        'functionality'
+                    )
+            else:
+                raise SpeedtestException(
+                    'This version of Python does not support HTTPS/SSL '
+                    'functionality'
+                )
 
 
 def _build_connection(connection, source_address, timeout, context=None):
