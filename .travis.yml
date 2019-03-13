@@ -1,4 +1,6 @@
 language: python
+sudo: required
+dist: xenial
 
 addons:
   apt:
