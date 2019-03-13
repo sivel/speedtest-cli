@@ -41,6 +41,7 @@ matrix:
       env: TOXENV=py38
     - python: pypy
       env: TOXENV=pypy
+      dist: trusty
 
 before_install:
   - if [[ $(echo "$TOXENV" | egrep -c "py35") != 0 ]]; then pyenv global system 3.5; fi;
