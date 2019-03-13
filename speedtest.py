@@ -412,6 +412,7 @@ class SpeedtestHTTPConnection(HTTPConnection):
     def __init__(self, *args, **kwargs):
         source_address = kwargs.pop('source_address', None)
         timeout = kwargs.pop('timeout', 10)
+        kwargs.pop('verify', None)
 
         HTTPConnection.__init__(self, *args, **kwargs)
 
@@ -443,11 +444,21 @@ if HTTPSConnection:
         def __init__(self, *args, **kwargs):
             source_address = kwargs.pop('source_address', None)
             timeout = kwargs.pop('timeout', 10)
+            verify = kwargs.pop('verify', True)
 
             HTTPSConnection.__init__(self, *args, **kwargs)
 
             self.timeout = timeout
             self.source_address = source_address
+
+            self.verify = verify
+            if not verify and hasattr(ssl, 'SSLContext'):
+                self._context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+                if ssl.OP_NO_SSLv2:
+                    self._context.options |= ssl.OP_NO_SSLv2
+                self._context.options |= ssl.OP_NO_SSLv3
+                self._context.verify_mode = ssl.CERT_NONE
+                self._context.check_hostname = False
 
         def connect(self):
             "Connect to a host on a given (SSL) port."
@@ -457,7 +468,7 @@ if HTTPSConnection:
             if ssl:
                 try:
                     kwargs = {}
-                    if hasattr(ssl, 'SSLContext'):
+                    if hasattr(ssl, 'SSLContext') and self.verify:
                         kwargs['server_hostname'] = self.host
                     self.sock = self._context.wrap_socket(self.sock, **kwargs)
                 except AttributeError:
@@ -482,7 +493,8 @@ if HTTPSConnection:
                 )
 
 
-def _build_connection(connection, source_address, timeout, context=None):
+def _build_connection(connection, source_address, timeout, verify=None,
+                      context=None):
     """Cross Python 2.4 - Python 3 callable to build an ``HTTPConnection`` or
     ``HTTPSConnection`` with the args we need
 
@@ -492,7 +504,8 @@ def _build_connection(connection, source_address, timeout, context=None):
     def inner(host, **kwargs):
         kwargs.update({
             'source_address': source_address,
-            'timeout': timeout
+            'timeout': timeout,
+            'verify': verify,
         })
         if context:
             kwargs['context'] = context
@@ -514,7 +527,7 @@ class SpeedtestHTTPHandler(AbstractHTTPHandler):
             _build_connection(
                 SpeedtestHTTPConnection,
                 self.source_address,
-                self.timeout
+                self.timeout,
             ),
             req
         )
@@ -527,11 +540,12 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
     args we need for ``source_address`` and ``timeout``
     """
     def __init__(self, debuglevel=0, context=None, source_address=None,
-                 timeout=10):
+                 timeout=10, verify=True):
         AbstractHTTPHandler.__init__(self, debuglevel)
         self._context = context
         self.source_address = source_address
         self.timeout = timeout
+        self.verify = verify
 
     def https_open(self, req):
         return self.do_open(
@@ -539,6 +553,7 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
                 SpeedtestHTTPSConnection,
                 self.source_address,
                 self.timeout,
+                self.verify,
                 context=self._context,
             ),
             req
@@ -547,7 +562,7 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
     https_request = AbstractHTTPHandler.do_request_
 
 
-def build_opener(source_address=None, timeout=10):
+def build_opener(source_address=None, timeout=10, verify=True):
     """Function similar to ``urllib2.build_opener`` that will build
     an ``OpenerDirector`` with the explicit handlers we want,
     ``source_address`` for binding, ``timeout`` and our custom
@@ -568,7 +583,7 @@ def build_opener(source_address=None, timeout=10):
         SpeedtestHTTPHandler(source_address=source_address_tuple,
                              timeout=timeout),
         SpeedtestHTTPSHandler(source_address=source_address_tuple,
-                              timeout=timeout),
+                              timeout=timeout, verify=verify),
         HTTPDefaultErrorHandler(),
         HTTPRedirectHandler(),
         HTTPErrorProcessor()
@@ -655,7 +670,7 @@ def build_user_agent():
     return user_agent
 
 
-def build_request(url, data=None, headers=None, bump='0', secure=False):
+def build_request(url, data=None, headers=None, bump='0'):
     """Build a urllib2 request object
 
     This function automatically adds a User-Agent header to all requests
@@ -666,8 +681,7 @@ def build_request(url, data=None, headers=None, bump='0', secure=False):
         headers = {}
 
     if url[0] == ':':
-        scheme = ('http', 'https')[bool(secure)]
-        schemed_url = '%s%s' % (scheme, url)
+        schemed_url = '%s%s' % ('https', url)
     else:
         schemed_url = url
 
@@ -909,7 +923,7 @@ class SpeedtestResults(object):
     """
 
     def __init__(self, download=0, upload=0, ping=0, server=None, client=None,
-                 opener=None, secure=False):
+                 opener=None, verify=True):
         self.download = download
         self.upload = upload
         self.ping = ping
@@ -927,9 +941,7 @@ class SpeedtestResults(object):
         if opener:
             self._opener = opener
         else:
-            self._opener = build_opener()
-
-        self._secure = secure
+            self._opener = build_opener(verify=verify)
 
     def __repr__(self):
         return repr(self.dict())
@@ -972,7 +984,7 @@ class SpeedtestResults(object):
         headers = {'Referer': 'http://c.speedtest.net/flash/speedtest.swf'}
         request = build_request('://www.speedtest.net/api/api.php',
                                 data='&'.join(api_data).encode(),
-                                headers=headers, secure=self._secure)
+                                headers=headers)
         f, e = catch_request(request, opener=self._opener)
         if e:
             raise ShareResultsConnectFailure(e)
@@ -991,7 +1003,7 @@ class SpeedtestResults(object):
             raise ShareResultsSubmitFailure('Could not submit results to '
                                             'speedtest.net')
 
-        self._share = 'http://www.speedtest.net/result/%s.png' % resultid[0]
+        self._share = 'https://www.speedtest.net/result/%s.png' % resultid[0]
 
         return self._share
 
@@ -1050,14 +1062,13 @@ class Speedtest(object):
     """Class for performing standard speedtest.net testing operations"""
 
     def __init__(self, config=None, source_address=None, timeout=10,
-                 secure=False, shutdown_event=None):
+                 shutdown_event=None, verify=True):
         self.config = {}
 
         self._source_address = source_address
         self._timeout = timeout
-        self._opener = build_opener(source_address, timeout)
-
-        self._secure = secure
+        self._opener = build_opener(source_address, timeout, verify=verify)
+        self._verify = verify
 
         if shutdown_event:
             self._shutdown_event = shutdown_event
@@ -1075,7 +1086,7 @@ class Speedtest(object):
         self.results = SpeedtestResults(
             client=self.config['client'],
             opener=self._opener,
-            secure=secure,
+            verify=self._verify,
         )
 
     @property
@@ -1093,7 +1104,7 @@ class Speedtest(object):
         if gzip:
             headers['Accept-Encoding'] = 'gzip'
         request = build_request('://www.speedtest.net/speedtest-config.php',
-                                headers=headers, secure=self._secure)
+                                headers=headers)
         uh, e = catch_request(request, opener=self._opener)
         if e:
             raise ConfigRetrievalError(e)
@@ -1223,9 +1234,7 @@ class Speedtest(object):
 
         urls = [
             '://www.speedtest.net/speedtest-servers-static.php',
-            'http://c.speedtest.net/speedtest-servers-static.php',
             '://www.speedtest.net/speedtest-servers.php',
-            'http://c.speedtest.net/speedtest-servers.php',
         ]
 
         headers = {}
@@ -1239,7 +1248,6 @@ class Speedtest(object):
                     '%s?threads=%s' % (url,
                                        self.config['threads']['download']),
                     headers=headers,
-                    secure=self._secure
                 )
                 uh, e = catch_request(request, opener=self._opener)
                 if e:
@@ -1432,7 +1440,8 @@ class Speedtest(object):
                     if urlparts[0] == 'https':
                         h = SpeedtestHTTPSConnection(
                             urlparts[1],
-                            source_address=source_address_tuple
+                            source_address=source_address_tuple,
+                            verify=self._verify,
                         )
                     else:
                         h = SpeedtestHTTPConnection(
@@ -1493,7 +1502,7 @@ class Speedtest(object):
         requests = []
         for i, url in enumerate(urls):
             requests.append(
-                build_request(url, bump=i, secure=self._secure)
+                build_request(url, bump=i)
             )
 
         def producer(q, requests, request_count):
@@ -1576,7 +1585,7 @@ class Speedtest(object):
             headers = {'Content-length': size}
             requests.append(
                 (
-                    build_request(self.best['url'], data, secure=self._secure,
+                    build_request(self.best['url'], data,
                                   headers=headers),
                     size
                 )
@@ -1719,9 +1728,11 @@ def parse_args():
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=PARSER_TYPE_FLOAT,
                         help='HTTP timeout in seconds. Default 10')
-    parser.add_argument('--secure', action='store_true',
-                        help='Use HTTPS instead of HTTP when communicating '
-                             'with speedtest.net operated servers')
+    parser.add_argument('--no-verify', default=True, dest='verify',
+                        action='store_false',
+                        help='Do not verify SSL certs, only affects Python '
+                             'versions supporting SSL verification, such as '
+                             '>=2.7.9 or where backported.')
     parser.add_argument('--no-pre-allocate', dest='pre_allocate',
                         action='store_const', default=True, const=False,
                         help='Do not pre allocate upload data. Pre allocation '
@@ -1751,7 +1762,6 @@ def validate_optional_args(args):
     """
     optional_args = {
         'json': ('json/simplejson python module', json),
-        'secure': ('SSL support', HTTPSConnection),
     }
 
     for arg, info in optional_args.items():
@@ -1834,7 +1844,7 @@ def shell():
         speedtest = Speedtest(
             source_address=args.source,
             timeout=args.timeout,
-            secure=args.secure
+            verify=args.verify,
         )
     except (ConfigRetrievalError,) + HTTP_ERRORS:
         printer('Cannot retrieve speedtest configuration', error=True)
