@@ -53,6 +53,9 @@ class FakeShutdownEvent(object):
 # Some global variables we use
 DEBUG = False
 _GLOBAL_DEFAULT_TIMEOUT = object()
+PY25PLUS = sys.version_info[:2] >= (2, 5)
+PY26PLUS = sys.version_info[:2] >= (2, 6)
+PY32PLUS = sys.version_info[:2] >= (3, 2)
 
 # Begin import game to handle Python 2 and Python 3
 try:
@@ -64,14 +67,15 @@ except ImportError:
         json = None
 
 try:
-    import xml.etree.cElementTree as ET
-except ImportError:
+    import xml.etree.ElementTree as ET
     try:
-        import xml.etree.ElementTree as ET
+        from xml.etree.ElementTree import _Element as ET_Element
     except ImportError:
-        from xml.dom import minidom as DOM
-        from xml.parsers.expat import ExpatError
-        ET = None
+        pass
+except ImportError:
+    from xml.dom import minidom as DOM
+    from xml.parsers.expat import ExpatError
+    ET = None
 
 try:
     from urllib2 import (urlopen, Request, HTTPError, URLError,
@@ -261,6 +265,16 @@ else:
                 write(sep)
             write(arg)
         write(end)
+
+if PY32PLUS:
+    etree_iter = ET.Element.iter
+elif PY25PLUS:
+    etree_iter = ET_Element.getiterator
+
+if PY26PLUS:
+    thread_is_alive = threading.Thread.is_alive
+else:
+    thread_is_alive = threading.Thread.isAlive
 
 
 # Exception "constants" to support Python 2 through Python 3
@@ -1262,7 +1276,7 @@ class Speedtest(object):
                             raise SpeedtestServersError(
                                 'Malformed speedtest.net server list: %s' % e
                             )
-                        elements = root.getiterator('server')
+                        elements = etree_iter(root, 'server')
                     except AttributeError:
                         try:
                             root = DOM.parseString(serversxml)
@@ -1499,9 +1513,10 @@ class Speedtest(object):
         finished = []
 
         def consumer(q, request_count):
+            _is_alive = thread_is_alive
             while len(finished) < request_count:
                 thread = q.get(True)
-                while thread.isAlive():
+                while _is_alive(thread):
                     thread.join(timeout=0.1)
                 finished.append(sum(thread.result))
                 callback(thread.i, request_count, end=True)
@@ -1514,9 +1529,10 @@ class Speedtest(object):
         start = timeit.default_timer()
         prod_thread.start()
         cons_thread.start()
-        while prod_thread.isAlive():
+        _is_alive = thread_is_alive
+        while _is_alive(prod_thread):
             prod_thread.join(timeout=0.1)
-        while cons_thread.isAlive():
+        while _is_alive(cons_thread):
             cons_thread.join(timeout=0.1)
 
         stop = timeit.default_timer()
@@ -1584,9 +1600,10 @@ class Speedtest(object):
         finished = []
 
         def consumer(q, request_count):
+            _is_alive = thread_is_alive
             while len(finished) < request_count:
                 thread = q.get(True)
-                while thread.isAlive():
+                while _is_alive(thread):
                     thread.join(timeout=0.1)
                 finished.append(thread.result)
                 callback(thread.i, request_count, end=True)
@@ -1599,9 +1616,10 @@ class Speedtest(object):
         start = timeit.default_timer()
         prod_thread.start()
         cons_thread.start()
-        while prod_thread.isAlive():
+        _is_alive = thread_is_alive
+        while _is_alive(prod_thread):
             prod_thread.join(timeout=0.1)
-        while cons_thread.isAlive():
+        while _is_alive(cons_thread):
             cons_thread.join(timeout=0.1)
 
         stop = timeit.default_timer()
