@@ -36,7 +36,7 @@ except ImportError:
     gzip = None
     GZIP_BASE = object
 
-__version__ = '2.1.1'
+__version__ = '2.1.2a'
 
 
 class FakeShutdownEvent(object):
