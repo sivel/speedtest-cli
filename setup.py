@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright 2012-2016 Matt Martz
+# Copyright 2012 Matt Martz
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -66,7 +66,7 @@ setup(
     author_email='matt@sivel.net',
     url='https://github.com/sivel/speedtest-cli',
     license='Apache License, Version 2.0',
-    py_modules=['speedtest', 'speedtest_cli'],
+    py_modules=['speedtest'],
     entry_points={
         'console_scripts': [
             'speedtest=speedtest:main',
@@ -90,5 +90,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ]
 )

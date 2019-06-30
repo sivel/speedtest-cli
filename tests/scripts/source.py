@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright 2012-2016 Matt Martz
+# Copyright 2018 Matt Martz
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,20 +15,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import warnings
+import sys
+import subprocess
 
-DEPRECATED_MSG = ('The file speedtest_cli.py has been deprecated in favor of '
-                  'speedtest.py\nand is available for download at:\n\n'
-                  'https://raw.githubusercontent.com/sivel/speedtest-cli/'
-                  'master/speedtest.py')
+cmd = [sys.executable, 'speedtest.py', '--source', '127.0.0.1']
 
+p = subprocess.Popen(
+    cmd,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
+)
 
-if __name__ == '__main__':
-    raise SystemExit(DEPRECATED_MSG)
-else:
-    try:
-        from speedtest import *
-    except ImportError:
-        raise SystemExit(DEPRECATED_MSG)
-    else:
-        warnings.warn(DEPRECATED_MSG, UserWarning)
+stdout, stderr = p.communicate()
+
+if p.returncode != 1:
+    raise SystemExit('%s did not fail with exit code 1' % ' '.join(cmd))
+
+if 'Invalid argument'.encode() not in stderr:
+    raise SystemExit(
+        '"Invalid argument" not found in stderr:\n%s' % stderr.decode()
+    )
