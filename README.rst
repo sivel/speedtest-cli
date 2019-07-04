@@ -26,8 +26,8 @@ speedtest-cli works with Python 2.4-3.7
 Installation
 ------------
 
-pip / easy\_install
-~~~~~~~~~~~~~~~~~~~
+pip / easy\_install / brew
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -38,6 +38,12 @@ or
 ::
 
     easy_install speedtest-cli
+
+or
+
+::
+
+    brew install speedtest-cli
 
 Github
 ~~~~~~
