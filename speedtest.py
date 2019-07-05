@@ -413,6 +413,8 @@ class SpeedtestHTTPConnection(HTTPConnection):
         source_address = kwargs.pop('source_address', None)
         timeout = kwargs.pop('timeout', 10)
 
+        self._tunnel_host = None
+
         HTTPConnection.__init__(self, *args, **kwargs)
 
         self.source_address = source_address
@@ -433,16 +435,22 @@ class SpeedtestHTTPConnection(HTTPConnection):
                 self.source_address
             )
 
+        if self._tunnel_host:
+            self._tunnel()
+
 
 if HTTPSConnection:
-    class SpeedtestHTTPSConnection(HTTPSConnection,
-                                   SpeedtestHTTPConnection):
+    class SpeedtestHTTPSConnection(HTTPSConnection):
         """Custom HTTPSConnection to support source_address across
         Python 2.4 - Python 3
         """
+        default_port = 443
+
         def __init__(self, *args, **kwargs):
             source_address = kwargs.pop('source_address', None)
             timeout = kwargs.pop('timeout', 10)
+
+            self._tunnel_host = None
 
             HTTPSConnection.__init__(self, *args, **kwargs)
 
@@ -451,14 +459,30 @@ if HTTPSConnection:
 
         def connect(self):
             "Connect to a host on a given (SSL) port."
+            try:
+                self.sock = socket.create_connection(
+                    (self.host, self.port),
+                    self.timeout,
+                    self.source_address
+                )
+            except (AttributeError, TypeError):
+                self.sock = create_connection(
+                    (self.host, self.port),
+                    self.timeout,
+                    self.source_address
+                )
 
-            SpeedtestHTTPConnection.connect(self)
+            if self._tunnel_host:
+                self._tunnel()
 
             if ssl:
                 try:
                     kwargs = {}
                     if hasattr(ssl, 'SSLContext'):
-                        kwargs['server_hostname'] = self.host
+                        if self._tunnel_host:
+                            kwargs['server_hostname'] = self._tunnel_host
+                        else:
+                            kwargs['server_hostname'] = self.host
                     self.sock = self._context.wrap_socket(self.sock, **kwargs)
                 except AttributeError:
                     self.sock = ssl.wrap_socket(self.sock)
