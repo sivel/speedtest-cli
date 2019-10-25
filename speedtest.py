@@ -28,6 +28,10 @@ import datetime
 import platform
 import threading
 import xml.parsers.expat
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
 
 try:
     import gzip
