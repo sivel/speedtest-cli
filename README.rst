@@ -79,7 +79,8 @@ Usage
                          [--share] [--simple] [--csv]
                          [--csv-delimiter CSV_DELIMITER] [--csv-header] [--json]
                          [--list] [--server SERVER] [--exclude EXCLUDE]
-                         [--mini MINI] [--source SOURCE] [--timeout TIMEOUT]
+                         [--mini MINI] [--source SOURCE]
+                         [--timeout TIMEOUT] [--interface INTERFACE]
                          [--secure] [--no-pre-allocate] [--version]
 
     Command line interface for testing internet bandwidth using speedtest.net.
@@ -116,6 +117,7 @@ Usage
                             multiple times
       --mini MINI           URL of the Speedtest Mini server
       --source SOURCE       Source IP address to bind to
+      --interface INTERFACE Network interface device to bind to. (Only on Linux)
       --timeout TIMEOUT     HTTP timeout in seconds. Default 10
       --secure              Use HTTPS instead of HTTP when communicating with
                             speedtest.net operated servers

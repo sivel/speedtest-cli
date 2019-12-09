@@ -365,7 +365,7 @@ class SpeedtestMissingBestServer(SpeedtestException):
 
 
 def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
-                      source_address=None):
+                      source_address=None, interface=None):
     """Connect to *address* and return the socket object.
 
     Convenience function.  Connect to *address* (a 2-tuple ``(host,
@@ -391,6 +391,9 @@ def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
                 sock.settimeout(float(timeout))
             if source_address:
                 sock.bind(source_address)
+            if interface:
+                sock.setsockopt(socket.SOL_SOCKET, 25, interface)
+
             sock.connect(sa)
             return sock
 
@@ -411,6 +414,7 @@ class SpeedtestHTTPConnection(HTTPConnection):
     """
     def __init__(self, *args, **kwargs):
         source_address = kwargs.pop('source_address', None)
+        interface = kwargs.pop('interface', None)
         timeout = kwargs.pop('timeout', 10)
 
         self._tunnel_host = None
@@ -418,18 +422,20 @@ class SpeedtestHTTPConnection(HTTPConnection):
         HTTPConnection.__init__(self, *args, **kwargs)
 
         self.source_address = source_address
+        self.interface = interface
         self.timeout = timeout
 
     def connect(self):
         """Connect to the host and port specified in __init__."""
         try:
-            self.sock = socket.create_connection(
+            self.sock = create_connection(
                 (self.host, self.port),
                 self.timeout,
-                self.source_address
+                self.source_address,
+                self.interface
             )
         except (AttributeError, TypeError):
-            self.sock = create_connection(
+            self.sock = socket.create_connection(
                 (self.host, self.port),
                 self.timeout,
                 self.source_address
@@ -448,6 +454,7 @@ if HTTPSConnection:
 
         def __init__(self, *args, **kwargs):
             source_address = kwargs.pop('source_address', None)
+            interface = kwargs.pop('interface', None)
             timeout = kwargs.pop('timeout', 10)
 
             self._tunnel_host = None
@@ -456,17 +463,19 @@ if HTTPSConnection:
 
             self.timeout = timeout
             self.source_address = source_address
+            self.interface = interface
 
         def connect(self):
             "Connect to a host on a given (SSL) port."
             try:
-                self.sock = socket.create_connection(
+                self.sock = create_connection(
                     (self.host, self.port),
                     self.timeout,
-                    self.source_address
+                    self.source_address,
+                    self.interface
                 )
             except (AttributeError, TypeError):
-                self.sock = create_connection(
+                self.sock = socket.create_connection(
                     (self.host, self.port),
                     self.timeout,
                     self.source_address
@@ -506,7 +515,8 @@ if HTTPSConnection:
                 )
 
 
-def _build_connection(connection, source_address, timeout, context=None):
+def _build_connection(connection, source_address, interface,
+                      timeout, context=None):
     """Cross Python 2.4 - Python 3 callable to build an ``HTTPConnection`` or
     ``HTTPSConnection`` with the args we need
 
@@ -516,6 +526,7 @@ def _build_connection(connection, source_address, timeout, context=None):
     def inner(host, **kwargs):
         kwargs.update({
             'source_address': source_address,
+            'interface': interface,
             'timeout': timeout
         })
         if context:
@@ -528,9 +539,11 @@ class SpeedtestHTTPHandler(AbstractHTTPHandler):
     """Custom ``HTTPHandler`` that can build a ``HTTPConnection`` with the
     args we need for ``source_address`` and ``timeout``
     """
-    def __init__(self, debuglevel=0, source_address=None, timeout=10):
+    def __init__(self, debuglevel=0, source_address=None,
+                 interface=None, timeout=10):
         AbstractHTTPHandler.__init__(self, debuglevel)
         self.source_address = source_address
+        self.interface = interface
         self.timeout = timeout
 
     def http_open(self, req):
@@ -538,6 +551,7 @@ class SpeedtestHTTPHandler(AbstractHTTPHandler):
             _build_connection(
                 SpeedtestHTTPConnection,
                 self.source_address,
+                self.interface,
                 self.timeout
             ),
             req
@@ -551,10 +565,11 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
     args we need for ``source_address`` and ``timeout``
     """
     def __init__(self, debuglevel=0, context=None, source_address=None,
-                 timeout=10):
+                 interface=None, timeout=10):
         AbstractHTTPHandler.__init__(self, debuglevel)
         self._context = context
         self.source_address = source_address
+        self.interface = interface
         self.timeout = timeout
 
     def https_open(self, req):
@@ -562,6 +577,7 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
             _build_connection(
                 SpeedtestHTTPSConnection,
                 self.source_address,
+                self.interface,
                 self.timeout,
                 context=self._context,
             ),
@@ -571,7 +587,7 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
     https_request = AbstractHTTPHandler.do_request_
 
 
-def build_opener(source_address=None, timeout=10):
+def build_opener(source_address=None, interface=None, timeout=10):
     """Function similar to ``urllib2.build_opener`` that will build
     an ``OpenerDirector`` with the explicit handlers we want,
     ``source_address`` for binding, ``timeout`` and our custom
@@ -590,8 +606,10 @@ def build_opener(source_address=None, timeout=10):
     handlers = [
         ProxyHandler(),
         SpeedtestHTTPHandler(source_address=source_address_tuple,
+                             interface=interface,
                              timeout=timeout),
         SpeedtestHTTPSHandler(source_address=source_address_tuple,
+                              interface=interface,
                               timeout=timeout),
         HTTPDefaultErrorHandler(),
         HTTPRedirectHandler(),
@@ -1073,13 +1091,15 @@ class SpeedtestResults(object):
 class Speedtest(object):
     """Class for performing standard speedtest.net testing operations"""
 
-    def __init__(self, config=None, source_address=None, timeout=10,
+    def __init__(self, config=None, source_address=None,
+                 interface=None, timeout=10,
                  secure=False, shutdown_event=None):
         self.config = {}
 
         self._source_address = source_address
+        self._interface = interface
         self._timeout = timeout
-        self._opener = build_opener(source_address, timeout)
+        self._opener = build_opener(source_address, interface, timeout)
 
         self._secure = secure
 
@@ -1322,8 +1342,9 @@ class Speedtest(object):
                     if servers and int(attrib.get('id')) not in servers:
                         continue
 
-                    if (int(attrib.get('id')) in self.config['ignore_servers']
-                            or int(attrib.get('id')) in exclude):
+                    if (int(attrib.get('id')) in
+                            self.config['ignore_servers'] or
+                            int(attrib.get('id')) in exclude):
                         continue
 
                     try:
@@ -1456,12 +1477,14 @@ class Speedtest(object):
                     if urlparts[0] == 'https':
                         h = SpeedtestHTTPSConnection(
                             urlparts[1],
-                            source_address=source_address_tuple
+                            source_address=source_address_tuple,
+                            interface=self._interface
                         )
                     else:
                         h = SpeedtestHTTPConnection(
                             urlparts[1],
-                            source_address=source_address_tuple
+                            source_address=source_address_tuple,
+                            interface=self._interface
                         )
                     headers = {'User-Agent': user_agent}
                     path = '%s?%s' % (urlparts[2], urlparts[4])
@@ -1755,6 +1778,8 @@ def parse_args():
                              'supplied multiple times')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
+    parser.add_argument('--interface', help='Network interface device to '
+                                            'bind to. (Only on Linux)')
     parser.add_argument('--timeout', default=10, type=PARSER_TYPE_FLOAT,
                         help='HTTP timeout in seconds. Default 10')
     parser.add_argument('--secure', action='store_true',
@@ -1867,10 +1892,17 @@ def shell():
     else:
         callback = print_dots(shutdown_event)
 
+    if args.interface and not (sys.platform == "linux" or
+                               sys.platform == "linux2"):
+        args.interface = None
+        printer('Warning! The "interface" argument will be ignored since'
+                ' it is only supported when running under Linux', quiet)
+
     printer('Retrieving speedtest.net configuration...', quiet)
     try:
         speedtest = Speedtest(
             source_address=args.source,
+            interface=args.interface,
             timeout=args.timeout,
             secure=args.secure
         )
