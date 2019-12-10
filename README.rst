@@ -13,6 +13,9 @@ speedtest.net
 .. image:: https://img.shields.io/pypi/l/speedtest-cli.svg
         :target: https://pypi.python.org/pypi/speedtest-cli/
         :alt: License
+.. image:: https://repl.it/badge/github/sivel/speedtest-cli
+    :target: https://repl.it/github/sivel/speedtest-cli
+    :alt: Repl.it
 
 Versions
 --------
