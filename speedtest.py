@@ -23,6 +23,8 @@ import math
 import errno
 import signal
 import socket
+import argparse
+
 import timeit
 import datetime
 import platform
@@ -364,47 +366,6 @@ class SpeedtestMissingBestServer(SpeedtestException):
     """get_best_server not called or not able to determine best server"""
 
 
-def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
-                      source_address=None):
-    """Connect to *address* and return the socket object.
-
-    Convenience function.  Connect to *address* (a 2-tuple ``(host,
-    port)``) and return the socket object.  Passing the optional
-    *timeout* parameter will set the timeout on the socket instance
-    before attempting to connect.  If no *timeout* is supplied, the
-    global default timeout setting returned by :func:`getdefaulttimeout`
-    is used.  If *source_address* is set it must be a tuple of (host, port)
-    for the socket to bind as a source address before making the connection.
-    An host of '' or port 0 tells the OS to use the default.
-
-    Largely vendored from Python 2.7, modified to work with Python 2.4
-    """
-
-    host, port = address
-    err = None
-    for res in socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM):
-        af, socktype, proto, canonname, sa = res
-        sock = None
-        try:
-            sock = socket.socket(af, socktype, proto)
-            if timeout is not _GLOBAL_DEFAULT_TIMEOUT:
-                sock.settimeout(float(timeout))
-            if source_address:
-                sock.bind(source_address)
-            sock.connect(sa)
-            return sock
-
-        except socket.error:
-            err = get_exception()
-            if sock is not None:
-                sock.close()
-
-    if err is not None:
-        raise err
-    else:
-        raise socket.error("getaddrinfo returns an empty list")
-
-
 class SpeedtestHTTPConnection(HTTPConnection):
     """Custom HTTPConnection to support source_address across
     Python 2.4 - Python 3
@@ -422,18 +383,11 @@ class SpeedtestHTTPConnection(HTTPConnection):
 
     def connect(self):
         """Connect to the host and port specified in __init__."""
-        try:
-            self.sock = socket.create_connection(
-                (self.host, self.port),
-                self.timeout,
-                self.source_address
-            )
-        except (AttributeError, TypeError):
-            self.sock = create_connection(
-                (self.host, self.port),
-                self.timeout,
-                self.source_address
-            )
+        self.sock = socket.create_connection(
+            (self.host, self.port),
+            self.timeout,
+            self.source_address
+        )
 
         if self._tunnel_host:
             self._tunnel()
@@ -459,18 +413,11 @@ if HTTPSConnection:
 
         def connect(self):
             "Connect to a host on a given (SSL) port."
-            try:
-                self.sock = socket.create_connection(
-                    (self.host, self.port),
-                    self.timeout,
-                    self.source_address
-                )
-            except (AttributeError, TypeError):
-                self.sock = create_connection(
-                    (self.host, self.port),
-                    self.timeout,
-                    self.source_address
-                )
+            self.sock = socket.create_connection(
+                (self.host, self.port),
+                self.timeout,
+                self.source_address
+            )
 
             if self._tunnel_host:
                 self._tunnel()
@@ -1771,6 +1718,9 @@ def parse_args():
                         help='Show the version number and exit')
     parser.add_argument('--debug', action='store_true',
                         help=ARG_SUPPRESS, default=ARG_SUPPRESS)
+    parser.add_argument('-4', '--ipv4', dest='ipv4', help='IPv4 source address')
+    parser.add_argument('-6', '--ipv6', dest='ipv6', help='IPv6 source address')
+    parser.add_argument('-i', '--interface', dest='interface', help='Set network interface')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
@@ -1828,6 +1778,23 @@ def shell():
     signal.signal(signal.SIGINT, ctrl_c(shutdown_event))
 
     args = parse_args()
+
+    ipv4_source = None
+    ipv6_source = None
+
+    ipv4_source = args.ipv4
+    ipv6_source = args.ipv6
+    network_interface = args.interface
+    network_timeout = args.timeout
+
+    from patch_socket_create_connection import CustomSocket
+
+    my_socket = CustomSocket(
+            ipv4_source=ipv4_source, 
+            ipv6_source=ipv6_source, 
+            network_interface=network_interface, 
+            network_timeout=network_timeout)
+    socket.create_connection = my_socket.create_connection_with_custom_network_interface
 
     # Print the version and exit
     if args.version:
