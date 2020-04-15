@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright 2012 Matt Martz
 # All Rights Reserved.
@@ -1103,7 +1103,6 @@ class Speedtest(object):
 
         self.results = SpeedtestResults(
             client=self.config['client'],
-            opener=self._opener,
             secure=secure,
         )
 
