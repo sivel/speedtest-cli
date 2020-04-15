@@ -81,12 +81,12 @@ try:
     from urllib2 import (urlopen, Request, HTTPError, URLError,
                          AbstractHTTPHandler, ProxyHandler,
                          HTTPDefaultErrorHandler, HTTPRedirectHandler,
-                         HTTPErrorProcessor, OpenerDirector)
+                         HTTPErrorProcessor, OpenerDirector, build_opener as urllib_build_opener)
 except ImportError:
     from urllib.request import (urlopen, Request, HTTPError, URLError,
                                 AbstractHTTPHandler, ProxyHandler,
                                 HTTPDefaultErrorHandler, HTTPRedirectHandler,
-                                HTTPErrorProcessor, OpenerDirector)
+                                HTTPErrorProcessor, OpenerDirector, build_opener as urllib_build_opener)
 
 try:
     from httplib import HTTPConnection, BadStatusLine
@@ -571,7 +571,7 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
     https_request = AbstractHTTPHandler.do_request_
 
 
-def build_opener(source_address=None, timeout=10):
+def build_opener(source_address=None, timeout=10, proxy=None):
     """Function similar to ``urllib2.build_opener`` that will build
     an ``OpenerDirector`` with the explicit handlers we want,
     ``source_address`` for binding, ``timeout`` and our custom
@@ -597,8 +597,13 @@ def build_opener(source_address=None, timeout=10):
         HTTPRedirectHandler(),
         HTTPErrorProcessor()
     ]
+    if proxy:
+        httpproxy_handler = ProxyHandler({"http" : proxy,
+                                          "https": proxy})
+        opener = urllib_build_opener(httpproxy_handler)
+    else:
+        opener = OpenerDirector()
 
-    opener = OpenerDirector()
     opener.addheaders = [('User-agent', build_user_agent())]
 
     for handler in handlers:
@@ -1074,12 +1079,12 @@ class Speedtest(object):
     """Class for performing standard speedtest.net testing operations"""
 
     def __init__(self, config=None, source_address=None, timeout=10,
-                 secure=False, shutdown_event=None):
+                 secure=False, shutdown_event=None, proxy=None):
         self.config = {}
 
         self._source_address = source_address
         self._timeout = timeout
-        self._opener = build_opener(source_address, timeout)
+        self._opener = build_opener(source_address, timeout, proxy)
 
         self._secure = secure
 
@@ -1755,6 +1760,7 @@ def parse_args():
                              'supplied multiple times')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source', help='Source IP address to bind to')
+    parser.add_argument('--proxy', help='use http(s)proxy', default=None)
     parser.add_argument('--timeout', default=10, type=PARSER_TYPE_FLOAT,
                         help='HTTP timeout in seconds. Default 10')
     parser.add_argument('--secure', action='store_true',
@@ -1872,7 +1878,8 @@ def shell():
         speedtest = Speedtest(
             source_address=args.source,
             timeout=args.timeout,
-            secure=args.secure
+            secure=args.secure,
+            proxy=args.proxy
         )
     except (ConfigRetrievalError,) + HTTP_ERRORS:
         printer('Cannot retrieve speedtest configuration', error=True)
