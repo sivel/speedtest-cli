@@ -89,6 +89,11 @@ except ImportError:
                                 HTTPErrorProcessor, OpenerDirector)
 
 try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
+
+try:
     from httplib import HTTPConnection, BadStatusLine
 except ImportError:
     from http.client import HTTPConnection, BadStatusLine
@@ -316,6 +321,10 @@ class SpeedtestServersError(SpeedtestException):
 
 class ConfigRetrievalError(SpeedtestHTTPError):
     """Could not retrieve config.php"""
+
+
+class SearchServersError(SpeedtestHTTPError):
+    """Could not search servers"""
 
 
 class ServersRetrievalError(SpeedtestHTTPError):
@@ -1350,6 +1359,51 @@ class Speedtest(object):
 
         return self.servers
 
+    def search_servers(self, location):
+        headers = {}
+        if gzip:
+            headers['Accept-Encoding'] = 'gzip'
+
+        self.servers.clear()
+        params = {}
+        params['engine'] = 'js'
+        params['search'] = location
+        request = build_request('://www.speedtest.net/api/js/servers?%s'
+                                % urlencode(params), headers=headers,
+                                secure=True)
+
+        uh, e = catch_request(request, opener=build_opener(None, 10))
+        if e:
+            raise ConfigRetrievalError(e)
+
+        stream = get_response_stream(uh)
+        try:
+            string = stream.read().decode('utf-8')
+            json_obj = json.loads(string)
+        except (OSError, EOFError):
+            raise SearchServersError(get_exception())
+
+        stream.close()
+        uh.close()
+        for server in json_obj:
+            try:
+                d = distance(self.lat_lon,
+                             (float(server['lat']),
+                              float(server['lon'])))
+            except Exception:
+                continue
+
+            server['d'] = d
+            try:
+                self.servers[d].append(server)
+            except KeyError:
+                self.servers[d] = [server]
+
+        if not self.servers:
+            raise NoMatchedServers()
+
+        return self.servers
+
     def set_mini_server(self, server):
         """Instead of querying for a list of servers, set a link to a
         speedtest mini server
@@ -1747,6 +1801,8 @@ def parse_args():
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
+    parser.add_argument('--search', action='store',
+                        help='Please enter a search term')
     parser.add_argument('--server', type=PARSER_TYPE_INT, action='append',
                         help='Specify a server ID to test against. Can be '
                              'supplied multiple times')
@@ -1878,9 +1934,13 @@ def shell():
         printer('Cannot retrieve speedtest configuration', error=True)
         raise SpeedtestCLIError(get_exception())
 
-    if args.list:
+    if args.list or args.search:
         try:
-            speedtest.get_servers()
+            if args.list:
+                speedtest.get_servers()
+            else:
+                speedtest.search_servers(args.search)
+
         except (ServersRetrievalError,) + HTTP_ERRORS:
             printer('Cannot retrieve speedtest server list', error=True)
             raise SpeedtestCLIError(get_exception())
