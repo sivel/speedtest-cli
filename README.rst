@@ -110,6 +110,7 @@ Usage
                             affected by --bytes
       --list                Display a list of speedtest.net servers sorted by
                             distance
+      --search SEARCH       Please enter a search term
       --server SERVER       Specify a server ID to test against. Can be supplied
                             multiple times
       --exclude EXCLUDE     Exclude a server from selection. Can be supplied
