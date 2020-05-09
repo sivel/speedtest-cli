@@ -1944,18 +1944,19 @@ def shell():
         except (ServersRetrievalError,) + HTTP_ERRORS:
             printer('Cannot retrieve speedtest server list', error=True)
             raise SpeedtestCLIError(get_exception())
+        if not (args.search and args.server):
+            for _, servers in sorted(speedtest.servers.items()):
+                for server in servers:
+                    line = ('%(id)5s) %(sponsor)s (%(name)s, %(country)s) '
+                            '[%(d)0.2f km]' % server)
+                    try:
+                        printer(line)
+                    except IOError:
+                        e = get_exception()
+                        if e.errno != errno.EPIPE:
+                            raise
 
-        for _, servers in sorted(speedtest.servers.items()):
-            for server in servers:
-                line = ('%(id)5s) %(sponsor)s (%(name)s, %(country)s) '
-                        '[%(d)0.2f km]' % server)
-                try:
-                    printer(line)
-                except IOError:
-                    e = get_exception()
-                    if e.errno != errno.EPIPE:
-                        raise
-        sys.exit(0)
+            sys.exit(0)
 
     printer('Testing from %(isp)s (%(ip)s)...' % speedtest.config['client'],
             quiet)
@@ -1963,7 +1964,21 @@ def shell():
     if not args.mini:
         printer('Retrieving speedtest.net server list...', quiet)
         try:
-            speedtest.get_servers(servers=args.server, exclude=args.exclude)
+            if args.search and args.server:
+                for d, servers in sorted(speedtest.servers.items()):
+                    temp_servers = []
+                    for server in servers:
+                        if int(server['id']) in args.server:
+                            temp_servers.append(server)
+
+                    speedtest.servers[d] = temp_servers
+                    if len(speedtest.servers[d]) == 0:
+                        speedtest.servers.pop(d)
+
+            else:
+                speedtest.get_servers(servers=args.server,
+                                      exclude=args.exclude)
+
         except NoMatchedServers:
             raise SpeedtestCLIError(
                 'No matched servers: %s' %
