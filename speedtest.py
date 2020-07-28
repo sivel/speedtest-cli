@@ -766,7 +766,7 @@ def get_attributes_by_tag_name(dom, tag_name):
 
 def print_dots(shutdown_event):
     """Built in callback function used by Thread classes for printing
-    status
+    status dots
     """
     def inner(current, total, start=False, end=False):
         if shutdown_event.isSet():
@@ -775,6 +775,36 @@ def print_dots(shutdown_event):
         sys.stdout.write('.')
         if current + 1 == total and end is True:
             sys.stdout.write('\n')
+        sys.stdout.flush()
+    return inner
+
+
+def update_status_bar(shutdown_event):
+    """Built in callback function used by Thread classes for updating
+    status bar
+    """
+
+    empty = ' '
+    cursor = '>'
+    filled = '='
+
+    def inner(current, total, start=False, end=False):
+        if shutdown_event.isSet():
+            return
+
+        # Update status bar
+        header = '({:d}/{:d})'.format(current + 1, total)
+        _, columns = os.popen('stty size', 'r').read().split()
+        width = (int(columns) // 2) - len(header) - 4
+        completion = width * (current + 1) // total
+        progress = '[{}{}{}]'.format(filled * (completion - 1), cursor,
+                                     empty * (width - completion))
+        status_bar = '{} {}'.format(header, progress)
+
+        # Print updated status bar
+        sys.stdout.write('\033[K{}\r'.format(status_bar))
+        if current + 1 == total and end is True:
+            sys.stdout.write('\033[K')  # clear to end of line
         sys.stdout.flush()
     return inner
 
@@ -1865,7 +1895,7 @@ def shell():
     if quiet or debug:
         callback = do_nothing
     else:
-        callback = print_dots(shutdown_event)
+        callback = update_status_bar(shutdown_event)
 
     printer('Retrieving speedtest.net configuration...', quiet)
     try:
@@ -1932,8 +1962,7 @@ def shell():
             '%(latency)s ms' % results.server, quiet)
 
     if args.download:
-        printer('Testing download speed', quiet,
-                end=('', '\n')[bool(debug)])
+        printer('Testing download speed...', quiet)
         speedtest.download(
             callback=callback,
             threads=(None, 1)[args.single]
@@ -1946,8 +1975,7 @@ def shell():
         printer('Skipping download test', quiet)
 
     if args.upload:
-        printer('Testing upload speed', quiet,
-                end=('', '\n')[bool(debug)])
+        printer('Testing upload speed...', quiet)
         speedtest.upload(
             callback=callback,
             pre_allocate=args.pre_allocate,
