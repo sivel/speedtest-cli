@@ -534,14 +534,19 @@ class SpeedtestHTTPHandler(AbstractHTTPHandler):
         self.timeout = timeout
 
     def http_open(self, req):
-        return self.do_open(
-            _build_connection(
-                SpeedtestHTTPConnection,
-                self.source_address,
-                self.timeout
-            ),
-            req
-        )
+        try:
+            return self.do_open(
+                _build_connection(
+                    SpeedtestHTTPConnection,
+                    self.source_address,
+                    self.timeout
+                ),
+                req
+            )
+        except BadStatusLine:
+            raise SpeedtestHTTPError(
+                'Server returned bad status code'
+            )
 
     http_request = AbstractHTTPHandler.do_request_
 
@@ -558,15 +563,20 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
         self.timeout = timeout
 
     def https_open(self, req):
-        return self.do_open(
-            _build_connection(
-                SpeedtestHTTPSConnection,
-                self.source_address,
-                self.timeout,
-                context=self._context,
-            ),
-            req
-        )
+        try:
+            return self.do_open(
+                _build_connection(
+                    SpeedtestHTTPSConnection,
+                    self.source_address,
+                    self.timeout,
+                    context=self._context,
+                ),
+                req
+            )
+        except BadStatusLine:
+            raise SpeedtestHTTPError(
+                'Server returned bad status code'
+            )    
 
     https_request = AbstractHTTPHandler.do_request_
 
