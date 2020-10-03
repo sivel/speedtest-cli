@@ -576,7 +576,7 @@ class SpeedtestHTTPSHandler(AbstractHTTPHandler):
         except BadStatusLine:
             raise SpeedtestHTTPError(
                 'Server returned bad status code'
-            )    
+            )
 
     https_request = AbstractHTTPHandler.do_request_
 
