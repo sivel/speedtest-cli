@@ -788,15 +788,29 @@ def print_dots(shutdown_event):
 def do_nothing(*args, **kwargs):
     pass
 
+
 class PrometheusPushGateway(object):
     """ Class for managing prometheus push gateway configuration"""
     def __init__(self, server):
         self.server = server
         self.registry = CollectorRegistry()
         self.gauges = {}
-        self.gauges['download'] = Gauge('speedtest_dl_throughput_bps', 'Speedtest.Net Download Speed (bps)', registry=self.registry)
-        self.gauges['upload'] = Gauge('speedtest_ul_throughput_bps', 'Speedtest.Net Upload Speed (bps)', registry=self.registry)
-        self.gauges['latency'] = Gauge('speedtest_latency_ms', 'Speedtest.Net Latency (ms)', registry=self.registry)
+        self.gauges['download'] = Gauge(
+            'speedtest_dl_throughput_bps',
+            'Speedtest.Net Download Speed (bps)',
+            registry=self.registry
+        )
+        self.gauges['upload'] = Gauge(
+            'speedtest_ul_throughput_bps',
+            'Speedtest.Net Upload Speed (bps)',
+            registry=self.registry
+        )
+        self.gauges['latency'] = Gauge(
+            'speedtest_latency_ms',
+            'Speedtest.Net Latency (ms)',
+            registry=self.registry
+        )
+
 
 class HTTPDownloader(threading.Thread):
     """Thread class for retrieving a URL"""
@@ -1786,8 +1800,11 @@ def parse_args():
                         help='Show the version number and exit')
     parser.add_argument('--debug', action='store_true',
                         help=ARG_SUPPRESS, default=ARG_SUPPRESS)
-    parser.add_argument('--prometheus-push-gateway', dest='prometheus_push_gateway',
-                        help='URL of Prometheus PushGateway to push results to. e.g http://localhost:9091 or https://localhost:9091')
+    parser.add_argument('--prometheus-push-gateway',
+                        dest='prometheus_push_gateway',
+                        help='URL of Prometheus PushGateway to push results '
+                             'to. e.g http://localhost:9091 or '
+                             'https://localhost:9091')
 
     options = parser.parse_args()
     if isinstance(options, tuple):
@@ -1807,7 +1824,8 @@ def validate_optional_args(args):
     optional_args = {
         'json': ('json/simplejson python module', json),
         'secure': ('SSL support', HTTPSConnection),
-        'prometheus_push_gateway': ('prometheus_client python module', prometheus_client)
+        'prometheus_push_gateway':
+            ('prometheus_client python module', prometheus_client)
     }
 
     for arg, info in optional_args.items():
@@ -1836,12 +1854,14 @@ def printer(string, quiet=False, debug=False, error=False, **kwargs):
     if not quiet:
         print_(out, **kwargs)
 
+
 def is_url(url):
-  try:
-    result = urlparse(url)
-    return all([result.scheme, result.netloc])
-  except ValueError:
-    return False
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
+
 
 def shell():
     """Run the full speedtest.net test"""
@@ -1863,10 +1883,14 @@ def shell():
 
     if args.prometheus_push_gateway and \
             not is_url(args.prometheus_push_gateway):
-        raise SpeedtestCLIError('--prometheus-push-gateway must be a valid URL')
+        raise SpeedtestCLIError(
+            '--prometheus-push-gateway must be a valid URL'
+        )
 
     if len(args.csv_delimiter) != 1:
-        raise SpeedtestCLIError('--csv-delimiter must be a single character')
+        raise SpeedtestCLIError(
+            '--csv-delimiter must be a single character'
+        )
 
     if args.csv_header:
         csv_header(args.csv_delimiter)
@@ -2009,7 +2033,8 @@ def shell():
         printer('Share results: %s' % results.share())
 
     if args.prometheus_push_gateway:
-        prometheus_push_gateway = PrometheusPushGateway(args.prometheus_push_gateway)
+        prometheus_push_gateway = PrometheusPushGateway(
+            args.prometheus_push_gateway)
 
         prometheus_push_gateway.gauges['upload'].set(results.upload)
         prometheus_push_gateway.gauges['download'].set(results.download)
@@ -2024,6 +2049,7 @@ def shell():
         except URLError:
             # Couldn't talk to push gateway
             printer('Could not contact Prometheus PushGateway', quiet)
+
 
 def main():
     try:
