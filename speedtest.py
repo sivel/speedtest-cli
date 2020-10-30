@@ -1753,12 +1753,12 @@ def parse_args():
                              'information in JSON format. Speeds listed in '
                              'bit/s and not affected by --bytes')
     parser.add_argument('--load-servers-from-json', dest='servers_json', type=PARSER_TYPE_STR,
-                        help='Serverlist for static testing in json Format')
+                        help='Load servers from json file for static testing')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
     parser.add_argument('--server', type=PARSER_TYPE_INT, action='append',
-                        help='Specify a server ID to test against. Can be '
+                        help='Specify a server ID from --list servers to test against. Can be '
                              'supplied multiple times')
     parser.add_argument('--exclude', type=PARSER_TYPE_INT, action='append',
                         help='Exclude a server from selection. Can be '

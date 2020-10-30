@@ -1,0 +1,16 @@
+{
+    "313.8447559412203": [
+        {
+            "url": "http://speedtest.glasfaser-ostbayern.de:8080/speedtest/upload.php",
+            "lat": "49.0167",
+            "lon": "12.0833",
+            "name": "Regensburg",
+            "country": "Germany",
+            "cc": "DE",
+            "sponsor": "R-KOM GmbH & Co. KG",
+            "id": "4404",
+            "host": "speedtest.glasfaser-ostbayern.de:8080",
+            "d": 313.8447559412203
+        }
+    ]
+}

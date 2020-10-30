@@ -75,12 +75,13 @@ Usage
 ::
 
     $ speedtest-cli -h
-    usage: speedtest-cli [-h] [--no-download] [--no-upload] [--single] [--bytes]
-                         [--share] [--simple] [--csv]
-                         [--csv-delimiter CSV_DELIMITER] [--csv-header] [--json]
-                         [--list] [--server SERVER] [--exclude EXCLUDE]
-                         [--mini MINI] [--source SOURCE] [--timeout TIMEOUT]
-                         [--secure] [--no-pre-allocate] [--version]
+    usage: speedtest.py [-h] [--no-download] [--no-upload] [--single] [--bytes]
+                        [--share] [--simple] [--csv]
+                        [--csv-delimiter CSV_DELIMITER] [--csv-header] [--json]
+                        [--load-servers-from-json SERVERS_JSON] [--list]
+                        [--server SERVER] [--exclude EXCLUDE] [--mini MINI]
+                        [--source SOURCE] [--timeout TIMEOUT] [--secure]
+                        [--no-pre-allocate] [--version]
 
     Command line interface for testing internet bandwidth using speedtest.net.
     --------------------------------------------------------------------------
@@ -108,10 +109,12 @@ Usage
       --json                Suppress verbose output, only show basic information
                             in JSON format. Speeds listed in bit/s and not
                             affected by --bytes
+      --load-servers-from-json SERVERS_JSON
+                            Load servers from json file for static testing
       --list                Display a list of speedtest.net servers sorted by
                             distance
-      --server SERVER       Specify a server ID to test against. Can be supplied
-                            multiple times
+      --server SERVER       Specify a server ID from --list servers to test
+                            against. Can be supplied multiple times
       --exclude EXCLUDE     Exclude a server from selection. Can be supplied
                             multiple times
       --mini MINI           URL of the Speedtest Mini server
@@ -124,6 +127,7 @@ Usage
                             support systems with insufficient memory, use this
                             option to avoid a MemoryError
       --version             Show the version number and exit
+
 
 
 Python API
