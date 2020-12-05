@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#! /usr/bin/python3
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright 2012 Matt Martz
 # All Rights Reserved.
@@ -19,6 +20,12 @@ import os
 import re
 import csv
 import sys
+if sys.version_info[0:2] < (2, 4):
+    raise Exception(
+                    'You need Python 2.4+ to use speedtest!\n'
+                    'Run \u001b[32m./setup.sh\u001b[0m '
+                    'to install the newest Python version '
+                    'or do it manually!')
 import math
 import errno
 import signal
