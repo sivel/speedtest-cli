@@ -36,7 +36,7 @@ except ImportError:
     gzip = None
     GZIP_BASE = object
 
-__version__ = '2.1.2'
+__version__ = '2.1.2.reveal-server'
 
 
 class FakeShutdownEvent(object):
@@ -1043,7 +1043,7 @@ class SpeedtestResults(object):
         """Return CSV Headers"""
 
         row = ['Server ID', 'Sponsor', 'Server Name', 'Timestamp', 'Distance',
-               'Ping', 'Download', 'Upload', 'Share', 'IP Address']
+               'Ping', 'Download', 'Upload', 'Share', 'Client', 'Server']
         out = StringIO()
         writer = csv.writer(out, delimiter=delimiter, lineterminator='')
         writer.writerow([to_utf8(v) for v in row])
@@ -1058,7 +1058,8 @@ class SpeedtestResults(object):
         row = [data['server']['id'], data['server']['sponsor'],
                data['server']['name'], data['timestamp'],
                data['server']['d'], data['ping'], data['download'],
-               data['upload'], self._share or '', self.client['ip']]
+               data['upload'], self._share or '', self.client['ip'],
+               data['server']['host']]
         writer.writerow([to_utf8(v) for v in row])
         return out.getvalue()
 
@@ -1932,7 +1933,7 @@ def shell():
 
     results = speedtest.results
 
-    printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+    printer('Hosted by %(sponsor)s (%(name)s) %(host)s [%(d)0.2f km]: '
             '%(latency)s ms' % results.server, quiet)
 
     if args.download:
