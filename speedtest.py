@@ -39,7 +39,7 @@ except ImportError:
 try:
     import IN
     SO_BINDTODEVICE = IN.SO_BINDTODEVICE
-except ImportError:
+except (ImportError, AttributeError):
     SO_BINDTODEVICE = None
 
 
