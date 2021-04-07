@@ -1170,9 +1170,11 @@ class Speedtest(object):
             # times = get_attributes_by_tag_name(root, 'times')
             client = get_attributes_by_tag_name(root, 'client')
 
-        ignore_servers = list(
-            map(int, server_config['ignoreids'].split(','))
-        )
+        if server_config['ignoreids'] == "":
+            ignore_servers = list()
+        else:
+            ignore_servers = list(map(int, server_config['ignoreids'].split(',')))
+
 
         ratio = int(upload['ratio'])
         upload_max = int(upload['maxchunkcount'])
