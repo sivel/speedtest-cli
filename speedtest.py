@@ -217,12 +217,12 @@ else:
             return
 
         def write(data):
-            if not isinstance(data, basestring):
+            if not isinstance(data, basestring):  # noqa
                 data = str(data)
             # If the file has an encoding, encode unicode with it.
             encoding = 'utf8'  # Always trust UTF-8 for output
-            if (isinstance(fp, file) and
-                    isinstance(data, unicode) and
+            if (isinstance(fp, file) and  # noqa
+                    isinstance(data, unicode) and  # noqa
                     encoding is not None):
                 errors = getattr(fp, "errors", None)
                 if errors is None:
@@ -233,13 +233,13 @@ else:
         want_unicode = False
         sep = kwargs.pop("sep", None)
         if sep is not None:
-            if isinstance(sep, unicode):
+            if isinstance(sep, unicode):  # noqa
                 want_unicode = True
             elif not isinstance(sep, str):
                 raise TypeError("sep must be None or a string")
         end = kwargs.pop("end", None)
         if end is not None:
-            if isinstance(end, unicode):
+            if isinstance(end, unicode):  # noqa
                 want_unicode = True
             elif not isinstance(end, str):
                 raise TypeError("end must be None or a string")
@@ -247,12 +247,12 @@ else:
             raise TypeError("invalid keyword arguments to print()")
         if not want_unicode:
             for arg in args:
-                if isinstance(arg, unicode):
+                if isinstance(arg, unicode):  # noqa
                     want_unicode = True
                     break
         if want_unicode:
-            newline = unicode("\n")
-            space = unicode(" ")
+            newline = unicode("\n")  # noqa
+            space = unicode(" ")  # noqa
         else:
             newline = "\n"
             space = " "
