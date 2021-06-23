@@ -24,3 +24,5 @@ jobs:
       - name: Run Tox
         # Run tox using the version of Python in `PATH`
         run: tox -e py
+      - name: Run flake8
+        run: tox -e flake8
