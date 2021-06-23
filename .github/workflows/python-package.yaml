@@ -1,0 +1,25 @@
+name: Python package
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [2.7, 3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install Tox and any other packages
+        run: pip install tox
+      - name: Run Tox
+        # Run tox using the version of Python in `PATH`
+        run: tox -e py
