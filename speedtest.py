@@ -1893,7 +1893,10 @@ def shell():
 
     if args.list:
         try:
-            speedtest.get_servers()
+            if args.exclude:
+              speedtest.get_servers(exclude=args.exclude)
+            else:
+              speedtest.get_servers()
         except (ServersRetrievalError,) + HTTP_ERRORS:
             printer('Cannot retrieve speedtest server list', error=True)
             raise SpeedtestCLIError(get_exception())
