@@ -1865,7 +1865,7 @@ def shell():
         raise SpeedtestCLIError('Cannot supply both --no-download and '
                                 '--no-upload')
 
-    if not args.bytes and not args.units:
+    if args.bytes and args.units:
         raise SpeedtestCLIError('Cannot supply both --bytes and '
                                 '--units')
 
