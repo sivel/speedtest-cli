@@ -1656,7 +1656,8 @@ class Speedtest(object):
                 while _is_alive(thread):
                     thread.join(timeout=0.001)
                 in_flight['threads'] -= 1
-                finished.append(thread.result)
+                if type(thread.result) in (int, float):
+                    finished.append(thread.result)
                 callback(thread.i, request_count, end=True)
 
         q = Queue(threads or self.config['threads']['upload'])
