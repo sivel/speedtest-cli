@@ -1376,28 +1376,25 @@ class Speedtest(object):
 
                 for attrib in attriblist:
                     if servers and int(attrib.get('id')) not in servers:
+                        # Not one of the preselected servers
                         continue
 
                     if (int(attrib.get('id')) in self.config['ignore_servers']
                             or int(attrib.get('id')) in exclude):
+                        # One of the specifically excluded or ignored servers
                         continue
 
                     host, port = attrib['host'].split(':')
                     attrib['host'] = (host, int(port))
 
                     try:
-                        d = distance(self.lat_lon,
-                                     (float(attrib.get('lat')),
-                                      float(attrib.get('lon'))))
+                        d = attrib['d'] = distance(self.lat_lon,
+                                                   (float(attrib.get('lat')),
+                                                    float(attrib.get('lon'))))
                     except Exception:
                         continue
 
-                    attrib['d'] = d
-
-                    try:
-                        self.servers[d].append(attrib)
-                    except KeyError:
-                        self.servers[d] = [attrib]
+                    self.servers.setdefault(d, []).append(attrib)
 
                 break
 
