@@ -1286,6 +1286,7 @@ class Speedtest(object):
                     )
 
         urls = [
+            'https://www.speedtest.net/api/js/servers',
             '://www.speedtest.net/speedtest-servers-static.php',
             'http://c.speedtest.net/speedtest-servers-static.php',
             '://www.speedtest.net/speedtest-servers.php',
@@ -1311,6 +1312,10 @@ class Speedtest(object):
                     raise ServersRetrievalError()
 
                 stream = get_response_stream(uh)
+                try:
+                    is_json = uh.headers.getheader('content-type').startswith('application/json')
+                except AttributeError:
+                    is_json = uh.getheader('content-type').startswith('application/json')
 
                 serversxml_list = []
                 while 1:
@@ -1328,37 +1333,48 @@ class Speedtest(object):
                     raise ServersRetrievalError()
 
                 serversxml = ''.encode().join(serversxml_list)
+                attriblist = []
 
-                printer('Servers XML:\n%s' % serversxml, debug=True)
+                if is_json:
+                    printer('Servers JSON:\n%s' % serversxml, debug=True)
+                    try:
+                        attriblist = json.loads(serversxml)
+                    except (ValueError, json.JSONDecodeError):
+                        raise ServersRetrievalError()
 
-                try:
+                else:
+                    printer('Servers XML:\n%s' % serversxml, debug=True)
+
                     try:
                         try:
-                            root = ET.fromstring(serversxml)
-                        except ET.ParseError:
-                            e = get_exception()
-                            raise SpeedtestServersError(
-                                'Malformed speedtest.net server list: %s' % e
-                            )
-                        elements = root.getiterator('server')
-                    except AttributeError:
+                            try:
+                                root = ET.fromstring(serversxml)
+                            except ET.ParseError:
+                                e = get_exception()
+                                raise SpeedtestServersError(
+                                    'Malformed speedtest.net server list: %s' % e
+                                )
+                            elements = root.getiterator('server')
+                        except AttributeError:
+                            try:
+                                root = DOM.parseString(serversxml)
+                            except ExpatError:
+                                e = get_exception()
+                                raise SpeedtestServersError(
+                                    'Malformed speedtest.net server list: %s' % e
+                                )
+                            elements = root.getElementsByTagName('server')
+                    except (SyntaxError, xml.parsers.expat.ExpatError):
+                        raise ServersRetrievalError()
+
+                    for server in elements:
                         try:
-                            root = DOM.parseString(serversxml)
-                        except ExpatError:
-                            e = get_exception()
-                            raise SpeedtestServersError(
-                                'Malformed speedtest.net server list: %s' % e
-                            )
-                        elements = root.getElementsByTagName('server')
-                except (SyntaxError, xml.parsers.expat.ExpatError):
-                    raise ServersRetrievalError()
+                            attrib = server.attrib
+                        except AttributeError:
+                            attrib = dict(list(server.attributes.items()))
+                        attriblist.append(attrib)
 
-                for server in elements:
-                    try:
-                        attrib = server.attrib
-                    except AttributeError:
-                        attrib = dict(list(server.attributes.items()))
-
+                for attrib in attriblist:
                     if servers and int(attrib.get('id')) not in servers:
                         continue
 
