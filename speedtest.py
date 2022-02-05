@@ -781,6 +781,7 @@ def print_dots(shutdown_event):
         if event_is_set(shutdown_event):
             return
 
+        
         sys.stdout.write('.')
         if current + 1 == total and end is True:
             sys.stdout.write('\n')
@@ -1910,11 +1911,10 @@ def shell():
                         raise
         sys.exit(0)
 
-    printer('Testing from %(isp)s (%(ip)s)...' % speedtest.config['client'],
+    printer('   ISP: %(isp)s (%(ip)s)...' % speedtest.config['client'],
             quiet)
 
     if not args.mini:
-        printer('Retrieving speedtest.net server list...', quiet)
         try:
             speedtest.get_servers(servers=args.server, exclude=args.exclude)
         except NoMatchedServers:
@@ -1933,25 +1933,23 @@ def shell():
 
         if args.server and len(args.server) == 1:
             printer('Retrieving information for the selected server...', quiet)
-        else:
-            printer('Selecting best server based on ping...', quiet)
+        # else:
+            # printer('Selecting best server based on ping...', quiet)
         speedtest.get_best_server()
     elif args.mini:
         speedtest.get_best_server(speedtest.set_mini_server(args.mini))
 
     results = speedtest.results
 
-    printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+    printer('   Server: %(sponsor)s (%(name)s) [%(d)0.2f km]: '
             '%(latency)s ms' % results.server, quiet)
 
     if args.download:
-        printer('Testing download speed', quiet,
+        printer('   Testing download speed | ', quiet,
                 end=('', '\n')[bool(debug)])
         speedtest.download(
-            callback=callback,
-            threads=(None, 1)[args.single]
         )
-        printer('Download: %0.2f M%s/s' %
+        printer('%0.2f M%s/s' %
                 ((results.download / 1000.0 / 1000.0) / args.units[1],
                  args.units[0]),
                 quiet)
@@ -1959,14 +1957,13 @@ def shell():
         printer('Skipping download test', quiet)
 
     if args.upload:
-        printer('Testing upload speed', quiet,
+        printer('   Testing upload speed   | ', quiet,
                 end=('', '\n')[bool(debug)])
         speedtest.upload(
-            callback=callback,
             pre_allocate=args.pre_allocate,
             threads=(None, 1)[args.single]
         )
-        printer('Upload: %0.2f M%s/s' %
+        printer('%0.2f M%s/s' %
                 ((results.upload / 1000.0 / 1000.0) / args.units[1],
                  args.units[0]),
                 quiet)
