@@ -1250,7 +1250,7 @@ class Speedtest(object):
             except (KeyError,SyntaxError) as e:
                 pass
             message += "\n</servers>\n</settings>\n"
-            return message.replace("&","").encode()
+            return message.replace("&","").replace("%","").encode()
 
 
     def get_servers(self, servers=None, exclude=None, custom_server=None):
@@ -1375,7 +1375,6 @@ class Speedtest(object):
                 if int(uh.code) != 200:
                     raise ServersRetrievalError()
                 serversxml = ''.encode().join(serversxml_list)
-                print(serversxml)
                 printer('Servers XML:\n%s' % serversxml, debug=True)
 
                 try:
