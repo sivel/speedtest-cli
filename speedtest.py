@@ -1353,8 +1353,6 @@ class Speedtest(object):
                     except KeyError:
                         self.servers[d] = [attrib]
 
-                break
-
             except ServersRetrievalError:
                 continue
 
