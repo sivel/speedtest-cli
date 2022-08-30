@@ -1052,7 +1052,7 @@ class SpeedtestResults(object):
         """Return CSV Headers"""
 
         row = ['Server ID', 'Sponsor', 'Server Name', 'Timestamp', 'Distance',
-               'Ping', 'Download', 'Upload', 'Share', 'IP Address']
+               'Ping', 'Download', 'Upload', 'Share', 'IP Address', 'Lat', 'Lon']
         out = StringIO()
         writer = csv.writer(out, delimiter=delimiter, lineterminator='')
         writer.writerow([to_utf8(v) for v in row])
@@ -1067,7 +1067,8 @@ class SpeedtestResults(object):
         row = [data['server']['id'], data['server']['sponsor'],
                data['server']['name'], data['timestamp'],
                data['server']['d'], data['ping'], data['download'],
-               data['upload'], self._share or '', self.client['ip']]
+               data['upload'], self._share or '', self.client['ip'],
+               data['server']['lat'], data['server']['lon']]
         writer.writerow([to_utf8(v) for v in row])
         return out.getvalue()
 
