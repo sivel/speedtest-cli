@@ -1437,6 +1437,14 @@ class Speedtest(object):
         printer('Closest Servers:\n%r' % self.closest, debug=True)
         return self.closest
 
+    @staticmethod
+    def get_normalize_servers(dict_servers):
+        """
+        Converting a server dictionary to a server list
+        """
+
+        return [server for _, servers in dict_servers.items() for server in servers]
+
     def get_best_server(self, servers=None):
         """Perform a speedtest.net "ping" to determine which speedtest.net
         server has the lowest latency
@@ -1445,7 +1453,11 @@ class Speedtest(object):
         if not servers:
             if not self.closest:
                 servers = self.get_closest_servers()
-            servers = self.closest
+            else:
+                servers = self.closest
+
+        if type(servers) is dict:
+            servers = self.get_normalize_servers(servers)
 
         if self._source_address:
             source_address_tuple = (self._source_address, 0)
