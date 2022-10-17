@@ -688,7 +688,7 @@ def build_user_agent():
     return user_agent
 
 
-def build_request(url, data=None, headers=None, bump='0', secure=False):
+def build_request(url, data=None, headers=None, bump='0', secure=True):
     """Build a urllib2 request object
 
     This function automatically adds a User-Agent header to all requests
@@ -946,7 +946,7 @@ class SpeedtestResults(object):
     """
 
     def __init__(self, download=0, upload=0, ping=0, server=None, client=None,
-                 opener=None, secure=False):
+                 opener=None, secure=True):
         self.download = download
         self.upload = upload
         self.ping = ping
@@ -1087,7 +1087,7 @@ class Speedtest(object):
     """Class for performing standard speedtest.net testing operations"""
 
     def __init__(self, config=None, source_address=None, timeout=10,
-                 secure=False, shutdown_event=None):
+                 secure=True, shutdown_event=None):
         self.config = {}
 
         self._source_address = source_address
@@ -1770,9 +1770,6 @@ def parse_args():
     parser.add_argument('--source', help='Source IP address to bind to')
     parser.add_argument('--timeout', default=10, type=PARSER_TYPE_FLOAT,
                         help='HTTP timeout in seconds. Default 10')
-    parser.add_argument('--secure', action='store_true',
-                        help='Use HTTPS instead of HTTP when communicating '
-                             'with speedtest.net operated servers')
     parser.add_argument('--no-pre-allocate', dest='pre_allocate',
                         action='store_const', default=True, const=False,
                         help='Do not pre allocate upload data. Pre allocation '
@@ -1884,8 +1881,7 @@ def shell():
     try:
         speedtest = Speedtest(
             source_address=args.source,
-            timeout=args.timeout,
-            secure=args.secure
+            timeout=args.timeout
         )
     except (ConfigRetrievalError,) + HTTP_ERRORS:
         printer('Cannot retrieve speedtest configuration', error=True)
