@@ -1130,7 +1130,6 @@ class Speedtest(object):
         headers = {}
         if gzip:
             headers['Accept-Encoding'] = 'gzip'
-        headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
         request = build_request('://www.speedtest.net/speedtest-config.php',
                                 headers=headers, secure=self._secure)
         uh, e = catch_request(request, opener=self._opener)
@@ -1771,8 +1770,8 @@ def parse_args():
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
     parser.add_argument('--source',
                         help='Source IP address and source port to bind to.'
-                             'Use the form A.B.C.D:P. You can leave the IP'
-                             'address or port empty and eliminate the colon'
+                             'Use the form A.B.C.D:P. You can leave the IP '
+                             'address or port empty and eliminate the colon '
                              'for defaults')
     parser.add_argument('--timeout', default=10, type=PARSER_TYPE_FLOAT,
                         help='HTTP timeout in seconds. Default 10')
