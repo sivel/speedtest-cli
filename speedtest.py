@@ -590,7 +590,8 @@ def build_opener(source_address=None, timeout=10):
     printer('Timeout set to %d' % timeout, debug=True)
 
     if source_address:
-        source_address_tuple = (source_address, 0)
+        split_source_address = source_address.split(':')
+        source_address_tuple = (source_address, 0) if len(split_source_address) == 1 else (split_source_address[0], int(split_source_address[1])) 
         printer('Binding to source address: %r' % (source_address_tuple,),
                 debug=True)
     else:
@@ -1767,7 +1768,11 @@ def parse_args():
                         help='Exclude a server from selection. Can be '
                              'supplied multiple times')
     parser.add_argument('--mini', help='URL of the Speedtest Mini server')
-    parser.add_argument('--source', help='Source IP address to bind to')
+    parser.add_argument('--source',
+                        help='Source IP address and source port to bind to.'
+                             'Use the form A.B.C.D:P. You can leave the IP '
+                             'address or port empty and eliminate the colon '
+                             'for defaults')
     parser.add_argument('--timeout', default=10, type=PARSER_TYPE_FLOAT,
                         help='HTTP timeout in seconds. Default 10')
     parser.add_argument('--secure', action='store_true',
@@ -1993,7 +1998,7 @@ def shell():
     if args.share and not machine_format:
         printer('Share results: %s' % results.share())
 
-
+      
 def main():
     try:
         shell()
