@@ -1979,12 +1979,21 @@ def shell():
         results.share()
 
     if args.simple:
-        printer('Ping: %s ms\nDownload: %0.2f M%s/s\nUpload: %0.2f M%s/s' %
-                (results.ping,
-                 (results.download / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0],
-                 (results.upload / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]))
+        printer('Ping: %s ms' % results.ping)
+
+        if args.download:
+            printer('Download: %0.2f M%s/s' %
+                    ((results.download / 1000.0 / 1000.0) / args.units[1],
+                     args.units[0]))
+        else:
+            printer('Skipping download test')
+
+        if args.upload:
+            printer('Upload: %0.2f M%s/s' %
+                    ((results.upload / 1000.0 / 1000.0) / args.units[1],
+                     args.units[0]))
+        else:
+            printer('Skipping upload test')
     elif args.csv:
         printer(results.csv(delimiter=args.csv_delimiter))
     elif args.json:
