@@ -18,6 +18,7 @@
 import csv
 import datetime
 import errno
+import json
 import math
 import os
 import platform
@@ -1301,10 +1302,7 @@ class Speedtest:
                     )
 
         urls = [
-            "://www.speedtest.net/speedtest-servers-static.php",
-            "http://c.speedtest.net/speedtest-servers-static.php",
-            "://www.speedtest.net/speedtest-servers.php",
-            "http://c.speedtest.net/speedtest-servers.php",
+            "://www.speedtest.net/api/js/servers",
         ]
 
         headers = {}
@@ -1346,56 +1344,34 @@ class Speedtest:
                 printer(f"Servers XML:\n{serversxml}", debug=True)
 
                 try:
-                    try:
-                        try:
-                            root = ET.fromstring(serversxml)
-                        except ET.ParseError:
-                            e = get_exception()
-                            raise SpeedtestServersError(
-                                f"Malformed speedtest.net server list: {e}",
-                            )
-                        elements = etree_iter(root, "server")
-                    except AttributeError:
-                        try:
-                            root = DOM.parseString(serversxml)
-                        except ExpatError:
-                            e = get_exception()
-                            raise SpeedtestServersError(
-                                f"Malformed speedtest.net server list: {e}",
-                            )
-                        elements = root.getElementsByTagName("server")
-                except (SyntaxError, xml.parsers.expat.ExpatError):
+                    elements = json.loads(serversxml)
+                except SyntaxError:
                     raise ServersRetrievalError()
 
                 for server in elements:
-                    try:
-                        attrib = server.attrib
-                    except AttributeError:
-                        attrib = dict(list(server.attributes.items()))
-
-                    if servers and int(attrib.get("id")) not in servers:
+                    if servers and int(server.get("id")) not in servers:
                         continue
 
                     if (
-                        int(attrib.get("id")) in self.config["ignore_servers"]
-                        or int(attrib.get("id")) in exclude
+                        int(server.get("id")) in self.config["ignore_servers"]
+                        or int(server.get("id")) in exclude
                     ):
                         continue
 
                     try:
                         d = distance(
                             self.lat_lon,
-                            (float(attrib.get("lat")), float(attrib.get("lon"))),
+                            (float(server.get("lat")), float(server.get("lon"))),
                         )
                     except Exception:
                         continue
 
-                    attrib["d"] = d
+                    server["d"] = d
 
                     try:
-                        self.servers[d].append(attrib)
+                        self.servers[d].append(server)
                     except KeyError:
-                        self.servers[d] = [attrib]
+                        self.servers[d] = [server]
 
                 break
 
