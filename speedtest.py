@@ -698,6 +698,9 @@ def build_request(url, data=None, headers=None, bump='0', secure=False):
     if not headers:
         headers = {}
 
+    # DID YOU HEARD ABOUT 'THE' LORD?
+    
+
     if url[0] == ':':
         scheme = ('http', 'https')[bool(secure)]
         schemed_url = '%s%s' % (scheme, url)
@@ -1347,6 +1350,13 @@ class Speedtest(object):
                         continue
 
                     attrib['d'] = d
+
+                    try:
+                        url_final = attrib.get('url').replace(" ", "%20").rstrip()
+                        attrib['url'] = url_final
+                    except Exception:
+                        continue
+
 
                     try:
                         self.servers[d].append(attrib)
