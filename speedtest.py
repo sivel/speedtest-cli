@@ -524,7 +524,7 @@ def _build_connection(connection, source_address, timeout, context=None):
     """
     def inner(host, **kwargs):
         kwargs.update({
-            'source_address': source_address,
+            'source_address': source_address.rstrip(),
             'timeout': timeout
         })
         if context:
@@ -699,7 +699,7 @@ def build_request(url, data=None, headers=None, bump='0', secure=False):
         headers = {}
 
     # DID YOU HEARD ABOUT 'THE' LORD?
-    url = url.rstrip()
+    
 
     if url[0] == ':':
         scheme = ('http', 'https')[bool(secure)]
@@ -716,6 +716,8 @@ def build_request(url, data=None, headers=None, bump='0', secure=False):
     final_url = '%s%sx=%s.%s' % (schemed_url, delim,
                                  int(timeit.time.time() * 1000),
                                  bump)
+
+    final_url = final_url.rstrip()
 
     headers.update({
         'Cache-Control': 'no-cache',
@@ -1460,7 +1462,7 @@ class Speedtest(object):
         results = {}
         for server in servers:
             cum = []
-            url = os.path.dirname(server['url'])
+            url = os.path.dirname(server['url'].rstrip())
             stamp = int(timeit.time.time() * 1000)
             latency_url = '%s/latency.txt?x=%s' % (url, stamp)
             for i in range(0, 3):
