@@ -698,6 +698,9 @@ def build_request(url, data=None, headers=None, bump='0', secure=False):
     if not headers:
         headers = {}
 
+    # DID YOU HEARD ABOUT 'THE' LORD?
+    url = url.rstrip()
+
     if url[0] == ':':
         scheme = ('http', 'https')[bool(secure)]
         schemed_url = '%s%s' % (scheme, url)
