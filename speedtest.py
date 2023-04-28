@@ -524,7 +524,7 @@ def _build_connection(connection, source_address, timeout, context=None):
     """
     def inner(host, **kwargs):
         kwargs.update({
-            'source_address': source_address.rstrip(),
+            'source_address': source_address,
             'timeout': timeout
         })
         if context:
@@ -716,8 +716,6 @@ def build_request(url, data=None, headers=None, bump='0', secure=False):
     final_url = '%s%sx=%s.%s' % (schemed_url, delim,
                                  int(timeit.time.time() * 1000),
                                  bump)
-
-    final_url = final_url.rstrip()
 
     headers.update({
         'Cache-Control': 'no-cache',
@@ -1354,6 +1352,13 @@ class Speedtest(object):
                     attrib['d'] = d
 
                     try:
+                        url_final = attrib.get('url').replace(" ", "%20").rstrip()
+                        attrib['url'] = url_final
+                    except Exception:
+                        continue
+
+
+                    try:
                         self.servers[d].append(attrib)
                     except KeyError:
                         self.servers[d] = [attrib]
@@ -1462,7 +1467,7 @@ class Speedtest(object):
         results = {}
         for server in servers:
             cum = []
-            url = os.path.dirname(server['url'].rstrip())
+            url = os.path.dirname(server['url'])
             stamp = int(timeit.time.time() * 1000)
             latency_url = '%s/latency.txt?x=%s' % (url, stamp)
             for i in range(0, 3):
