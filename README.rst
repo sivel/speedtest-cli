@@ -104,7 +104,7 @@ Usage
       --csv-delimiter CSV_DELIMITER
                             Single character delimiter to use in CSV output.
                             Default ","
-      --csv-header          Print CSV headers
+      --csv-header          Print CSV headers and exit
       --json                Suppress verbose output, only show basic information
                             in JSON format. Speeds listed in bit/s and not
                             affected by --bytes
