@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<settings>
+<servers>
+<server url="http://speedtest.deltacable.com:8080/speedtest/upload.php" lat="49.0902" lon="-123.0652" name="Delta, BC" country="Canada" cc="CA" sponsor="Eastlink" id="22154" host="speedtest.deltacable.com:8080"/>
+<server url="https://speedtest.vc.shawcable.net:8080/speedtest/upload.php" lat="49.2505" lon="-123.1119" name="Vancouver, BC" country="Canada" cc="CA" sponsor="Shaw Communications" id="4243" host="speedtest.vc.shawcable.net:8080"/>
+<server url="http://speedtest.skywaywest.net:8080/speedtest/upload.php" lat="49.2505" lon="-123.1119" name="Vancouver, BC" country="Canada" cc="CA" sponsor="Skyway West Business Internet Services" id="3318" host="speedtest.skywaywest.net:8080"/>
+<server url="http://speedtest-6.aebc.com:8080/speedtest/upload.php" lat="49.2505" lon="-123.1119" name="Vancouver, BC" country="Canada" cc="CA" sponsor="AEBC Internet" id="41509" host="speedtest-6.aebc.com:8080"/>
+<server url="http://speedtest.van3.fibretel.ca:8080/speedtest/upload.php" lat="49.2505" lon="-123.1119" name="Vancouver, BC" country="Canada" cc="CA" sponsor="FIBRETEL" id="58622" host="speedtest.van3.fibretel.ca:8080"/>
+<server url="http://fast.rockisland.net:8080/speedtest/upload.php" lat="48.5343" lon="-123.0171" name="Friday Harbor, WA" country="United States" cc="US" sponsor="Rock Island Communications" id="26805" host="fast.rockisland.net:8080"/>
+<server url="http://speedtest.cityofanacortes.org:8080/speedtest/upload.php" lat="48.5126" lon="-122.6127" name="Anacortes, WA" country="United States" cc="US" sponsor="City of Anacortes" id="31110" host="speedtest.cityofanacortes.org:8080"/>
+<server url="http://ost02.whidbey.net:8080/speedtest/upload.php" lat="48.0401" lon="-122.4063" name="Langley, WA" country="United States" cc="US" sponsor="Whidbey Telecom" id="54406" host="ost02.whidbey.net:8080"/>
+<server url="https://speedtestvm-evrtwaxa.as20055.net:8080/speedtest/upload.php" lat="47.9790" lon="-122.2021" name="Everett, WA" country="United States" cc="US" sponsor="Ziply Fiber" id="42157" host="speedtestvm-evrtwaxa.as20055.net:8080"/>
+<server url="http://speedtest1-bothwaxb.as20055.net:8080/speedtest/upload.php" lat="47.7717" lon="-122.2044" name="Bothell, WA" country="United States" cc="US" sponsor="Ziply Fiber" id="51693" host="speedtest1-bothwaxb.as20055.net:8080"/>
+</servers>
+</settings>

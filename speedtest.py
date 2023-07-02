@@ -1237,7 +1237,7 @@ class Speedtest(object):
 
         return self.config
 
-    def get_servers(self, servers=None, exclude=None):
+    def get_servers(self, servers=None, exclude=None, load_servers=None):
         """Retrieve a the list of speedtest.net servers, optionally filtered
         to servers matching those specified in the ``servers`` argument
         """
@@ -1325,6 +1325,14 @@ class Speedtest(object):
                         elements = root.getElementsByTagName('server')
                 except (SyntaxError, xml.parsers.expat.ExpatError):
                     raise ServersRetrievalError()
+
+                #load from file if exist
+                printer('Servers File:\n%s' % load_servers, debug=True)
+                if load_servers is not None:
+                    if os.path.isfile(load_servers):
+                        serverfile = ET.parse(load_servers)
+                        serverlist = serverfile.getroot()
+                        elements = elements + list(set(serverlist[0])-set(elements))
 
                 for server in elements:
                     try:
@@ -1757,6 +1765,8 @@ def parse_args():
                         help='Suppress verbose output, only show basic '
                              'information in JSON format. Speeds listed in '
                              'bit/s and not affected by --bytes')
+    parser.add_argument('--load-servers', action='append',
+                        help='Load list of servers from file')
     parser.add_argument('--list', action='store_true',
                         help='Display a list of speedtest.net servers '
                              'sorted by distance')
@@ -1891,9 +1901,18 @@ def shell():
         printer('Cannot retrieve speedtest configuration', error=True)
         raise SpeedtestCLIError(get_exception())
 
+    if args.load_servers:
+        printer('Loading file with servers...', quiet)
+        if not os.path.isfile(args.load_servers[0]):
+            raise SystemExit('ERROR: Cannot load specified %s file' % args.load_servers)     
+        
+        file = args.load_servers[0]
+    else:
+        file = None
+
     if args.list:
         try:
-            speedtest.get_servers()
+            speedtest.get_servers(load_servers=file)
         except (ServersRetrievalError,) + HTTP_ERRORS:
             printer('Cannot retrieve speedtest server list', error=True)
             raise SpeedtestCLIError(get_exception())
@@ -1916,7 +1935,7 @@ def shell():
     if not args.mini:
         printer('Retrieving speedtest.net server list...', quiet)
         try:
-            speedtest.get_servers(servers=args.server, exclude=args.exclude)
+            speedtest.get_servers(servers=args.server, exclude=args.exclude, load_servers=file)
         except NoMatchedServers:
             raise SpeedtestCLIError(
                 'No matched servers: %s' %
