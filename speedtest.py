@@ -1219,13 +1219,9 @@ class Speedtest(object):
         sizes = {
             'upload': up_sizes[ratio - 1:],
         }
-        if self._use_socket:
-            sizes['download'] = [245388, 505544, 1118012, 1986284, 4468241,
-                                 7907740, 12407926, 17816816, 24262167,
-                                 31625365]
-        else:
-            sizes['download'] = [350, 500, 750, 1000, 1500, 2000, 2500,
-                                 3000, 3500, 4000]
+        sizes['download'] = [245388, 505544, 1118012, 1986284, 4468241,
+                             7907740, 12407926, 17816816, 24262167,
+                             31625365]
 
         size_count = len(sizes['upload'])
 
@@ -1290,6 +1286,7 @@ class Speedtest(object):
                     )
 
         urls = [
+            'https://www.speedtest.net/api/js/servers',
             '://www.speedtest.net/speedtest-servers-static.php',
             'http://c.speedtest.net/speedtest-servers-static.php',
             '://www.speedtest.net/speedtest-servers.php',
@@ -1315,6 +1312,10 @@ class Speedtest(object):
                     raise ServersRetrievalError()
 
                 stream = get_response_stream(uh)
+                try:
+                    is_json = uh.headers.getheader('content-type').startswith('application/json')
+                except AttributeError:
+                    is_json = uh.getheader('content-type').startswith('application/json')
 
                 serversxml_list = []
                 while 1:
@@ -1332,60 +1333,68 @@ class Speedtest(object):
                     raise ServersRetrievalError()
 
                 serversxml = ''.encode().join(serversxml_list)
+                attriblist = []
 
-                printer('Servers XML:\n%s' % serversxml, debug=True)
+                if is_json:
+                    printer('Servers JSON:\n%s' % serversxml, debug=True)
+                    try:
+                        attriblist = json.loads(serversxml)
+                    except (ValueError, json.JSONDecodeError):
+                        raise ServersRetrievalError()
 
-                try:
+                else:
+                    printer('Servers XML:\n%s' % serversxml, debug=True)
+
                     try:
                         try:
-                            root = ET.fromstring(serversxml)
-                        except ET.ParseError:
-                            e = get_exception()
-                            raise SpeedtestServersError(
-                                'Malformed speedtest.net server list: %s' % e
-                            )
-                        elements = root.getiterator('server')
-                    except AttributeError:
+                            try:
+                                root = ET.fromstring(serversxml)
+                            except ET.ParseError:
+                                e = get_exception()
+                                raise SpeedtestServersError(
+                                    'Malformed speedtest.net server list: %s' % e
+                                )
+                            elements = root.getiterator('server')
+                        except AttributeError:
+                            try:
+                                root = DOM.parseString(serversxml)
+                            except ExpatError:
+                                e = get_exception()
+                                raise SpeedtestServersError(
+                                    'Malformed speedtest.net server list: %s' % e
+                                )
+                            elements = root.getElementsByTagName('server')
+                    except (SyntaxError, xml.parsers.expat.ExpatError):
+                        raise ServersRetrievalError()
+
+                    for server in elements:
                         try:
-                            root = DOM.parseString(serversxml)
-                        except ExpatError:
-                            e = get_exception()
-                            raise SpeedtestServersError(
-                                'Malformed speedtest.net server list: %s' % e
-                            )
-                        elements = root.getElementsByTagName('server')
-                except (SyntaxError, xml.parsers.expat.ExpatError):
-                    raise ServersRetrievalError()
+                            attrib = server.attrib
+                        except AttributeError:
+                            attrib = dict(list(server.attributes.items()))
+                        attriblist.append(attrib)
 
-                for server in elements:
-                    try:
-                        attrib = server.attrib
-                    except AttributeError:
-                        attrib = dict(list(server.attributes.items()))
-
+                for attrib in attriblist:
                     if servers and int(attrib.get('id')) not in servers:
+                        # Not one of the preselected servers
                         continue
 
                     if (int(attrib.get('id')) in self.config['ignore_servers']
                             or int(attrib.get('id')) in exclude):
+                        # One of the specifically excluded or ignored servers
                         continue
 
                     host, port = attrib['host'].split(':')
                     attrib['host'] = (host, int(port))
 
                     try:
-                        d = distance(self.lat_lon,
-                                     (float(attrib.get('lat')),
-                                      float(attrib.get('lon'))))
+                        d = attrib['d'] = distance(self.lat_lon,
+                                                   (float(attrib.get('lat')),
+                                                    float(attrib.get('lon'))))
                     except Exception:
                         continue
 
-                    attrib['d'] = d
-
-                    try:
-                        self.servers[d].append(attrib)
-                    except KeyError:
-                        self.servers[d] = [attrib]
+                    self.servers.setdefault(d, []).append(attrib)
 
                 break
 
@@ -1703,8 +1712,8 @@ class Speedtest(object):
             for size in self.config['sizes']['download']:
                 for _ in range(0, self.config['counts']['download']):
                     urls.append(
-                        '%s/random%sx%s.jpg' %
-                        (os.path.dirname(self.best['url']), size, size)
+                        '%s/download?size=%d' %
+                        (os.path.dirname(os.path.dirname(self.best['url'])), size)
                     )
 
             request_count = len(urls)
