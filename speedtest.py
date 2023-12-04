@@ -957,7 +957,12 @@ class SpeedtestResults(object):
         self.client = client or {}
 
         self._share = None
-        self.timestamp = '%sZ' % datetime.datetime.utcnow().isoformat()
+        # datetime.datetime.utcnow() is deprecated starting from 3.12
+        # but datetime.UTC is supported starting from 3.11
+        if sys.version_info.major >= 3 and sys.version_info.minor >= 11:
+            self.timestamp = '%sZ' % datetime.datetime.now(datetime.UTC).isoformat()
+        else:
+            self.timestamp = '%sZ' % datetime.datetime.utcnow().isoformat()
         self.bytes_received = 0
         self.bytes_sent = 0
 
