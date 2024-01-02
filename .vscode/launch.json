@@ -1,0 +1,32 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: downloade single",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/speedtest.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--csv",
+        "--json"
+      ],
+      // "linux": {
+      //   "MIMode": "gdb",
+      //   "miDebuggerPath": "/usr/bin/gdb"
+      // },
+      // "osx": {
+      //   "MIMode": "lldb"
+      // },
+      // "windows": {
+      //   "MIMode": "gdb",
+      //   "miDebuggerPath": "C:\\MinGw\\bin\\gdb.exe"
+      // }
+      // "cwd": "${workspaceFolder}",
+      "justMyCode": false
+    }
+  ]
+}

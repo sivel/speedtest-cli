@@ -28,6 +28,8 @@ import sys
 import threading
 import timeit
 import xml.parsers.expat
+import utilities
+
 
 try:
     import gzip
@@ -1830,6 +1832,7 @@ def printer(string, quiet=False, debug=False, error=False, **kwargs):
 
     if not quiet:
         print_(out, **kwargs)
+        # return str(out)
 
 
 def shell():
@@ -1940,6 +1943,9 @@ def shell():
         speedtest.get_best_server(speedtest.set_mini_server(args.mini))
 
     results = speedtest.results
+    # print(dict(str(results)))
+    # os.makedirs('tmp', exist_ok=True)
+    utilities.write_to_csv(str(results))
 
     printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
             '%(latency)s ms' % results.server, quiet)
