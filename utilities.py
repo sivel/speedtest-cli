@@ -1,76 +1,6 @@
-import logging
 import os
-import shutil
-import time
-import csv
-import json
-
-
-def remove_directory(directory_path, n=100):
-    directory_path = str(directory_path)
-    if os.path.islink(directory_path):
-        os.unlink(directory_path)
-    elif os.path.exists(directory_path):
-        deleted = False
-        for i in range(0, n - 1):
-            try:
-                shutil.rmtree(directory_path, onerror=on_error)
-                deleted = True
-                break
-
-            except OSError as err:
-                logging.error(
-                    "Error while deleting directory {}, on attempt number {}: {}. Retrying...".format(
-                        directory_path, i, err.strerror
-                    )
-                )
-                time.sleep(1)
-
-        if not deleted:
-            shutil.rmtree(directory_path, onerror=on_error)
-
-
-def on_error(func, path, exc_info):
-    """
-    Error handler for ``shutil.rmtree``.
-
-    If the error is due to an access error (read only file)
-    it attempts to add write permission and then retries.
-
-    If the error is for another reason it re-raises the error.
-
-    Usage : ``shutil.rmtree(path, onerror=on_error)``
-    """
-    import stat
-
-    if not os.access(path, os.W_OK):
-        # Is the error an access error ?
-        os.chmod(path, stat.S_IWUSR)
-        func(path)
-    else:
-        raise
-
-
-def make_directory(directory_path):
-    directory_path = str(directory_path)
-    if not os.path.exists(directory_path):
-        os.makedirs(directory_path)
-
-
-def make_clean_directory(directory_path):
-    directory_path = str(directory_path)
-    remove_directory(directory_path)
-    while os.path.exists(directory_path):
-        pass
-    make_directory(directory_path)
-    while not os.path.exists(directory_path):
-        pass
-
-
-def delete_file(file):
-    file = str(file)
-    if os.path.exists(file):
-        os.remove(file)
+import ast
+import pandas as pd
 
 
 def write_to_csv(input_str):
@@ -101,3 +31,49 @@ def write_to_csv(input_str):
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(header)
         csv_writer.writerow(values)
+
+
+def convert_and_save_to_xlsx(data_str, file_name):
+    # Try to open the Excel file
+    try:
+        df = pd.read_excel(file_name)
+    except IOError:
+        # File doesn't exist, create a new one
+        df = pd.DataFrame()
+
+    # Convert the input string to a dictionary
+    data_dict = ast.literal_eval(data_str)
+
+    # Flatten the nested dictionaries
+    flattened_data = flatten_dict(data_dict)
+
+    # Append the flattened data to the DataFrame
+    df = df._append(pd.DataFrame(flattened_data, index=[0]), ignore_index=True)
+
+    # Save the DataFrame to an Excel file
+    df.to_excel(file_name, index=False)
+
+def flatten_dict(d, parent_key='', sep='_'):
+    """
+    Flatten a nested dictionary by joining keys with a separator.
+    """
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+# Sample input string
+sample_input = "{'download': 0, 'upload': 0, 'ping': 9.319, 'server': {'url': 'http://speedtest.nextgentel.no:8080/speedtest/upload.php', 'lat': '59.9494', 'lon': '10.7564', 'name': 'Oslo', 'country': 'Norway', 'cc': 'NO', 'sponsor': 'NextGenTel AS', 'id': '8018', 'host': 'speedtest.nextgentel.no:8080', 'd': 5.7463776547060155, 'latency': 9.319}, 'timestamp': '2024-01-01T20:06:56.839888Z', 'bytes_sent': 0, 'bytes_received': 0, 'share': None, 'client': {'ip': '84.215.59.36', 'lat': '59.955', 'lon': '10.859', 'isp': 'Telia Norge AS', 'isprating': '3.7', 'rating': '0', 'ispdlavg': '0', 'ispulavg': '0', 'loggedin': '0', 'country': 'NO'}}"
+
+# Specify the file name
+file_name = "output.xlsx"
+
+# Call the function with the sample input and file name
+convert_and_save_to_xlsx(sample_input, file_name)
+
+
+# py .\speedtest.py --csv

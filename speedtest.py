@@ -1945,7 +1945,8 @@ def shell():
     results = speedtest.results
     # print(dict(str(results)))
     # os.makedirs('tmp', exist_ok=True)
-    utilities.write_to_csv(str(results))
+    # utilities.convert_and_save_to_xlsx(str(results), "tmp/output.xlsx")
+    # utilities.convert_and_save_to_csv(str(results), "tmp/data.csv")
 
     printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
             '%(latency)s ms' % results.server, quiet)
@@ -1998,6 +1999,8 @@ def shell():
 
     if args.share and not machine_format:
         printer('Share results: %s' % results.share())
+
+    utilities.convert_and_save_to_xlsx(str(results), "tmp/output.xlsx")
 
 
 def main():

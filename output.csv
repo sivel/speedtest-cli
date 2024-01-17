@@ -1,2 +1,0 @@
-download,upload,ping,server_url,server_lat,server_lon,server_name,server_country,server_cc,server_sponsor,server_id,server_host,server_d,server_latency,timestamp,bytes_sent,bytes_received,share,client_ip,client_lat,client_lon,client_isp,client_isprating,client_rating,client_ispdlavg,client_ispulavg,client_loggedin,client_country
-0,0,6.93,http://ookla-osl.net.avur.no:8080/speedtest/upload.php,59.9494,10.7564,Oslo,Norway,NO,AVUR AS,18967,ookla-osl.net.avur.no:8080,5.7463776547060155,6.93,2024-01-01T21:26:53.963606Z,0,0,,84.215.59.36,59.955,10.859,Telia Norge AS,3.7,0,0,0,0,NO

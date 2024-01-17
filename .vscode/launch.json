@@ -11,8 +11,6 @@
       "program": "${workspaceFolder}/speedtest.py",
       "console": "integratedTerminal",
       "args": [
-        "--csv",
-        "--json"
       ],
       // "linux": {
       //   "MIMode": "gdb",
