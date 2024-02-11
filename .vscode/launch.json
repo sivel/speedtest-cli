@@ -25,6 +25,16 @@
       // }
       // "cwd": "${workspaceFolder}",
       "justMyCode": false
+    },
+
+    {
+      "name": "Python: list",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/speedtest.py",
+      "console": "integratedTerminal",
+      "args": ["--list"],
+      "justMyCode": false
     }
   ]
 }

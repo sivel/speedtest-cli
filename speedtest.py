@@ -1943,40 +1943,36 @@ def shell():
         speedtest.get_best_server(speedtest.set_mini_server(args.mini))
 
     results = speedtest.results
-    # print(dict(str(results)))
-    # os.makedirs('tmp', exist_ok=True)
-    # utilities.convert_and_save_to_xlsx(str(results), "tmp/output.xlsx")
-    # utilities.convert_and_save_to_csv(str(results), "tmp/data.csv")
 
-    printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
-            '%(latency)s ms' % results.server, quiet)
+    # printer('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
+    #         '%(latency)s ms' % results.server, quiet)
 
     if args.download:
-        printer('Testing download speed', quiet,
-                end=('', '\n')[bool(debug)])
+        # printer('Testing download speed', quiet,
+        #         end=('', '\n')[bool(debug)])
         speedtest.download(
             callback=callback,
             threads=(None, 1)[args.single]
         )
-        printer('Download: %0.2f M%s/s' %
-                ((results.download / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]),
-                quiet)
+        # printer('Download: %0.2f M%s/s' %
+        #         ((results.download / 1000.0 / 1000.0) / args.units[1],
+        #          args.units[0]),
+        #         quiet)
     else:
         printer('Skipping download test', quiet)
 
     if args.upload:
-        printer('Testing upload speed', quiet,
-                end=('', '\n')[bool(debug)])
+        # printer('Testing upload speed', quiet,
+        #         end=('', '\n')[bool(debug)])
         speedtest.upload(
             callback=callback,
             pre_allocate=args.pre_allocate,
             threads=(None, 1)[args.single]
         )
-        printer('Upload: %0.2f M%s/s' %
-                ((results.upload / 1000.0 / 1000.0) / args.units[1],
-                 args.units[0]),
-                quiet)
+        # printer('Upload: %0.2f M%s/s' %
+        #         ((results.upload / 1000.0 / 1000.0) / args.units[1],
+        #          args.units[0]),
+        #         quiet)
     else:
         printer('Skipping upload test', quiet)
 
@@ -2004,18 +2000,20 @@ def shell():
 
 
 def main():
-    try:
-        shell()
-    except KeyboardInterrupt:
-        printer('\nCancelling...', error=True)
-    except (SpeedtestException, SystemExit):
-        e = get_exception()
-        # Ignore a successful exit, or argparse exit
-        if getattr(e, 'code', 1) not in (0, 2):
-            msg = '%s' % e
-            if not msg:
-                msg = '%r' % e
-            raise SystemExit('ERROR: %s' % msg)
+    for i in range(0,3):
+        try:
+            shell()
+        except KeyboardInterrupt:
+            printer('\nCancelling...', error=True)
+        except (SpeedtestException, SystemExit):
+            e = get_exception()
+            # Ignore a successful exit, or argparse exit
+            if getattr(e, 'code', 1) not in (0, 2):
+                msg = '%s' % e
+                if not msg:
+                    msg = '%r' % e
+                raise SystemExit('ERROR: %s' % msg)
+        i+=1
 
 
 if __name__ == '__main__':

@@ -65,15 +65,3 @@ def flatten_dict(d, parent_key='', sep='_'):
         else:
             items.append((new_key, v))
     return dict(items)
-
-# Sample input string
-sample_input = "{'download': 0, 'upload': 0, 'ping': 9.319, 'server': {'url': 'http://speedtest.nextgentel.no:8080/speedtest/upload.php', 'lat': '59.9494', 'lon': '10.7564', 'name': 'Oslo', 'country': 'Norway', 'cc': 'NO', 'sponsor': 'NextGenTel AS', 'id': '8018', 'host': 'speedtest.nextgentel.no:8080', 'd': 5.7463776547060155, 'latency': 9.319}, 'timestamp': '2024-01-01T20:06:56.839888Z', 'bytes_sent': 0, 'bytes_received': 0, 'share': None, 'client': {'ip': '84.215.59.36', 'lat': '59.955', 'lon': '10.859', 'isp': 'Telia Norge AS', 'isprating': '3.7', 'rating': '0', 'ispdlavg': '0', 'ispulavg': '0', 'loggedin': '0', 'country': 'NO'}}"
-
-# Specify the file name
-file_name = "output.xlsx"
-
-# Call the function with the sample input and file name
-convert_and_save_to_xlsx(sample_input, file_name)
-
-
-# py .\speedtest.py --csv
