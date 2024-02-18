@@ -29,6 +29,8 @@ import threading
 import timeit
 import xml.parsers.expat
 import utilities
+import schedule
+import time
 
 
 try:
@@ -1999,8 +2001,8 @@ def shell():
     utilities.convert_and_save_to_xlsx(str(results), "tmp/output.xlsx")
 
 
-def main():
-    for i in range(0,3):
+def main(iternation=1):
+    for i in range(iteration):
         try:
             shell()
         except KeyboardInterrupt:
@@ -2014,7 +2016,17 @@ def main():
                     msg = '%r' % e
                 raise SystemExit('ERROR: %s' % msg)
         i+=1
+        if i == iteration:
+            break
 
 
 if __name__ == '__main__':
-    main()
+    schedule_time = "01:24"
+    schedule.every().day.at(schedule_time).do(main)
+    repeat_count = 0
+    current_time = datetime.datetime.now().time()
+    while True:
+        if current_time.strftime("%H:%M") == schedule_time:
+            main(3)
+        else:
+            time.sleep(1)
