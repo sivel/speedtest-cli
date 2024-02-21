@@ -1837,7 +1837,7 @@ def printer(string, quiet=False, debug=False, error=False, **kwargs):
         # return str(out)
 
 
-def shell():
+def shell(server=None):
     """Run the full speedtest.net test"""
 
     global DEBUG
@@ -1846,6 +1846,7 @@ def shell():
     signal.signal(signal.SIGINT, ctrl_c(shutdown_event))
 
     args = parse_args()
+    args.server = server
 
     # Print the version and exit
     if args.version:
@@ -1885,7 +1886,7 @@ def shell():
     else:
         callback = print_dots(shutdown_event)
 
-    printer('Retrieving speedtest.net configuration...', quiet)
+    # printer('Retrieving speedtest.net configuration...', quiet)
     try:
         speedtest = Speedtest(
             source_address=args.source,
@@ -1915,11 +1916,10 @@ def shell():
                         raise
         sys.exit(0)
 
-    printer('Testing from %(isp)s (%(ip)s)...' % speedtest.config['client'],
-            quiet)
+    # printer('Testing from %(isp)s (%(ip)s)...' % speedtest.config['client'], quiet)
 
     if not args.mini:
-        printer('Retrieving speedtest.net server list...', quiet)
+        # printer('Retrieving speedtest.net server list...', quiet)
         try:
             speedtest.get_servers(servers=args.server, exclude=args.exclude)
         except NoMatchedServers:
@@ -1936,10 +1936,10 @@ def shell():
                 'be an int' % ', '.join('%s' % s for s in args.server)
             )
 
-        if args.server and len(args.server) == 1:
-            printer('Retrieving information for the selected server...', quiet)
-        else:
-            printer('Selecting best server based on ping...', quiet)
+        # if args.server and len(args.server) == 1:
+        #     printer('Retrieving information for the selected server...', quiet)
+        # else:
+        #     printer('Selecting best server based on ping...', quiet)
         speedtest.get_best_server()
     elif args.mini:
         speedtest.get_best_server(speedtest.set_mini_server(args.mini))
@@ -1998,13 +1998,13 @@ def shell():
     if args.share and not machine_format:
         printer('Share results: %s' % results.share())
 
-    utilities.convert_and_save_to_xlsx(str(results), "tmp/output.xlsx")
+    utilities.convert_and_save_to_xlsx(str(results), "tmp/f24-ch1.xlsx")
 
 
-def main(iternation=1):
+def main(iteration=1, server=[8018]):
     for i in range(iteration):
         try:
-            shell()
+            shell(server)
         except KeyboardInterrupt:
             printer('\nCancelling...', error=True)
         except (SpeedtestException, SystemExit):
@@ -2021,12 +2021,13 @@ def main(iternation=1):
 
 
 if __name__ == '__main__':
-    schedule_time = "01:24"
-    schedule.every().day.at(schedule_time).do(main)
+    schedule_time = "23:13"
     repeat_count = 0
-    current_time = datetime.datetime.now().time()
     while True:
-        if current_time.strftime("%H:%M") == schedule_time:
-            main(3)
+        current_time = datetime.datetime.now().strftime("%H:%M")
+        if current_time == schedule_time:
+            main(1)
+            break
         else:
             time.sleep(1)
+    # main()

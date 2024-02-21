@@ -33,7 +33,8 @@
       "request": "launch",
       "program": "${workspaceFolder}/speedtest.py",
       "console": "integratedTerminal",
-      "args": ["--list"],
+      // "args": ["--list", "--server 8018"],
+      // "args": ["--server", "8018"],
       "justMyCode": false
     }
   ]
