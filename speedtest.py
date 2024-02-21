@@ -29,7 +29,6 @@ import threading
 import timeit
 import xml.parsers.expat
 import utilities
-import schedule
 import time
 
 
