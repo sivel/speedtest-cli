@@ -1997,7 +1997,7 @@ def shell():
     if args.share and not machine_format:
         printer('Share results: %s' % results.share())
 
-    utilities.convert_and_save_to_xlsx(str(results), "tmp/f24-ch1.xlsx")
+    utilities.convert_and_save_to_xlsx(str(results), "tmp/f24-ch1-coi-db0-Shield.xlsx")
 
 
 def main(iteration=1):
