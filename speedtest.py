@@ -1836,7 +1836,7 @@ def printer(string, quiet=False, debug=False, error=False, **kwargs):
         # return str(out)
 
 
-def shell(server=None):
+def shell():
     """Run the full speedtest.net test"""
 
     global DEBUG
@@ -2000,10 +2000,10 @@ def shell(server=None):
     utilities.convert_and_save_to_xlsx(str(results), "tmp/f24-ch1.xlsx")
 
 
-def main(iteration=1, server=[8018]):
+def main(iteration=1):
     for i in range(iteration):
         try:
-            shell(server)
+            shell()
         except KeyboardInterrupt:
             printer('\nCancelling...', error=True)
         except (SpeedtestException, SystemExit):
