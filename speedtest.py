@@ -2000,33 +2000,21 @@ def shell():
     utilities.convert_and_save_to_xlsx(str(results), "tmp/f24-ch1-coi-db0-Shield.xlsx")
 
 
-def main(iteration=1):
-    for i in range(iteration):
-        try:
-            shell()
-        except KeyboardInterrupt:
-            printer('\nCancelling...', error=True)
-        except (SpeedtestException, SystemExit):
-            e = get_exception()
-            # Ignore a successful exit, or argparse exit
-            if getattr(e, 'code', 1) not in (0, 2):
-                msg = '%s' % e
-                if not msg:
-                    msg = '%r' % e
-                raise SystemExit('ERROR: %s' % msg)
-        i+=1
-        if i == iteration:
-            break
+def main():
+    try:
+        shell()
+    except KeyboardInterrupt:
+        printer('\nCancelling...', error=True)
+    except (SpeedtestException, SystemExit):
+        e = get_exception()
+        # Ignore a successful exit, or argparse exit
+        if getattr(e, 'code', 1) not in (0, 2):
+            msg = '%s' % e
+            if not msg:
+                msg = '%r' % e
+            raise SystemExit('ERROR: %s' % msg)
+
 
 
 if __name__ == '__main__':
-    schedule_time = "19:39"
-    repeat_count = 0
-    while True:
-        current_time = datetime.datetime.now().strftime("%H:%M")
-        if current_time == schedule_time:
-            main(500)
-            break
-        else:
-            time.sleep(1)
-    # main(5)
+    main()
