@@ -2020,12 +2020,12 @@ def main(iteration=1):
 
 
 if __name__ == '__main__':
-    schedule_time = "23:13"
+    schedule_time = "19:39"
     repeat_count = 0
     while True:
         current_time = datetime.datetime.now().strftime("%H:%M")
         if current_time == schedule_time:
-            main(1)
+            main(500)
             break
         else:
             time.sleep(1)
