@@ -1845,7 +1845,6 @@ def shell(server=None):
     signal.signal(signal.SIGINT, ctrl_c(shutdown_event))
 
     args = parse_args()
-    args.server = server
 
     # Print the version and exit
     if args.version:
@@ -1920,7 +1919,8 @@ def shell(server=None):
     if not args.mini:
         # printer('Retrieving speedtest.net server list...', quiet)
         try:
-            speedtest.get_servers(servers=args.server, exclude=args.exclude)
+            # speedtest.get_servers(servers=args.server, exclude=args.exclude)
+            args.server = speedtest.get_closest_servers(1)
         except NoMatchedServers:
             raise SpeedtestCLIError(
                 'No matched servers: %s' %
@@ -2029,4 +2029,4 @@ if __name__ == '__main__':
             break
         else:
             time.sleep(1)
-    # main()
+    # main(5)
