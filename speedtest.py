@@ -1836,7 +1836,7 @@ def printer(string, quiet=False, debug=False, error=False, **kwargs):
         # return str(out)
 
 
-def shell(server=None):
+def shell():
     """Run the full speedtest.net test"""
 
     global DEBUG
@@ -1845,7 +1845,6 @@ def shell(server=None):
     signal.signal(signal.SIGINT, ctrl_c(shutdown_event))
 
     args = parse_args()
-    args.server = server
 
     # Print the version and exit
     if args.version:
@@ -1920,7 +1919,8 @@ def shell(server=None):
     if not args.mini:
         # printer('Retrieving speedtest.net server list...', quiet)
         try:
-            speedtest.get_servers(servers=args.server, exclude=args.exclude)
+            # speedtest.get_servers(servers=args.server, exclude=args.exclude)
+            args.server = speedtest.get_closest_servers(1)
         except NoMatchedServers:
             raise SpeedtestCLIError(
                 'No matched servers: %s' %
@@ -2000,10 +2000,10 @@ def shell(server=None):
     utilities.convert_and_save_to_xlsx(str(results), "tmp/f24-ch1.xlsx")
 
 
-def main(iteration=1, server=[8018]):
+def main(iteration=1):
     for i in range(iteration):
         try:
-            shell(server)
+            shell()
         except KeyboardInterrupt:
             printer('\nCancelling...', error=True)
         except (SpeedtestException, SystemExit):
@@ -2029,4 +2029,4 @@ if __name__ == '__main__':
             break
         else:
             time.sleep(1)
-    # main()
+    # main(5)
